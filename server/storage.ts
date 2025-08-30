@@ -114,7 +114,9 @@ export class MemStorage implements IStorage {
       lastAccessedAt: null,
       activitiesCompleted: insertModule.activitiesCompleted || 0,
       minutesCompleted: insertModule.minutesCompleted || 0,
-      isLocked: insertModule.isLocked !== undefined ? insertModule.isLocked : true
+      isLocked: insertModule.isLocked !== undefined ? insertModule.isLocked : true,
+      contentData: insertModule.contentData || null,
+      userProgress: insertModule.userProgress || null
     };
     this.anxietyModules.set(id, module);
     return module;
