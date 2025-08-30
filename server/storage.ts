@@ -158,7 +158,7 @@ export class MemStorage implements IStorage {
         activitiesTotal: 5,
         activitiesCompleted: 0,
         minutesCompleted: 0,
-        isLocked: true,
+        isLocked: false,
       },
       {
         userId,
@@ -169,7 +169,7 @@ export class MemStorage implements IStorage {
         activitiesTotal: 3,
         activitiesCompleted: 0,
         minutesCompleted: 0,
-        isLocked: true,
+        isLocked: false,
       },
       {
         userId,
@@ -180,7 +180,7 @@ export class MemStorage implements IStorage {
         activitiesTotal: 4,
         activitiesCompleted: 0,
         minutesCompleted: 0,
-        isLocked: true,
+        isLocked: false,
       },
       {
         userId,
@@ -191,7 +191,7 @@ export class MemStorage implements IStorage {
         activitiesTotal: 4,
         activitiesCompleted: 0,
         minutesCompleted: 0,
-        isLocked: true,
+        isLocked: false,
       },
       {
         userId,
@@ -202,7 +202,7 @@ export class MemStorage implements IStorage {
         activitiesTotal: 3,
         activitiesCompleted: 0,
         minutesCompleted: 0,
-        isLocked: true,
+        isLocked: false,
       },
     ];
 
