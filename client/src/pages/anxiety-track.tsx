@@ -75,8 +75,9 @@ export default function AnxietyTrack() {
   };
 
   const handleCompleteModule = (module: any) => {
+    console.log('Completing module:', module.weekNumber);
     const updates = {
-      completedAt: new Date(),
+      completedAt: new Date().toISOString(),
       minutesCompleted: module.estimatedMinutes,
       activitiesCompleted: module.activitiesTotal
     };
@@ -379,6 +380,9 @@ export default function AnxietyTrack() {
                 const isInProgress = !isLocked && !isCompleted;
                 const progressPercentage = module.estimatedMinutes > 0 ? 
                   Math.round((module.minutesCompleted / module.estimatedMinutes) * 100) : 0;
+                
+                // Debug logging
+                console.log(`Module ${module.weekNumber}: completed=${isCompleted}, locked=${isLocked}, inProgress=${isInProgress}, completedAt=${module.completedAt}`);
                   
                 const IconComponent = getModuleIcon(module.weekNumber);
                 const details = getDetailedModuleInfo(module.weekNumber);
