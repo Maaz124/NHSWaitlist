@@ -2,7 +2,6 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertOnboardingResponseSchema, insertWeeklyAssessmentSchema } from "@shared/schema";
-import { calculateRiskScore, determineRiskLevel } from "../client/src/lib/risk-calculator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // User registration/login (simplified for MVP)
@@ -36,6 +35,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ user });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/users/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({ user });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 
@@ -118,7 +132,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/modules/:userId", async (req, res) => {
     try {
       const { userId } = req.params;
-      const modules = await storage.getAnxietyModules(userId);
+      let modules = await storage.getAnxietyModules(userId);
+      
+      // Initialize modules if none exist
+      if (modules.length === 0) {
+        await storage.initializeAnxietyModules(userId);
+        modules = await storage.getAnxietyModules(userId);
+      }
+      
       res.json({ modules });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -145,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const latestAssessment = await storage.getLatestWeeklyAssessment(userId);
       const onboarding = await storage.getOnboardingResponse(userId);
 
-      const totalMinutes = modules.reduce((sum, module) => sum + module.minutesCompleted, 0);
+      const totalMinutes = modules.reduce((sum, module) => sum + (module.minutesCompleted || 0), 0);
       const totalEstimatedMinutes = modules.reduce((sum, module) => sum + module.estimatedMinutes, 0);
       const completionRate = totalEstimatedMinutes > 0 ? Math.round((totalMinutes / totalEstimatedMinutes) * 100) : 0;
       

@@ -68,8 +68,8 @@ export default function AnxietyTrack() {
     );
   }
 
-  const modules = modulesData?.modules || [];
-  const dashboard = dashboardData?.dashboardData || {};
+  const modules = (modulesData as any)?.modules || [];
+  const dashboard = (dashboardData as any)?.dashboardData || {};
 
   return (
     <div className="min-h-screen flex flex-col">

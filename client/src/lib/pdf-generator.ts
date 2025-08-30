@@ -88,7 +88,7 @@ export function generateProgressReport(data: ReportData): jsPDF {
   yPos += 10;
   
   const completedModules = data.modules.filter(m => m.completedAt);
-  const totalMinutes = data.modules.reduce((sum, m) => sum + m.minutesCompleted, 0);
+  const totalMinutes = data.modules.reduce((sum, m) => sum + (m.minutesCompleted || 0), 0);
   const totalEstimatedMinutes = data.modules.reduce((sum, m) => sum + m.estimatedMinutes, 0);
   const completionRate = totalEstimatedMinutes > 0 ? Math.round((totalMinutes / totalEstimatedMinutes) * 100) : 0;
   

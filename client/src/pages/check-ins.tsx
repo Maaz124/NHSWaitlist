@@ -116,7 +116,7 @@ export default function CheckIns() {
 
   const handleSubmit = () => {
     const responses = form.getValues();
-    const weekNumber = (assessmentsData?.assessments?.length || 0) + 1;
+    const weekNumber = ((assessmentsData as any)?.assessments?.length || 0) + 1;
     
     createAssessmentMutation.mutate({
       userId: mockUserId,
@@ -133,7 +133,7 @@ export default function CheckIns() {
     );
   }
 
-  const assessments = assessmentsData?.assessments || [];
+  const assessments = (assessmentsData as any)?.assessments || [];
   const hasCompletedThisWeek = assessments.some((a: any) => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);

@@ -53,7 +53,12 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id, createdAt: new Date() };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      createdAt: new Date(),
+      nhsNumber: insertUser.nhsNumber || null
+    };
     this.users.set(id, user);
     return user;
   }
@@ -79,7 +84,12 @@ export class MemStorage implements IStorage {
 
   async createWeeklyAssessment(insertAssessment: InsertWeeklyAssessment): Promise<WeeklyAssessment> {
     const id = randomUUID();
-    const assessment: WeeklyAssessment = { ...insertAssessment, id, completedAt: new Date() };
+    const assessment: WeeklyAssessment = { 
+      ...insertAssessment, 
+      id, 
+      completedAt: new Date(),
+      needsEscalation: insertAssessment.needsEscalation || false
+    };
     this.weeklyAssessments.set(id, assessment);
     return assessment;
   }
@@ -101,7 +111,10 @@ export class MemStorage implements IStorage {
       ...insertModule, 
       id, 
       completedAt: null, 
-      lastAccessedAt: null 
+      lastAccessedAt: null,
+      activitiesCompleted: insertModule.activitiesCompleted || 0,
+      minutesCompleted: insertModule.minutesCompleted || 0,
+      isLocked: insertModule.isLocked !== undefined ? insertModule.isLocked : true
     };
     this.anxietyModules.set(id, module);
     return module;

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Shield, TrendingUp, Clock, Bell, GraduationCap, FileText, Wind, Smile, BarChart3, Headphones } from "lucide-react";
 import { Link } from "wouter";
 import { generateProgressReport } from "@/lib/pdf-generator";
+import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   // For MVP, using a mock user ID - in production this would come from auth
@@ -51,8 +52,8 @@ export default function Dashboard() {
     );
   }
 
-  const dashboard = dashboardData?.dashboardData || {};
-  const modules = modulesData?.modules || [];
+  const dashboard = (dashboardData as any)?.dashboardData || {};
+  const modules = (modulesData as any)?.modules || [];
   const user = { firstName: "James", lastName: "Smith", email: "james.smith@example.com" };
 
   const nextCheckInDate = new Date(dashboard.nextCheckInDue);
