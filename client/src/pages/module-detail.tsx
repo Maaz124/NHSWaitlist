@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute } from "wouter";
+import { useRoute, Link } from "wouter";
 import { Header } from "@/components/ui/header";
 import { TabNavigation } from "@/components/ui/tab-navigation";
 import { CrisisBanner } from "@/components/ui/crisis-banner";
@@ -50,8 +50,8 @@ const activityIcons = {
 };
 
 export default function ModuleDetail() {
-  const [match] = useRoute("/anxiety-track/module/:weekNumber");
-  const weekNumber = parseInt((match?.params as any)?.weekNumber || "1");
+  const [match, params] = useRoute("/anxiety-track/module/:weekNumber");
+  const weekNumber = parseInt((params as any)?.weekNumber || "1");
   const mockUserId = "user-1";
   
   const [currentActivity, setCurrentActivity] = useState<string | null>(null);
@@ -99,7 +99,13 @@ export default function ModuleDetail() {
   if (!module) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">Module not found</div>
+        <div className="text-center">
+          <p>Module not found for week {weekNumber}</p>
+          <p className="text-sm text-muted-foreground mt-2">Available modules: {modules.length}</p>
+          <Link href="/anxiety-track">
+            <Button variant="outline" className="mt-4">Back to Anxiety Track</Button>
+          </Link>
+        </div>
       </div>
     );
   }
