@@ -66,16 +66,20 @@ export default function AnxietyTrack() {
     if (newMinutesCompleted >= module.estimatedMinutes) {
       updates.completedAt = new Date();
       updates.activitiesCompleted = module.activitiesTotal;
-      
-      // Unlock next module
-      const nextModule = modules?.find((m: any) => m.weekNumber === module.weekNumber + 1);
-      if (nextModule) {
-        updateModuleMutation.mutate({
-          moduleId: nextModule.id,
-          updates: { isLocked: false },
-        });
-      }
     }
+    
+    updateModuleMutation.mutate({
+      moduleId: module.id,
+      updates,
+    });
+  };
+
+  const handleCompleteModule = (module: any) => {
+    const updates = {
+      completedAt: new Date(),
+      minutesCompleted: module.estimatedMinutes,
+      activitiesCompleted: module.activitiesTotal
+    };
     
     updateModuleMutation.mutate({
       moduleId: module.id,
@@ -370,9 +374,9 @@ export default function AnxietyTrack() {
             <TabsContent value="modules" className="space-y-4">
               {/* Enhanced Module Cards */}
               {modules.map((module: any) => {
-                const isCompleted = module.completedAt;
-                const isInProgress = !module.isLocked && !isCompleted;
-                const isLocked = module.isLocked;
+                const isCompleted = !!module.completedAt;
+                const isLocked = module.isLocked === true;
+                const isInProgress = !isLocked && !isCompleted;
                 const progressPercentage = module.estimatedMinutes > 0 ? 
                   Math.round((module.minutesCompleted / module.estimatedMinutes) * 100) : 0;
                   
@@ -507,6 +511,15 @@ export default function AnxietyTrack() {
                                   data-testid={`button-quick-continue-${module.weekNumber}`}
                                 >
                                   Quick Practice
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleCompleteModule(module)}
+                                  disabled={updateModuleMutation.isPending}
+                                  data-testid={`button-complete-module-${module.weekNumber}`}
+                                >
+                                  Mark Complete
                                 </Button>
                                 <Link href={`/anxiety-track/module/${module.weekNumber}`}>
                                   <Button size="sm" data-testid={`button-enter-module-${module.weekNumber}`}>
