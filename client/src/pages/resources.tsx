@@ -11,15 +11,14 @@ import { ThoughtRecord } from "@/components/ThoughtRecord";
 import { GroundingExercises } from "@/components/GroundingExercises";
 import { MoodTracker } from "@/components/MoodTracker";
 import { RelaxationTools } from "@/components/RelaxationTools";
-import { AnxietyGuideSimple } from "@/components/AnxietyGuideSimple";
-import { SleepGuideSimple } from "@/components/SleepGuideSimple";
-import { LifestyleGuideSimple } from "@/components/LifestyleGuideSimple";
+import { AnxietyGuideComprehensive } from "@/components/AnxietyGuideComprehensive";
+import { SleepGuideComprehensive } from "@/components/SleepGuideComprehensive";
+import { LifestyleGuideComprehensive } from "@/components/LifestyleGuideComprehensive";
 
 export default function Resources() {
   const mockUserId = "user-1";
   const [activeToolView, setActiveToolView] = useState<string | null>(null);
   
-  console.log('Current activeToolView:', activeToolView);
 
   const handleExportReport = async () => {
     try {
@@ -52,27 +51,11 @@ export default function Resources() {
       case 'relaxation':
         return <RelaxationTools />;
       case 'anxiety-guide':
-        return (
-          <div className="p-8 bg-green-100 rounded-lg text-center border-4 border-green-500">
-            <h1 className="text-3xl font-bold text-green-800 mb-4">✅ SUCCESS: Understanding Anxiety Guide</h1>
-            <p className="text-green-700 text-lg">The educational content system is working! This would show the full Understanding Anxiety guide.</p>
-            <p className="text-green-600 mt-2">State: {activeToolView}</p>
-          </div>
-        );
+        return <AnxietyGuideComprehensive />;
       case 'sleep-anxiety':
-        return (
-          <div className="p-8 bg-blue-100 rounded-lg text-center border-4 border-blue-500">
-            <h1 className="text-3xl font-bold text-blue-800 mb-4">✅ SUCCESS: Sleep & Anxiety Guide</h1>
-            <p className="text-blue-700 text-lg">The educational content system is working! This would show the full Sleep & Anxiety guide.</p>
-          </div>
-        );
+        return <SleepGuideComprehensive />;
       case 'lifestyle-guide':
-        return (
-          <div className="p-8 bg-purple-100 rounded-lg text-center border-4 border-purple-500">
-            <h1 className="text-3xl font-bold text-purple-800 mb-4">✅ SUCCESS: Lifestyle & Wellbeing Guide</h1>
-            <p className="text-purple-700 text-lg">The educational content system is working! This would show the full Lifestyle guide.</p>
-          </div>
-        );
+        return <LifestyleGuideComprehensive />;
       default:
         return null;
     }
@@ -232,11 +215,7 @@ export default function Resources() {
                   <Button 
                     variant="secondary" 
                     className="w-full justify-start p-3 h-auto"
-                    onClick={() => {
-                      console.log('Clicking anxiety guide');
-                      setActiveToolView('anxiety-guide');
-                      console.log('Set state to anxiety-guide');
-                    }}
+                    onClick={() => setActiveToolView('anxiety-guide')}
                     data-testid="button-understanding-anxiety"
                   >
                     <div className="text-left">
