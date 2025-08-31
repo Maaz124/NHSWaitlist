@@ -11,6 +11,9 @@ import { ThoughtRecord } from "@/components/ThoughtRecord";
 import { GroundingExercises } from "@/components/GroundingExercises";
 import { MoodTracker } from "@/components/MoodTracker";
 import { RelaxationTools } from "@/components/RelaxationTools";
+import { AnxietyGuide } from "@/components/AnxietyGuide";
+import { SleepAnxietyGuide } from "@/components/SleepAnxietyGuide";
+import { LifestyleGuide } from "@/components/LifestyleGuide";
 
 export default function Resources() {
   const mockUserId = "user-1";
@@ -205,33 +208,36 @@ export default function Resources() {
                   <Button 
                     variant="secondary" 
                     className="w-full justify-start p-3 h-auto"
+                    onClick={() => setActiveToolView('anxiety-guide')}
                     data-testid="button-understanding-anxiety"
                   >
                     <div className="text-left">
                       <p className="font-medium">Understanding Anxiety</p>
-                      <p className="text-sm text-muted-foreground">NHS-approved guide</p>
+                      <p className="text-sm text-muted-foreground">NHS-approved interactive guide with quizzes</p>
                     </div>
                   </Button>
                   
                   <Button 
                     variant="secondary" 
                     className="w-full justify-start p-3 h-auto"
+                    onClick={() => setActiveToolView('sleep-anxiety')}
                     data-testid="button-sleep-anxiety"
                   >
                     <div className="text-left">
                       <p className="font-medium">Sleep & Anxiety</p>
-                      <p className="text-sm text-muted-foreground">Evidence-based tips</p>
+                      <p className="text-sm text-muted-foreground">Evidence-based tips with personal assessment</p>
                     </div>
                   </Button>
                   
                   <Button 
                     variant="secondary" 
                     className="w-full justify-start p-3 h-auto"
+                    onClick={() => setActiveToolView('lifestyle-guide')}
                     data-testid="button-lifestyle-factors"
                   >
                     <div className="text-left">
                       <p className="font-medium">Lifestyle Factors</p>
-                      <p className="text-sm text-muted-foreground">Diet, exercise & wellbeing</p>
+                      <p className="text-sm text-muted-foreground">Diet, exercise & wellbeing with action plan</p>
                     </div>
                   </Button>
                 </div>
@@ -277,6 +283,58 @@ export default function Resources() {
           </div>
         </div>
       </main>
+
+      {/* Educational Content Views */}
+      {activeToolView === 'anxiety-guide' && (
+        <div className="fixed inset-0 bg-background z-50 overflow-auto">
+          <div className="container max-w-4xl mx-auto p-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setActiveToolView(null)}
+              className="mb-6"
+              data-testid="button-back-to-resources"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Resources
+            </Button>
+            <AnxietyGuide />
+          </div>
+        </div>
+      )}
+      
+      {activeToolView === 'sleep-anxiety' && (
+        <div className="fixed inset-0 bg-background z-50 overflow-auto">
+          <div className="container max-w-4xl mx-auto p-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setActiveToolView(null)}
+              className="mb-6"
+              data-testid="button-back-to-resources"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Resources
+            </Button>
+            <SleepAnxietyGuide />
+          </div>
+        </div>
+      )}
+      
+      {activeToolView === 'lifestyle-guide' && (
+        <div className="fixed inset-0 bg-background z-50 overflow-auto">
+          <div className="container max-w-4xl mx-auto p-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setActiveToolView(null)}
+              className="mb-6"
+              data-testid="button-back-to-resources"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Resources
+            </Button>
+            <LifestyleGuide />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
