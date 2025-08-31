@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
@@ -171,16 +172,16 @@ export function RelaxationTools() {
   }, [isActive, timeRemaining, currentStep, currentTechnique]);
 
   const getTotalSteps = (technique: any) => {
-    if (technique.muscleGroups) return technique.muscleGroups.length * 2; // tension + relaxation
-    if (technique.scenarios) return technique.scenarios[0].steps.length;
-    if (technique.phrases) return technique.phrases.length;
+    if (technique && 'muscleGroups' in technique) return technique.muscleGroups.length * 2; // tension + relaxation
+    if (technique && 'scenarios' in technique) return technique.scenarios[0].steps.length;
+    if (technique && 'phrases' in technique) return technique.phrases.length;
     return 1;
   };
 
   const getStepDuration = (technique: any, step: number) => {
-    if (technique.muscleGroups) return 10; // 5s tension + 5s relaxation
-    if (technique.scenarios) return Math.floor((sessionDuration * 60) / technique.scenarios[0].steps.length);
-    if (technique.phrases) return technique.phrases[step].duration;
+    if (technique && 'muscleGroups' in technique) return 10; // 5s tension + 5s relaxation
+    if (technique && 'scenarios' in technique) return Math.floor((sessionDuration * 60) / technique.scenarios[0].steps.length);
+    if (technique && 'phrases' in technique && technique.phrases[step]) return technique.phrases[step].duration;
     return 60;
   };
 
@@ -232,7 +233,7 @@ export function RelaxationTools() {
   const getCurrentInstruction = () => {
     if (!currentTechnique) return "";
     
-    if (currentTechnique.muscleGroups) {
+    if ('muscleGroups' in currentTechnique) {
       const muscleIndex = Math.floor(currentStep / 2);
       const muscle = currentTechnique.muscleGroups[muscleIndex];
       const isRelaxation = currentStep % 2 === 1;
@@ -244,12 +245,12 @@ export function RelaxationTools() {
       }
     }
     
-    if (currentTechnique.scenarios) {
+    if ('scenarios' in currentTechnique) {
       const scenario = currentTechnique.scenarios[0];
       return scenario.steps[currentStep] || "Continue to relax and enjoy this peaceful experience.";
     }
     
-    if (currentTechnique.phrases) {
+    if ('phrases' in currentTechnique) {
       const phrase = currentTechnique.phrases[currentStep];
       return `Repeat to yourself: "${phrase.phrase}". Focus on ${phrase.focus}. Let this sensation develop naturally.`;
     }
@@ -338,11 +339,11 @@ export function RelaxationTools() {
                   </div>
 
                   {/* Technique Details */}
-                  {key === "pmr" && (
+                  {key === "pmr" && 'muscleGroups' in technique && (
                     <div>
                       <h4 className="font-semibold mb-3">Muscle Groups ({technique.muscleGroups.length})</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                        {technique.muscleGroups.map((muscle, index) => (
+                        {('muscleGroups' in technique ? technique.muscleGroups : []).map((muscle: any, index: number) => (
                           <div key={index} className="flex items-center gap-3 p-2 bg-secondary/20 rounded">
                             <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold">
                               {index + 1}
@@ -361,7 +362,7 @@ export function RelaxationTools() {
                     <div>
                       <h4 className="font-semibold mb-3">Visualization Scenarios</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {technique.scenarios.map((scenario, index) => (
+                        {('scenarios' in technique ? technique.scenarios : []).map((scenario: any, index: number) => (
                           <Card key={index} className="border-dashed border-2">
                             <CardContent className="p-4">
                               <div className="flex items-center gap-2 mb-2">
@@ -382,7 +383,7 @@ export function RelaxationTools() {
                     <div>
                       <h4 className="font-semibold mb-3">Autogenic Phrases ({technique.phrases.length})</h4>
                       <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {technique.phrases.map((phrase, index) => (
+                        {('phrases' in technique ? technique.phrases : []).map((phrase: any, index: number) => (
                           <div key={index} className="flex items-start gap-3 p-3 bg-secondary/20 rounded">
                             <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold">
                               {index + 1}

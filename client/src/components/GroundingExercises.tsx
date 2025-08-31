@@ -417,22 +417,14 @@ export function GroundingExercises() {
               
               {(currentStepData?.type === "observation" || currentStepData?.type === "visualization") && (
                 <div className="mt-4">
-                  <Label className="text-sm font-medium mb-2 block">
-                    {currentStepData.prompt}
-                  </Label>
                   <Textarea
                     value={userInputs[currentStep] || ""}
                     onChange={(e) => updateUserInput(e.target.value)}
-                    placeholder="Take your time to observe and describe..."
+                    placeholder="Take your time to observe and describe what you notice..."
                     rows={3}
                     className="mt-2"
                     data-testid={`textarea-step-${currentStep}`}
                   />
-                  {currentStepData.count && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Try to identify {currentStepData.count} different things
-                    </p>
-                  )}
                 </div>
               )}
             </div>
