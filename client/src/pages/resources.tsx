@@ -11,10 +11,9 @@ import { ThoughtRecord } from "@/components/ThoughtRecord";
 import { GroundingExercises } from "@/components/GroundingExercises";
 import { MoodTracker } from "@/components/MoodTracker";
 import { RelaxationTools } from "@/components/RelaxationTools";
-import { AnxietyGuide } from "@/components/AnxietyGuide";
-import { SleepAnxietyGuide } from "@/components/SleepAnxietyGuide";
-import { LifestyleGuide } from "@/components/LifestyleGuide";
-import { TestEducational } from "@/components/TestEducational";
+import { AnxietyGuideSimple } from "@/components/AnxietyGuideSimple";
+import { SleepGuideSimple } from "@/components/SleepGuideSimple";
+import { LifestyleGuideSimple } from "@/components/LifestyleGuideSimple";
 
 export default function Resources() {
   const mockUserId = "user-1";
@@ -298,8 +297,7 @@ export default function Resources() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Resources
             </Button>
-            <TestEducational />
-            {/* <AnxietyGuide /> */}
+            <AnxietyGuideSimple />
           </div>
         </div>
       )}
@@ -316,7 +314,7 @@ export default function Resources() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Resources
             </Button>
-            <SleepAnxietyGuide />
+            <SleepGuideSimple />
           </div>
         </div>
       )}
@@ -333,7 +331,7 @@ export default function Resources() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Resources
             </Button>
-            <LifestyleGuide />
+            <LifestyleGuideSimple />
           </div>
         </div>
       )}
