@@ -18,6 +18,8 @@ import { LifestyleGuideSimple } from "@/components/LifestyleGuideSimple";
 export default function Resources() {
   const mockUserId = "user-1";
   const [activeToolView, setActiveToolView] = useState<string | null>(null);
+  
+  console.log('Current activeToolView:', activeToolView);
 
   const handleExportReport = async () => {
     try {
@@ -208,7 +210,11 @@ export default function Resources() {
                   <Button 
                     variant="secondary" 
                     className="w-full justify-start p-3 h-auto"
-                    onClick={() => setActiveToolView('anxiety-guide')}
+                    onClick={() => {
+                      console.log('Clicking anxiety guide');
+                      setActiveToolView('anxiety-guide');
+                      console.log('Set state to anxiety-guide');
+                    }}
                     data-testid="button-understanding-anxiety"
                   >
                     <div className="text-left">
@@ -297,7 +303,11 @@ export default function Resources() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Resources
             </Button>
-            <AnxietyGuideSimple />
+            <div className="p-8 bg-green-100 rounded-lg text-center">
+              <h1 className="text-2xl font-bold text-green-800">TEST: Educational Content is Loading!</h1>
+              <p className="text-green-700 mt-2">If you see this, the system is working.</p>
+            </div>
+            {/* <AnxietyGuideSimple /> */}
           </div>
         </div>
       )}
