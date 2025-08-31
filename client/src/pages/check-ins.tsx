@@ -83,7 +83,15 @@ export default function CheckIns() {
 
   const form = useForm({
     resolver: zodResolver(weeklyAssessmentSchema),
-    defaultValues: Object.fromEntries(questions.map(q => [q.id, ""])),
+    defaultValues: {
+      anxietyFrequency: "",
+      worryFrequency: "",
+      depressionFrequency: "",
+      anhedoniaFrequency: "",
+      sleepQuality: "",
+      functioningLevel: "",
+    },
+    mode: "onChange",
   });
 
   const createAssessmentMutation = useMutation({
@@ -278,49 +286,35 @@ export default function CheckIns() {
                     {currentQ.question}
                   </label>
                   
-                  <Form {...form}>
-                    <FormField
-                      control={form.control}
-                      name={currentQ.id as keyof typeof form.formState.defaultValues}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <RadioGroup 
-                              value={field.value || ""} 
-                              onValueChange={(value) => {
-                                field.onChange(value);
-                              }}
-                              className="space-y-3"
-                            >
-                              {questionOptions.map((option) => (
-                                <div 
-                                  key={option.value}
-                                  className="flex items-center p-4 border border-border rounded-md hover:bg-secondary/50 cursor-pointer transition-colors"
-                                  onClick={() => {
-                                    field.onChange(option.value);
-                                  }}
-                                >
-                                  <RadioGroupItem 
-                                    value={option.value} 
-                                    id={`${currentQ.id}-${option.value}`}
-                                    className="mr-3"
-                                    data-testid={`radio-${currentQ.id}-${option.value}`}
-                                  />
-                                  <Label 
-                                    htmlFor={`${currentQ.id}-${option.value}`}
-                                    className="text-card-foreground cursor-pointer flex-1"
-                                  >
-                                    {option.label}
-                                  </Label>
-                                </div>
-                              ))}
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </Form>
+                  <div className="space-y-3">
+                    {questionOptions.map((option) => (
+                      <div 
+                        key={option.value}
+                        className={`flex items-center p-4 border rounded-md cursor-pointer transition-colors ${
+                          form.watch(currentQ.id as any) === option.value 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-border hover:bg-secondary/50'
+                        }`}
+                        onClick={() => {
+                          form.setValue(currentQ.id as any, option.value);
+                        }}
+                        data-testid={`option-${currentQ.id}-${option.value}`}
+                      >
+                        <div className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center ${
+                          form.watch(currentQ.id as any) === option.value 
+                            ? 'border-primary' 
+                            : 'border-gray-300'
+                        }`}>
+                          {form.watch(currentQ.id as any) === option.value && (
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                          )}
+                        </div>
+                        <span className="text-card-foreground flex-1">
+                          {option.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="flex justify-between pt-6">
