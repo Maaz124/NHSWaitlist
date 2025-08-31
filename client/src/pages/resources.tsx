@@ -292,7 +292,10 @@ export default function Resources() {
 
       {/* Educational Content Views */}
       {activeToolView === 'anxiety-guide' && (
-        <div className="fixed inset-0 bg-background z-50 overflow-auto">
+        <div 
+          className="fixed inset-0 bg-white dark:bg-gray-900 overflow-auto" 
+          style={{ zIndex: 9999 }}
+        >
           <div className="container max-w-4xl mx-auto p-6">
             <Button 
               variant="outline" 
@@ -303,17 +306,20 @@ export default function Resources() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Resources
             </Button>
-            <div className="p-8 bg-green-100 rounded-lg text-center">
-              <h1 className="text-2xl font-bold text-green-800">TEST: Educational Content is Loading!</h1>
-              <p className="text-green-700 mt-2">If you see this, the system is working.</p>
+            <div className="p-8 bg-green-100 rounded-lg text-center border-4 border-green-500">
+              <h1 className="text-3xl font-bold text-green-800 mb-4">✅ TEST: Educational Content is Working!</h1>
+              <p className="text-green-700 text-lg">If you can see this big green box, the system is working correctly.</p>
+              <p className="text-green-600 mt-2">State: {activeToolView}</p>
             </div>
-            {/* <AnxietyGuideSimple /> */}
           </div>
         </div>
       )}
       
       {activeToolView === 'sleep-anxiety' && (
-        <div className="fixed inset-0 bg-background z-50 overflow-auto">
+        <div 
+          className="fixed inset-0 bg-white dark:bg-gray-900 overflow-auto" 
+          style={{ zIndex: 9999 }}
+        >
           <div className="container max-w-4xl mx-auto p-6">
             <Button 
               variant="outline" 
@@ -324,13 +330,19 @@ export default function Resources() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Resources
             </Button>
-            <SleepGuideSimple />
+            <div className="p-8 bg-blue-100 rounded-lg text-center border-4 border-blue-500">
+              <h1 className="text-3xl font-bold text-blue-800 mb-4">✅ SLEEP GUIDE: Educational Content is Working!</h1>
+              <p className="text-blue-700 text-lg">Sleep & Anxiety guide would load here.</p>
+            </div>
           </div>
         </div>
       )}
       
       {activeToolView === 'lifestyle-guide' && (
-        <div className="fixed inset-0 bg-background z-50 overflow-auto">
+        <div 
+          className="fixed inset-0 bg-white dark:bg-gray-900 overflow-auto" 
+          style={{ zIndex: 9999 }}
+        >
           <div className="container max-w-4xl mx-auto p-6">
             <Button 
               variant="outline" 
@@ -341,7 +353,10 @@ export default function Resources() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Resources
             </Button>
-            <LifestyleGuideSimple />
+            <div className="p-8 bg-purple-100 rounded-lg text-center border-4 border-purple-500">
+              <h1 className="text-3xl font-bold text-purple-800 mb-4">✅ LIFESTYLE GUIDE: Educational Content is Working!</h1>
+              <p className="text-purple-700 text-lg">Lifestyle & Wellbeing guide would load here.</p>
+            </div>
           </div>
         </div>
       )}
