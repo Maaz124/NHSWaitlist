@@ -12,6 +12,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ValuesWorksheet } from "@/components/ValuesWorksheet";
+import { ProgressTracker } from "@/components/ProgressTracker";
+import { ToolkitBuilder } from "@/components/ToolkitBuilder";
+import { RelapsePlanner } from "@/components/RelapsePlanner";
+import { NhsPrepGuide } from "@/components/NhsPrepGuide";
 import { 
   ArrowLeft, 
   Clock, 
@@ -2087,6 +2091,30 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                         {activity.type === 'worksheet' && activity.id === 'values-assessment' && (
                           <div className="mt-6">
                             <ValuesWorksheet />
+                          </div>
+                        )}
+
+                        {activity.type === 'assessment' && activity.id === 'progress-review' && (
+                          <div className="mt-6">
+                            <ProgressTracker />
+                          </div>
+                        )}
+
+                        {activity.type === 'worksheet' && activity.id === 'personal-toolkit' && (
+                          <div className="mt-6">
+                            <ToolkitBuilder />
+                          </div>
+                        )}
+
+                        {activity.type === 'worksheet' && activity.id === 'relapse-prevention-plan' && (
+                          <div className="mt-6">
+                            <RelapsePlanner />
+                          </div>
+                        )}
+
+                        {activity.type === 'reading' && activity.id === 'nhs-transition-prep' && (
+                          <div className="mt-6">
+                            <NhsPrepGuide />
                           </div>
                         )}
                         
