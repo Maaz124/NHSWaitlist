@@ -1,13 +1,20 @@
+import { useState } from "react";
 import { Header } from "@/components/ui/header";
 import { TabNavigation } from "@/components/ui/tab-navigation";
 import { CrisisBanner } from "@/components/ui/crisis-banner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Gavel, GraduationCap, FileText, Check, Download } from "lucide-react";
+import { AlertTriangle, Gavel, GraduationCap, FileText, Check, Download, ArrowLeft } from "lucide-react";
 import { generateProgressReport } from "@/lib/pdf-generator";
+import { BreathingExercise } from "@/components/BreathingExercise";
+import { ThoughtRecord } from "@/components/ThoughtRecord";
+import { GroundingExercises } from "@/components/GroundingExercises";
+import { MoodTracker } from "@/components/MoodTracker";
+import { RelaxationTools } from "@/components/RelaxationTools";
 
 export default function Resources() {
   const mockUserId = "user-1";
+  const [activeToolView, setActiveToolView] = useState<string | null>(null);
 
   const handleExportReport = async () => {
     try {
@@ -27,6 +34,50 @@ export default function Resources() {
     }
   };
 
+  const renderToolView = () => {
+    switch (activeToolView) {
+      case 'breathing':
+        return <BreathingExercise />;
+      case 'thought-record':
+        return <ThoughtRecord />;
+      case 'grounding':
+        return <GroundingExercises />;
+      case 'mood-tracker':
+        return <MoodTracker />;
+      case 'relaxation':
+        return <RelaxationTools />;
+      default:
+        return null;
+    }
+  };
+
+  if (activeToolView) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <CrisisBanner />
+        <TabNavigation />
+        
+        <main className="flex-1 bg-background">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mb-8">
+              <Button 
+                variant="ghost" 
+                onClick={() => setActiveToolView(null)}
+                className="mb-4 gap-2"
+                data-testid="button-back-to-resources"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Resources
+              </Button>
+            </div>
+            {renderToolView()}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -37,7 +88,7 @@ export default function Resources() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
             <h2 className="text-2xl font-semibold text-foreground mb-2">Support Resources</h2>
-            <p className="text-muted-foreground">Additional tools and information to support your mental health journey</p>
+            <p className="text-muted-foreground">Interactive tools and information to support your mental health journey</p>
           </div>
 
           {/* Emergency Contacts */}
@@ -80,33 +131,60 @@ export default function Resources() {
                   <Button 
                     variant="secondary" 
                     className="w-full justify-start p-3 h-auto"
+                    onClick={() => setActiveToolView('breathing')}
                     data-testid="button-breathing-exercise"
                   >
                     <div className="text-left">
-                      <p className="font-medium">Breathing Exercise</p>
-                      <p className="text-sm text-muted-foreground">4-7-8 technique</p>
+                      <p className="font-medium">Breathing Exercises</p>
+                      <p className="text-sm text-muted-foreground">5 interactive techniques with timer</p>
                     </div>
                   </Button>
                   
                   <Button 
                     variant="secondary" 
                     className="w-full justify-start p-3 h-auto"
+                    onClick={() => setActiveToolView('thought-record')}
                     data-testid="button-thought-record"
                   >
                     <div className="text-left">
                       <p className="font-medium">Thought Record</p>
-                      <p className="text-sm text-muted-foreground">Challenge anxious thoughts</p>
+                      <p className="text-sm text-muted-foreground">CBT-based thought challenging</p>
                     </div>
                   </Button>
                   
                   <Button 
                     variant="secondary" 
                     className="w-full justify-start p-3 h-auto"
+                    onClick={() => setActiveToolView('grounding')}
+                    data-testid="button-grounding-exercises"
+                  >
+                    <div className="text-left">
+                      <p className="font-medium">Grounding Exercises</p>
+                      <p className="text-sm text-muted-foreground">5-4-3-2-1 & mindfulness tools</p>
+                    </div>
+                  </Button>
+                  
+                  <Button 
+                    variant="secondary" 
+                    className="w-full justify-start p-3 h-auto"
+                    onClick={() => setActiveToolView('mood-tracker')}
                     data-testid="button-mood-tracker"
                   >
                     <div className="text-left">
                       <p className="font-medium">Mood Tracker</p>
-                      <p className="text-sm text-muted-foreground">Daily wellbeing log</p>
+                      <p className="text-sm text-muted-foreground">Daily wellbeing & pattern insights</p>
+                    </div>
+                  </Button>
+                  
+                  <Button 
+                    variant="secondary" 
+                    className="w-full justify-start p-3 h-auto"
+                    onClick={() => setActiveToolView('relaxation')}
+                    data-testid="button-relaxation-tools"
+                  >
+                    <div className="text-left">
+                      <p className="font-medium">Relaxation Tools</p>
+                      <p className="text-sm text-muted-foreground">Progressive muscle & visualization</p>
                     </div>
                   </Button>
                 </div>
