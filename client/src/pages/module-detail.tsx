@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ValuesWorksheet } from "@/components/ValuesWorksheet";
 import { 
   ArrowLeft, 
   Clock, 
@@ -704,7 +705,43 @@ Choose one core value and identify:
 • One thing you could do today that aligns with this value
 • One thing you could do this week
 • One thing you could work toward this month
-• How you'll handle anxiety that arises while pursuing these value-driven actions`,
+• How you'll handle anxiety that arises while pursuing these value-driven actions
+
+**Step 6: Creating Your Values Action Plan**
+Now that you've identified your core values, let's create a concrete plan:
+
+**Your Top 3 Values:**
+1. ________________________
+2. ________________________
+3. ________________________
+
+**For Each Value, Answer:**
+• How does this value show up in your life currently?
+• What would living this value more fully look like?
+• What anxiety-related barrier is holding you back?
+• What's one small action you could take this week?
+
+**Values vs. Anxiety Decision Matrix:**
+When facing a decision, ask yourself:
+• What would I do if I were guided by my values?
+• What would I do if I were guided by my anxiety?
+• How can I take a step toward my values despite feeling anxious?
+
+**Daily Values Check-In:**
+Each evening, reflect:
+• How did I honor my values today?
+• When did anxiety pull me away from my values?
+• What's one way I can live more aligned with my values tomorrow?
+
+**Values-Based Motivation:**
+When anxiety makes you want to avoid something, remind yourself:
+• "This aligns with my value of ___________"
+• "By doing this, I'm being the person I want to be"
+• "I can feel anxious AND still act according to my values"
+• "This matters to me because ___________"
+
+**Worksheet Instructions:**
+Complete the interactive worksheet below to identify your personal values and create your action plan. Take your time with each section and be honest about what truly matters to you.`,
               reflection_questions: [
                 "Which values feel most important to you right now?",
                 "What value-driven activities have you been avoiding because of anxiety?",
@@ -1248,6 +1285,12 @@ When should you seek professional help?
                                 </div>
                               </div>
                             ))}
+                          </div>
+                        )}
+
+                        {activity.type === 'worksheet' && activity.id === 'values-assessment' && (
+                          <div className="mt-6">
+                            <ValuesWorksheet />
                           </div>
                         )}
                         
