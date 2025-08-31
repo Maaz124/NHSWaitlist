@@ -629,33 +629,115 @@ Not to eliminate anxiety completely, but to do meaningful activities despite fee
             content: {
               instructions: `Values are what give your life meaning and direction. When anxiety makes you avoid things, you often move away from your values. Let's reconnect with what matters to you:
 
-**Step 1: Life Areas**
+**Understanding Values vs. Goals:**
+• **Values** are ongoing directions (like "being a loving parent")
+• **Goals** are specific achievements (like "help my child with homework tonight")
+• Values guide your goals and give them meaning
+
+**Step 1: Life Areas Assessment**
 Rate how important each area is to you (1-10):
-• Family relationships
-• Friendships
-• Career/work
-• Education/learning
-• Health/fitness
-• Recreation/fun
-• Community involvement
-• Spirituality/personal growth
 
-**Step 2: Values in Each Area**
-For your highest-rated areas, identify your core values:
-Examples: Connection, growth, creativity, adventure, security, helping others
+**Relationships & Connection:**
+• Family relationships (spouse, children, parents, siblings)
+• Friendships and social connections
+• Intimate relationships and romance
+• Community involvement and belonging
 
-**Step 3: Current vs. Desired**
-For each important area:
-• How much are you currently living according to your values? (1-10)
-• What would be different if you were living more aligned with your values?
+**Personal Growth & Achievement:**
+• Career and work life
+• Education and learning
+• Personal development and self-improvement
+• Creativity and self-expression
 
-**Step 4: Barriers**
-What anxiety-related behaviors are keeping you from living according to your values?`,
+**Health & Well-being:**
+• Physical health and fitness
+• Mental and emotional well-being
+• Recreation, fun, and leisure
+• Self-care and relaxation
+
+**Meaning & Purpose:**
+• Spirituality or life philosophy
+• Contributing to causes you care about
+• Leaving a positive impact
+• Living authentically
+
+**Step 2: Identifying Core Values**
+For your highest-rated life areas, identify your underlying values. Here are some examples:
+
+**Connection Values:** Love, intimacy, friendship, belonging, trust, loyalty, support
+**Growth Values:** Learning, creativity, achievement, mastery, adventure, curiosity
+**Contribution Values:** Helping others, making a difference, justice, compassion, service
+**Authenticity Values:** Honesty, integrity, being true to yourself, independence
+**Security Values:** Safety, stability, predictability, financial security
+**Fun Values:** Playfulness, humor, enjoyment, spontaneity, celebration
+
+**Step 3: Values Clarification Exercise**
+Complete these sentences:
+• "I feel most alive and energized when I am..."
+• "The people I most admire tend to be..."
+• "If I had unlimited time and resources, I would spend my time..."
+• "When I look back on my life, I want to be remembered for..."
+• "The times I feel most proud of myself are when I..."
+
+**Step 4: Current vs. Desired Alignment**
+For each important life area and its associated values:
+• How much are you currently living according to these values? (1-10)
+• What specific behaviors demonstrate these values?
+• What would you be doing differently if you were fully aligned with these values?
+• What small actions could move you closer to your values?
+
+**Step 5: Anxiety as a Barrier**
+Identify how anxiety interferes with your values:
+• What value-driven activities do you avoid due to anxiety?
+• How does anxiety-driven behavior conflict with your values?
+• When has anxiety caused you to act against your values?
+
+**Examples of Values in Action:**
+• **Connection:** Reaching out to an old friend despite social anxiety
+• **Growth:** Taking a course even though you're afraid of looking stupid
+• **Authenticity:** Speaking up about something important despite fear of conflict
+• **Health:** Going to the gym even when you feel self-conscious
+• **Contribution:** Volunteering despite anxiety about meeting new people
+
+**Values-Based Goal Setting:**
+Choose one core value and identify:
+• One thing you could do today that aligns with this value
+• One thing you could do this week
+• One thing you could work toward this month
+• How you'll handle anxiety that arises while pursuing these value-driven actions`,
               reflection_questions: [
-                "What values have you been avoiding because of anxiety?",
-                "What would you do differently if anxiety wasn't holding you back?",
-                "What small step toward your values could you take this week?"
-              ]
+                "Which values feel most important to you right now?",
+                "What value-driven activities have you been avoiding because of anxiety?",
+                "How would your life look different if you let your values guide your decisions instead of your anxiety?",
+                "What's one small step toward your values you could take this week, even if it makes you anxious?",
+                "How can you use your values to motivate yourself when anxiety makes you want to avoid something?"
+              ],
+              worksheet_template: {
+                life_areas: [
+                  { area: "Family relationships", importance: 0, current_alignment: 0, values: "", barriers: "" },
+                  { area: "Friendships", importance: 0, current_alignment: 0, values: "", barriers: "" },
+                  { area: "Career/work", importance: 0, current_alignment: 0, values: "", barriers: "" },
+                  { area: "Education/learning", importance: 0, current_alignment: 0, values: "", barriers: "" },
+                  { area: "Health/fitness", importance: 0, current_alignment: 0, values: "", barriers: "" },
+                  { area: "Recreation/fun", importance: 0, current_alignment: 0, values: "", barriers: "" },
+                  { area: "Community involvement", importance: 0, current_alignment: 0, values: "", barriers: "" },
+                  { area: "Spirituality/personal growth", importance: 0, current_alignment: 0, values: "", barriers: "" }
+                ],
+                top_3_values: ["", "", ""],
+                values_in_action: {
+                  today: "",
+                  this_week: "",
+                  this_month: "",
+                  anxiety_management: ""
+                },
+                completion_statements: {
+                  most_alive: "",
+                  admire_others: "",
+                  unlimited_resources: "",
+                  remembered_for: "",
+                  feel_proud: ""
+                }
+              }
             }
           },
           {
