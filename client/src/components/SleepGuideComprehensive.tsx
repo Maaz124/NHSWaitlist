@@ -22,7 +22,8 @@ import {
   PenTool,
   Star,
   Bed,
-  Sun
+  Sun,
+  BookOpen
 } from "lucide-react";
 
 interface SleepAssessment {
