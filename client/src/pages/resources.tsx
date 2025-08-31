@@ -51,6 +51,28 @@ export default function Resources() {
         return <MoodTracker />;
       case 'relaxation':
         return <RelaxationTools />;
+      case 'anxiety-guide':
+        return (
+          <div className="p-8 bg-green-100 rounded-lg text-center border-4 border-green-500">
+            <h1 className="text-3xl font-bold text-green-800 mb-4">✅ SUCCESS: Understanding Anxiety Guide</h1>
+            <p className="text-green-700 text-lg">The educational content system is working! This would show the full Understanding Anxiety guide.</p>
+            <p className="text-green-600 mt-2">State: {activeToolView}</p>
+          </div>
+        );
+      case 'sleep-anxiety':
+        return (
+          <div className="p-8 bg-blue-100 rounded-lg text-center border-4 border-blue-500">
+            <h1 className="text-3xl font-bold text-blue-800 mb-4">✅ SUCCESS: Sleep & Anxiety Guide</h1>
+            <p className="text-blue-700 text-lg">The educational content system is working! This would show the full Sleep & Anxiety guide.</p>
+          </div>
+        );
+      case 'lifestyle-guide':
+        return (
+          <div className="p-8 bg-purple-100 rounded-lg text-center border-4 border-purple-500">
+            <h1 className="text-3xl font-bold text-purple-800 mb-4">✅ SUCCESS: Lifestyle & Wellbeing Guide</h1>
+            <p className="text-purple-700 text-lg">The educational content system is working! This would show the full Lifestyle guide.</p>
+          </div>
+        );
       default:
         return null;
     }
@@ -290,76 +312,6 @@ export default function Resources() {
         </div>
       </main>
 
-      {/* Educational Content Views */}
-      {activeToolView === 'anxiety-guide' && (
-        <div 
-          className="fixed inset-0 bg-white dark:bg-gray-900 overflow-auto" 
-          style={{ zIndex: 9999 }}
-        >
-          <div className="container max-w-4xl mx-auto p-6">
-            <Button 
-              variant="outline" 
-              onClick={() => setActiveToolView(null)}
-              className="mb-6"
-              data-testid="button-back-to-resources"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Resources
-            </Button>
-            <div className="p-8 bg-green-100 rounded-lg text-center border-4 border-green-500">
-              <h1 className="text-3xl font-bold text-green-800 mb-4">✅ TEST: Educational Content is Working!</h1>
-              <p className="text-green-700 text-lg">If you can see this big green box, the system is working correctly.</p>
-              <p className="text-green-600 mt-2">State: {activeToolView}</p>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {activeToolView === 'sleep-anxiety' && (
-        <div 
-          className="fixed inset-0 bg-white dark:bg-gray-900 overflow-auto" 
-          style={{ zIndex: 9999 }}
-        >
-          <div className="container max-w-4xl mx-auto p-6">
-            <Button 
-              variant="outline" 
-              onClick={() => setActiveToolView(null)}
-              className="mb-6"
-              data-testid="button-back-to-resources"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Resources
-            </Button>
-            <div className="p-8 bg-blue-100 rounded-lg text-center border-4 border-blue-500">
-              <h1 className="text-3xl font-bold text-blue-800 mb-4">✅ SLEEP GUIDE: Educational Content is Working!</h1>
-              <p className="text-blue-700 text-lg">Sleep & Anxiety guide would load here.</p>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {activeToolView === 'lifestyle-guide' && (
-        <div 
-          className="fixed inset-0 bg-white dark:bg-gray-900 overflow-auto" 
-          style={{ zIndex: 9999 }}
-        >
-          <div className="container max-w-4xl mx-auto p-6">
-            <Button 
-              variant="outline" 
-              onClick={() => setActiveToolView(null)}
-              className="mb-6"
-              data-testid="button-back-to-resources"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Resources
-            </Button>
-            <div className="p-8 bg-purple-100 rounded-lg text-center border-4 border-purple-500">
-              <h1 className="text-3xl font-bold text-purple-800 mb-4">✅ LIFESTYLE GUIDE: Educational Content is Working!</h1>
-              <p className="text-purple-700 text-lg">Lifestyle & Wellbeing guide would load here.</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
