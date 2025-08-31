@@ -9,11 +9,8 @@ import { Label } from "@/components/ui/label";
 import { 
   BookOpen,
   Brain,
-  Heart,
-  Zap,
   Shield,
   CheckCircle,
-  Play,
   ArrowRight,
   Lightbulb,
   AlertCircle,

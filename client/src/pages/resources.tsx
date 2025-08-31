@@ -14,6 +14,7 @@ import { RelaxationTools } from "@/components/RelaxationTools";
 import { AnxietyGuide } from "@/components/AnxietyGuide";
 import { SleepAnxietyGuide } from "@/components/SleepAnxietyGuide";
 import { LifestyleGuide } from "@/components/LifestyleGuide";
+import { TestEducational } from "@/components/TestEducational";
 
 export default function Resources() {
   const mockUserId = "user-1";
@@ -297,7 +298,8 @@ export default function Resources() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Resources
             </Button>
-            <AnxietyGuide />
+            <TestEducational />
+            {/* <AnxietyGuide /> */}
           </div>
         </div>
       )}
