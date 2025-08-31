@@ -887,41 +887,129 @@ Based on the evidence, how much do you believe the original prediction now?
             type: "assessment" as const,
             title: "Progress Assessment & Reflection",
             description: "Review your journey and celebrate your achievements",
-            estimatedMinutes: 15,
+            estimatedMinutes: 20,
             isCompleted: false,
             content: {
               instructions: `Take time to reflect on your progress through this 6-week program:
 
-**Skills Learned:**
-Review each week and identify the most helpful techniques:
-• Week 1: Understanding Anxiety - What insights were most valuable?
-• Week 2: Breathing & Relaxation - Which techniques work best for you?
-• Week 3: Cognitive Strategies - How has your thinking changed?
-• Week 4: Mindfulness & Grounding - What mindfulness practices do you enjoy?
-• Week 5: Behavioral Activation - What fears have you faced?
+**Part 1: Skills Learned**
+For each week, rate how helpful it was (1-10) and identify your key takeaways:
 
-**Changes You've Noticed:**
-• How do you handle anxiety differently now?
-• What situations feel more manageable?
+**Week 1: Understanding Anxiety**
+• What insights about anxiety were most valuable to you?
+• How has understanding the fight-flight-freeze response helped?
+• What anxiety triggers have you identified?
+• Helpfulness rating: ___/10
+
+**Week 2: Breathing & Relaxation**
+• Which breathing techniques work best for you?
+• How often do you use relaxation skills now?
+• When do you most rely on these techniques?
+• Helpfulness rating: ___/10
+
+**Week 3: Cognitive Strategies**
+• How has your thinking about anxious thoughts changed?
+• What cognitive tools do you use most often?
+• Can you challenge anxious thoughts more effectively now?
+• Helpfulness rating: ___/10
+
+**Week 4: Mindfulness & Grounding**
+• What mindfulness practices have you incorporated into daily life?
+• How does the 5-4-3-2-1 technique work for you?
+• When do you feel most present and grounded?
+• Helpfulness rating: ___/10
+
+**Week 5: Behavioral Activation**
+• What fears or avoidance behaviors have you faced?
+• How have your values guided your actions?
+• What exposure exercises have you tried?
+• Helpfulness rating: ___/10
+
+**Part 2: Changes You've Noticed**
+Rate each area before starting the program vs. now (1-10):
+
+**Anxiety Management:**
+• Before: ___/10  |  Now: ___/10
+• What specific changes have you noticed?
+
+**Daily Functioning:**
+• Before: ___/10  |  Now: ___/10  
 • How has your daily life improved?
+
+**Confidence:**
+• Before: ___/10  |  Now: ___/10
+• What situations feel more manageable now?
+
+**Relationships:**
+• Before: ___/10  |  Now: ___/10
+• How have your relationships been affected?
+
+**Work/School Performance:**
+• Before: ___/10  |  Now: ___/10
+• What changes have you noticed in your performance?
+
+**Overall Quality of Life:**
+• Before: ___/10  |  Now: ___/10
 • What are you most proud of achieving?
 
-**Remaining Challenges:**
-• What areas still feel difficult?
+**Part 3: Current Challenges Assessment**
+• What anxiety symptoms do you still struggle with?
+• What situations remain difficult for you?
+• Which coping strategies need more practice?
 • What would you like to continue working on?
 • Where might you need additional support?
 
-**Rating Your Progress:**
-• Anxiety management skills: 1-10
-• Confidence in handling anxiety: 1-10
-• Quality of life: 1-10
-• Readiness for NHS transition: 1-10`,
+**Part 4: Future Readiness**
+Rate your readiness in each area (1-10):
+• Using anxiety management tools independently: ___/10
+• Handling setbacks without professional support: ___/10
+• Maintaining progress during stressful periods: ___/10
+• Transitioning to NHS mental health services: ___/10
+• Continuing your anxiety management journey: ___/10
+
+**Part 5: Key Insights & Wisdom**
+• What is the most important thing you've learned about yourself?
+• What would you tell someone just starting this program?
+• What keeps you motivated to continue working on anxiety management?
+• How do you want to continue growing after this program?
+
+**Part 6: Success Stories**
+Describe 2-3 specific situations where you:
+1. Used your new skills successfully
+2. Did something you previously avoided due to anxiety
+3. Felt proud of how you handled an anxious moment`,
               reflection_prompts: [
-                "What is the biggest change you've made?",
+                "What is the biggest change you've made during this program?",
                 "Which week was most helpful and why?",
-                "What would you tell someone starting this program?",
-                "How do you want to continue growing?"
-              ]
+                "What advice would you give to someone starting this journey?",
+                "How do you want to continue growing after this program ends?",
+                "What are you most proud of achieving in these 6 weeks?",
+                "How will you remember and apply what you've learned?"
+              ],
+              progress_tracking: {
+                weekly_ratings: [
+                  { week: 1, helpfulness: 0, key_takeaway: "" },
+                  { week: 2, helpfulness: 0, key_takeaway: "" },
+                  { week: 3, helpfulness: 0, key_takeaway: "" },
+                  { week: 4, helpfulness: 0, key_takeaway: "" },
+                  { week: 5, helpfulness: 0, key_takeaway: "" }
+                ],
+                before_after_ratings: {
+                  anxiety_management: { before: 0, after: 0 },
+                  daily_functioning: { before: 0, after: 0 },
+                  confidence: { before: 0, after: 0 },
+                  relationships: { before: 0, after: 0 },
+                  work_performance: { before: 0, after: 0 },
+                  quality_of_life: { before: 0, after: 0 }
+                },
+                readiness_ratings: {
+                  independent_tools: 0,
+                  handle_setbacks: 0,
+                  maintain_progress: 0,
+                  nhs_transition: 0,
+                  continue_journey: 0
+                }
+              }
             }
           },
           {
@@ -929,52 +1017,261 @@ Review each week and identify the most helpful techniques:
             type: "worksheet" as const,
             title: "Creating Your Personal Anxiety Toolkit",
             description: "Compile your most effective techniques into a personalized toolkit",
-            estimatedMinutes: 20,
+            estimatedMinutes: 25,
             isCompleted: false,
             content: {
-              instructions: `Create a personalized toolkit with your most effective anxiety management strategies:
+              instructions: `Create a comprehensive, personalized toolkit with your most effective anxiety management strategies. This will be your go-to resource for managing anxiety independently.
 
-**Emergency Techniques (For Acute Anxiety):**
-Choose 2-3 techniques that work quickly:
-• Grounding techniques (5-4-3-2-1)
-• Box breathing or diaphragmatic breathing
-• Progressive muscle relaxation
-• Mindful observation
+**Section 1: Emergency Techniques (For Acute Anxiety)**
+Choose 3-5 techniques that work quickly when anxiety is high:
 
-**Daily Maintenance Strategies:**
+**Breathing Techniques:**
+□ Box breathing (4-4-4-4 pattern)
+□ Diaphragmatic breathing (belly breathing)
+□ 4-7-8 breathing (inhale 4, hold 7, exhale 8)
+□ Quick coherent breathing (5 seconds in, 5 seconds out)
+
+**Grounding Techniques:**
+□ 5-4-3-2-1 sensory grounding
+□ Physical grounding (feel feet on floor, hold an object)
+□ Mental grounding (count backwards from 100 by 7s)
+□ Cold water on wrists or face
+
+**Rapid Relaxation:**
+□ Progressive muscle relaxation (quick version)
+□ Visualization of calm place
+□ Mindful observation without judgment
+□ Positive self-talk phrases
+
+**Your Top 3 Emergency Techniques:**
+1. ________________________________
+2. ________________________________
+3. ________________________________
+
+**Section 2: Daily Maintenance Strategies**
 Select ongoing practices to prevent anxiety buildup:
-• Morning mindfulness routine
-• Regular exercise or movement
-• Evening relaxation practice
-• Weekly values-based activities
 
-**Thought Management Tools:**
+**Morning Routine (Choose 2-3):**
+□ 5-minute mindfulness meditation
+□ Gratitude journaling (3 things)
+□ Gentle stretching or yoga
+□ Intention setting for the day
+□ Breathing exercise while having coffee/tea
+□ Review daily goals aligned with values
+
+**Throughout the Day (Choose 2-3):**
+□ Hourly breathing check-ins
+□ Mindful transitions between activities
+□ Regular movement breaks
+□ Anxiety level check-ins (1-10 scale)
+□ Values-based decision making
+□ Positive self-talk reminders
+
+**Evening Routine (Choose 2-3):**
+□ Reflection on the day's successes
+□ Progressive muscle relaxation
+□ Worry time (scheduled 15 minutes)
+□ Gratitude practice
+□ Preparation for tomorrow to reduce morning anxiety
+□ Reading or calming activity
+
+**Weekly Practices (Choose 1-2):**
+□ Values assessment and goal adjustment
+□ Exposure practice (facing a small fear)
+□ Social connection activity
+□ Nature time or outdoor activity
+□ Review and update anxiety management goals
+
+**Your Daily Maintenance Plan:**
+Morning: ________________________________
+During Day: ______________________________
+Evening: ________________________________
+Weekly: _________________________________
+
+**Section 3: Thought Management Tools**
 Pick your favorite cognitive techniques:
-• Thought record worksheet
-• Challenging questions
-• Balanced thinking strategies
-• Mindful observation of thoughts
 
-**Behavioral Strategies:**
+**For Identifying Anxious Thoughts:**
+□ Thought records and journaling
+□ Mindful awareness of thinking patterns
+□ Anxiety symptom tracking
+□ Trigger identification logs
+
+**For Challenging Thoughts:**
+□ Evidence for/against worksheets
+□ Alternative perspective questions
+□ Probability estimation exercises
+□ Worst case/best case/most likely scenarios
+
+**For Balanced Thinking:**
+□ Reframing negative thoughts
+□ Self-compassion phrases
+□ Perspective-taking exercises
+□ Reality testing questions
+
+**Your Top 3 Thought Tools:**
+1. ________________________________
+2. ________________________________
+3. ________________________________
+
+**Quick Thought Challenge Questions:**
+• Is this thought realistic?
+• What evidence supports/contradicts this?
+• What would I tell a friend in this situation?
+• Will this matter in 5 years?
+
+**Section 4: Behavioral Strategies**
 Include gradual exposure and activation plans:
-• Your exposure hierarchy
-• Values-based goals
-• Behavioral experiments
-• Social connection activities
 
-**Warning Signs & Action Plan:**
-Identify early signs that anxiety is increasing:
-• Physical signs (tension, sleep changes)
-• Emotional signs (increased worry, irritability)
-• Behavioral signs (avoiding activities, isolation)
-• When you notice these signs, what will you do?`,
-              template: {
-                emergency_techniques: [],
-                daily_practices: [],
-                thought_tools: [],
-                behavioral_strategies: [],
-                warning_signs: [],
-                action_plan: ""
+**Exposure Practice:**
+□ Continue working through your exposure hierarchy
+□ Regular practice of anxiety-provoking situations
+□ Gradual increase in challenge level
+□ Behavioral experiments to test anxious predictions
+
+**Values-Based Actions:**
+□ Weekly goals aligned with your core values
+□ Regular review of values vs. anxiety-driven decisions
+□ Social activities that matter to you
+□ Work/hobby activities that bring meaning
+
+**Behavioral Activation:**
+□ Scheduling enjoyable activities
+□ Maintaining social connections
+□ Physical exercise routine
+□ Engaging in meaningful projects
+
+**Your Behavioral Strategy Plan:**
+Weekly exposure goal: ________________________
+Values-based activity: _______________________
+Social connection goal: ______________________
+Physical activity plan: ______________________
+
+**Section 5: Warning Signs & Early Intervention**
+
+**Physical Warning Signs:**
+□ Muscle tension (especially shoulders, jaw, back)
+□ Sleep changes (difficulty falling asleep, frequent waking)
+□ Appetite changes
+□ Headaches or stomach issues
+□ Fatigue or restlessness
+□ Heart racing or feeling short of breath
+
+**Emotional Warning Signs:**
+□ Increased worry or racing thoughts
+□ Irritability or mood swings
+□ Feeling overwhelmed or hopeless
+□ Difficulty concentrating
+□ Increased sensitivity to criticism
+□ Feeling disconnected from others
+
+**Behavioral Warning Signs:**
+□ Avoiding activities you usually enjoy
+□ Procrastinating on important tasks
+□ Isolating from friends and family
+□ Increased use of substances or unhealthy coping
+□ Changes in work or school performance
+□ Seeking excessive reassurance
+
+**Your Personal Warning Signs:**
+1. ________________________________
+2. ________________________________
+3. ________________________________
+
+**Early Intervention Action Plan:**
+When I notice 1-2 warning signs:
+• ________________________________
+• ________________________________
+
+When I notice 3+ warning signs:
+• ________________________________
+• ________________________________
+• Consider reaching out to: _______________
+
+**Section 6: Support Network & Resources**
+
+**Personal Support:**
+• Trusted friend: ________________________
+• Family member: _______________________
+• Professional contact: ___________________
+
+**Crisis Resources:**
+• Crisis Text Line: Text HOME to 741741
+• Samaritans: 116 123 (free, 24/7)
+• NHS 111 for urgent but non-emergency help
+• 999 for immediate emergency situations
+
+**Self-Help Resources:**
+• Apps I find helpful: ____________________
+• Books or websites: ____________________
+• Online communities: ___________________
+
+**Section 7: Toolkit Quick Reference Card**
+Create a summary card to keep with you:
+
+**When anxiety hits, try:**
+1. ________________________________
+2. ________________________________
+3. ________________________________
+
+**Daily practices:**
+________________________________
+
+**Emergency contacts:**
+________________________________
+
+**Reminder phrases:**
+• ________________________________
+• ________________________________`,
+              toolkit_builder: {
+                emergency_techniques: {
+                  breathing: [],
+                  grounding: [],
+                  relaxation: [],
+                  selected: []
+                },
+                daily_practices: {
+                  morning: [],
+                  throughout_day: [],
+                  evening: [],
+                  weekly: []
+                },
+                thought_tools: {
+                  identifying: [],
+                  challenging: [],
+                  balancing: [],
+                  quick_questions: []
+                },
+                behavioral_strategies: {
+                  exposure_goal: "",
+                  values_activity: "",
+                  social_goal: "",
+                  physical_plan: ""
+                },
+                warning_signs: {
+                  physical: [],
+                  emotional: [],
+                  behavioral: [],
+                  personal_top3: []
+                },
+                action_plan: {
+                  early_signs: [],
+                  multiple_signs: [],
+                  emergency_contact: ""
+                },
+                support_network: {
+                  trusted_friend: "",
+                  family_member: "",
+                  professional: "",
+                  helpful_apps: "",
+                  resources: ""
+                },
+                quick_reference: {
+                  emergency_steps: [],
+                  daily_practice: "",
+                  emergency_contact: "",
+                  reminder_phrases: []
+                }
               }
             }
           },
@@ -983,52 +1280,310 @@ Identify early signs that anxiety is increasing:
             type: "worksheet" as const,
             title: "Relapse Prevention Plan",
             description: "Prepare strategies for managing setbacks and maintaining progress",
-            estimatedMinutes: 15,
+            estimatedMinutes: 20,
             isCompleted: false,
             content: {
-              instructions: `Recovery isn't linear - there will be ups and downs. A relapse prevention plan helps you navigate difficult periods:
+              instructions: `Recovery isn't linear - there will be ups and downs. A comprehensive relapse prevention plan helps you navigate difficult periods and maintain your progress long-term.
 
-**Understanding Setbacks:**
-Setbacks are normal and don't erase your progress. They're opportunities to practice your skills.
+**Section 1: Understanding Setbacks**
+Setbacks are a normal part of recovery and don't erase your progress. They're opportunities to practice your skills and learn more about yourself.
 
-**High-Risk Situations:**
-When might your anxiety be more challenging?
-• Major life changes (job, relationship, health)
-• Stressful periods (exams, deadlines, conflicts)
-• Seasonal changes or anniversaries
-• Physical illness or fatigue
+**What a Setback IS:**
+• A temporary return of stronger anxiety symptoms
+• Using old coping patterns during stress
+• Feeling like you've "lost" some progress
+• Having a particularly difficult day, week, or period
 
-**Early Warning System:**
-How will you know if anxiety is becoming problematic again?
-• Severity: Anxiety interfering with daily activities
-• Duration: Anxiety lasting weeks without improvement
-• Avoidance: Returning to old avoidance patterns
-• Isolation: Withdrawing from support systems
+**What a Setback IS NOT:**
+• A sign that you've failed or the program didn't work
+• Permanent loss of all your progress
+• A reason to give up on your anxiety management
+• Evidence that you "can't get better"
 
-**Action Steps for Setbacks:**
-1. **Immediate Response:** Use your emergency toolkit
-2. **Short-term:** Return to daily practices and review your progress
-3. **Medium-term:** Seek additional support if needed
-4. **Long-term:** Adjust your maintenance plan
+**Setback Mindset Reframe:**
+Instead of: "I'm back to square one"
+Try: "I'm having a tough time and can use this as practice"
 
-**Support Network:**
-Who can you turn to for support?
-• Trusted friends or family members
-• Mental health professionals
-• Support groups or online communities
-• NHS services
+Instead of: "This proves I can't handle anxiety"
+Try: "This shows I'm human and need to use my tools more consistently"
 
-**Professional Support Triggers:**
-When should you seek professional help?
-• Suicidal thoughts or self-harm urges
-• Inability to function in daily life for 2+ weeks
-• Substance use to cope with anxiety
-• Anxiety significantly worsening despite using tools`,
-              emergency_contacts: [
-                "Crisis Line: 116 123 (Samaritans)",
-                "NHS 111 for urgent but non-emergency help",
-                "999 for immediate emergency situations"
-              ]
+**Section 2: High-Risk Situations**
+Identify when your anxiety might be more challenging:
+
+**Life Transitions:**
+□ Starting a new job or school
+□ Moving to a new home
+□ Relationship changes (marriage, breakup, divorce)
+□ Health issues (yours or family members)
+□ Financial stress or changes
+□ Loss or grief
+
+**Stressful Periods:**
+□ Work deadlines or high-pressure projects
+□ Exam periods or important presentations
+□ Family conflicts or relationship problems
+□ Holiday seasons or special events
+□ Anniversary dates of difficult events
+□ Legal issues or major decisions
+
+**Physical Factors:**
+□ Illness or injury
+□ Hormonal changes
+□ Sleep deprivation
+□ Medication changes
+□ Substance use
+□ Poor nutrition or dehydration
+
+**Environmental Factors:**
+□ Seasonal changes (especially winter)
+□ Weather extremes
+□ Major world events or news
+□ Changes in living situation
+□ Social isolation
+□ Information overload
+
+**Your Personal High-Risk Situations:**
+1. ________________________________
+2. ________________________________
+3. ________________________________
+4. ________________________________
+
+**Section 3: Early Warning System**
+Recognize when anxiety is becoming problematic again:
+
+**Level 1 - Yellow Alert (Mild Increase):**
+□ Slight increase in worry or tension
+□ Occasional difficulty sleeping
+□ Minor avoidance of some activities
+□ Feeling slightly more stressed than usual
+□ Forgetting to use coping strategies occasionally
+
+**Level 2 - Orange Alert (Moderate Increase):**
+□ Noticeable increase in physical anxiety symptoms
+□ Sleep problems several times per week
+□ Avoiding important activities more frequently
+□ Difficulty concentrating at work or school
+□ Feeling overwhelmed by daily tasks
+□ Increased irritability or mood changes
+
+**Level 3 - Red Alert (Significant Increase):**
+□ Severe anxiety symptoms interfering with daily life
+□ Sleep problems most nights
+□ Avoiding multiple important activities
+□ Unable to function normally at work/school/home
+□ Complete abandonment of coping strategies
+□ Thoughts of self-harm or substance use
+
+**Your Personal Warning Signs:**
+Early signs (Yellow): ________________________
+Moderate signs (Orange): ____________________
+Severe signs (Red): _________________________
+
+**Section 4: Action Plans for Each Level**
+
+**Yellow Alert Response Plan:**
+□ Increase daily mindfulness/breathing practice
+□ Review and restart neglected coping strategies
+□ Ensure good sleep hygiene and self-care
+□ Reach out to a friend or family member
+□ Schedule enjoyable or meaningful activities
+□ Review your personal toolkit
+
+Your specific Yellow Alert plan:
+1. ________________________________
+2. ________________________________
+3. ________________________________
+
+**Orange Alert Response Plan:**
+□ Implement emergency techniques more frequently
+□ Temporarily reduce non-essential commitments
+□ Increase social support and check-ins
+□ Consider speaking with a healthcare provider
+□ Review and adjust your routine
+□ Use your support network more actively
+
+Your specific Orange Alert plan:
+1. ________________________________
+2. ________________________________
+3. ________________________________
+
+**Red Alert Response Plan:**
+□ Seek professional help immediately
+□ Inform trusted people about your struggles
+□ Consider time off work/school if possible
+□ Use crisis resources if needed
+□ Return to basics: sleep, eat, breathe, move
+□ Remove additional stressors temporarily
+
+Your specific Red Alert plan:
+1. ________________________________
+2. ________________________________
+3. ________________________________
+
+**Section 5: Building Resilience**
+Strengthen your ability to bounce back:
+
+**Daily Resilience Habits:**
+□ Consistent sleep schedule (even on weekends)
+□ Regular physical activity or movement
+□ Healthy eating patterns
+□ Daily mindfulness or relaxation practice
+□ Social connection (even brief check-ins)
+□ Time in nature or outdoors
+□ Engaging in meaningful activities
+
+**Weekly Resilience Activities:**
+□ Values assessment and goal adjustment
+□ Social activities with friends or family
+□ Hobbies or creative activities
+□ Planning and preparation for the week ahead
+□ Review of what's working and what needs adjustment
+□ Time for rest and recovery
+
+**Monthly Resilience Review:**
+□ Assess overall mental health and progress
+□ Adjust goals and strategies as needed
+□ Plan for upcoming stressors or challenges
+□ Celebrate achievements and progress
+□ Connect with healthcare providers if needed
+
+**Section 6: Support Network Planning**
+
+**Primary Support Person:**
+Name: _________________________________
+Relationship: ____________________________
+Phone: ________________________________
+When to contact: ________________________
+
+**Secondary Support People:**
+Name: _________________________________
+Name: _________________________________
+Name: _________________________________
+
+**Professional Support:**
+GP: ___________________________________
+Mental health professional: ________________
+Crisis contact: ____________________________
+
+**Support Group/Community:**
+Online community: _______________________
+Local group: ____________________________
+Mental health charity: ____________________
+
+**Section 7: Professional Help Triggers**
+Seek professional help when:
+
+**Immediate/Crisis Situations:**
+□ Thoughts of suicide or self-harm
+□ Inability to ensure personal safety
+□ Severe panic attacks lasting hours
+□ Psychotic symptoms (hallucinations, delusions)
+□ Substance abuse to cope with anxiety
+
+**Urgent Situations (Within 1-2 weeks):**
+□ Inability to function at work/school for 1+ weeks
+□ Complete isolation from friends and family
+□ Severe sleep deprivation (less than 4 hours for several nights)
+□ Anxiety preventing basic self-care
+□ Significant increase in physical symptoms
+
+**Non-Urgent Professional Support:**
+□ Moderate symptoms persisting for 3+ weeks
+□ Feeling stuck despite using all your tools
+□ Wanting to learn additional coping strategies
+□ Major life changes requiring extra support
+□ Medication review or adjustment needed
+
+**Section 8: Long-Term Success Strategies**
+
+**3-Month Goals:**
+□ Maintain daily anxiety management routine
+□ Continue practicing exposure exercises
+□ Build and maintain social connections
+□ Monitor and adjust strategies as needed
+
+**6-Month Goals:**
+□ Handle minor setbacks independently
+□ Pursue values-based goals despite anxiety
+□ Maintain progress during stressful periods
+□ Develop additional coping strategies
+
+**1-Year Goals:**
+□ Integrate anxiety management into lifestyle
+□ Support others with similar struggles
+□ Pursue major life goals without anxiety interference
+□ Maintain overall life satisfaction and well-being
+
+**Your Personal Long-Term Goals:**
+3 months: ______________________________
+6 months: ______________________________
+1 year: ________________________________
+
+**Section 9: Emergency Crisis Resources**
+
+**UK Crisis Contacts:**
+• **Samaritans:** 116 123 (free, 24/7)
+• **Crisis Text Line:** Text SHOUT to 85258
+• **NHS 111:** For urgent but non-emergency help
+• **999:** For immediate emergency situations
+
+**Mental Health Helplines:**
+• **Mind Info Line:** 0300 123 3393
+• **Anxiety UK:** 03444 775 774
+• **Rethink Mental Illness:** 0300 5000 927
+• **CALM (Campaign Against Living Miserably):** 0800 58 58 58
+
+**Online Resources:**
+• **NHS Mental Health Services:** nhs.uk/mental-health
+• **Mind:** mind.org.uk
+• **Anxiety UK:** anxietyuk.org.uk
+• **Mental Health Foundation:** mentalhealth.org.uk
+
+**Apps for Support:**
+• **SilverCloud:** NHS-approved therapy platform
+• **Sanvello:** Anxiety and mood tracking
+• **Headspace:** Mindfulness and meditation
+• **Calm:** Sleep and relaxation
+
+**Section 10: Relapse Prevention Checklist**
+□ I've identified my personal high-risk situations
+□ I know my early warning signs
+□ I have action plans for different levels of difficulty
+□ I've built a strong support network
+□ I know when to seek professional help
+□ I have crisis resources easily accessible
+□ I've set realistic long-term goals
+□ I understand that setbacks are normal
+□ I'm committed to ongoing self-care and practice`,
+              relapse_prevention: {
+                high_risk_situations: [],
+                warning_signs: {
+                  yellow: [],
+                  orange: [],
+                  red: []
+                },
+                action_plans: {
+                  yellow: [],
+                  orange: [],
+                  red: []
+                },
+                support_network: {
+                  primary_contact: "",
+                  secondary_contacts: [],
+                  professional_contacts: [],
+                  community_resources: []
+                },
+                long_term_goals: {
+                  three_months: "",
+                  six_months: "",
+                  one_year: ""
+                },
+                resilience_habits: {
+                  daily: [],
+                  weekly: [],
+                  monthly: []
+                }
+              }
             }
           },
           {
@@ -1036,43 +1591,284 @@ When should you seek professional help?
             type: "reading" as const,
             title: "Preparing for NHS Mental Health Services",
             description: "Get ready for your transition to NHS care with confidence",
-            estimatedMinutes: 10,
+            estimatedMinutes: 15,
             isCompleted: false,
             content: {
-              text: `As you transition to NHS mental health services, you're in a much stronger position than when you started this program. Here's how to make the most of your NHS care:
+              text: `As you transition to NHS mental health services, you're in a much stronger position than when you started this program. Here's your comprehensive guide to making the most of NHS care:
 
-**What to Expect from NHS Services:**
-• Initial assessment with a mental health professional
-• Treatment options may include therapy (CBT, counseling) or medication
-• Waiting times vary, but you now have skills to manage during any wait
-• You may be offered group therapy or individual sessions
+**Section 1: Understanding NHS Mental Health Services**
 
-**Preparing for Your Assessment:**
-• Bring a summary of what you've learned in this program
-• Share which techniques have been most helpful
-• Discuss areas where you still need support
-• Be honest about your current anxiety levels and functioning
+**Primary Mental Health Team (PMHT):**
+• Often the first point of contact for mental health support
+• Provides assessments, brief interventions, and treatment planning
+• May offer cognitive behavioral therapy (CBT), counseling, or other therapies
+• Can refer to more specialist services if needed
 
-**Questions to Ask:**
-• What treatment options are available?
+**Community Mental Health Teams (CMHT):**
+• For people with more complex or severe mental health needs
+• Multi-disciplinary teams including psychiatrists, nurses, social workers
+• Provide ongoing support and treatment in the community
+• Coordinate care between different services
+
+**IAPT Services (Improving Access to Psychological Therapies):**
+• Focus on evidence-based psychological treatments
+• Primarily for anxiety and depression
+• Often shorter-term, structured therapy programs
+• May include group therapy options
+
+**Crisis Services:**
+• For urgent mental health support
+• Available 24/7 in most areas
+• Include crisis teams, safe havens, and crisis cafes
+• Alternative to A&E for mental health emergencies
+
+**Section 2: What to Expect from Your Assessment**
+
+**The Initial Assessment Process:**
+• Usually 1-2 hours with a mental health professional
+• Discussion of your current symptoms and their impact
+• Review of your mental health history
+• Assessment of risk factors and support systems
+• Development of initial treatment recommendations
+
+**What They'll Ask About:**
+• Current anxiety symptoms and triggers
+• How anxiety affects your daily life
+• Previous mental health treatment or support
+• Physical health and medication
+• Social support and relationships
+• Work, education, and housing situation
+• Risk factors and safety concerns
+
+**Section 3: Preparing for Your Assessment**
+
+**Documents to Bring:**
+□ GP referral letter (if you have one)
+□ List of current medications
+□ Summary of this 6-week program and what you've learned
+□ Your personal anxiety toolkit
+□ Any previous mental health records
+□ List of questions you want to ask
+
+**Your 6-Week Program Summary:**
+Create a one-page summary including:
+• Techniques that have been most helpful
+• Situations you've successfully managed
+• Areas where you still need support
+• Your current anxiety levels and functioning
+• Goals for ongoing treatment
+
+**Information to Share:**
+□ Specific anxiety symptoms and their frequency
+□ Triggers you've identified
+□ Coping strategies you've developed
+□ Progress you've made and challenges remaining
+□ Your values and treatment goals
+□ Support systems you have in place
+
+**Section 4: Treatment Options You Might Be Offered**
+
+**Cognitive Behavioral Therapy (CBT):**
+• Evidence-based treatment for anxiety disorders
+• Focuses on changing unhelpful thought and behavior patterns
+• Usually 12-20 sessions over several months
+• May be individual or group therapy
+• Builds on skills you've already learned in this program
+
+**Other Psychological Therapies:**
+• **Acceptance and Commitment Therapy (ACT):** Focus on accepting anxiety while pursuing values
+• **Mindfulness-Based Therapies:** Structured mindfulness programs
+• **Counseling:** Supportive talking therapy to explore feelings and experiences
+• **EMDR:** For anxiety related to trauma or specific incidents
+
+**Medication Options:**
+• **SSRIs (Selective Serotonin Reuptake Inhibitors):** Common first-line treatment
+• **SNRIs:** Alternative antidepressants that can help with anxiety
+• **Beta-blockers:** For physical symptoms of anxiety
+• **Short-term options:** Rarely prescribed, only for severe cases
+
+**Group Therapy Options:**
+• Anxiety management groups
+• Social anxiety groups
+• Mindfulness or relaxation groups
+• Peer support groups
+
+**Section 5: Questions to Ask During Your Assessment**
+
+**About Treatment Options:**
+• What treatment approaches do you recommend for my specific type of anxiety?
 • How long is the typical treatment course?
-• What should I do if I'm struggling while waiting for treatment?
-• Are there any support groups I could join?
+• What are the benefits and potential side effects of recommended treatments?
+• Are there group therapy options available?
+• What happens if the first treatment approach doesn't work?
 
-**Your Strengths Going Forward:**
-• You understand anxiety and how it affects you
-• You have a toolkit of proven techniques
-• You've practiced facing your fears
-• You know your values and what matters to you
-• You have a relapse prevention plan
+**About Waiting Times:**
+• How long is the wait for treatment to begin?
+• What support is available while I'm waiting?
+• Can I continue using the skills I've learned in this program?
+• Are there any resources or support groups I can access immediately?
 
-**Continuing Your Progress:**
-• Keep using the techniques that work for you
-• Continue with your exposure hierarchy
-• Maintain your daily anxiety management practices
+**About Ongoing Support:**
+• What should I do if I'm struggling between appointments?
+• How often will I be seen once treatment begins?
+• What crisis support is available if I need it?
+• How will my progress be monitored?
+
+**About Your Role:**
+• What can I do to prepare for treatment?
+• How can I make the most of therapy sessions?
+• What should I do between sessions?
+• How involved will my family or friends be in treatment?
+
+**Section 6: Your Strengths Going Forward**
+
+**Skills You've Developed:**
+□ Understanding of anxiety and how it affects you
+□ Toolkit of proven anxiety management techniques
+□ Experience with breathing and relaxation exercises
+□ Cognitive strategies for challenging anxious thoughts
+□ Mindfulness and grounding skills
+□ Values-based decision making
+□ Exposure and behavioral activation experience
+□ Relapse prevention planning
+
+**Personal Insights:**
+□ Knowledge of your anxiety triggers
+□ Understanding of your warning signs
+□ Awareness of your personal values
+□ Recognition of your support systems
+□ Experience with what works and what doesn't
+
+**Progress You've Made:**
+□ Situations you can now handle that you couldn't before
+□ Improved confidence in managing anxiety
+□ Better understanding of yourself and your needs
+□ Stronger sense of what you want from life
+
+**Section 7: Continuing Your Progress While Waiting**
+
+**Maintain Your Daily Practices:**
+□ Continue using breathing and relaxation techniques
+□ Keep practicing mindfulness and grounding
+□ Maintain your values-based goal setting
+□ Use your personal anxiety toolkit regularly
+
+**Stay Connected:**
+□ Keep in touch with your support network
+□ Continue social activities and relationships
+□ Engage with online communities if helpful
+□ Consider peer support groups
+
+**Keep Learning:**
+□ Read self-help books on anxiety management
+□ Use mental health apps for additional support
+□ Practice the skills you've learned consistently
+□ Try new anxiety management techniques
+
+**Monitor Your Progress:**
+□ Keep track of your anxiety levels and triggers
+□ Note what techniques are working well
+□ Document any new challenges or successes
+□ Prepare updates for your first NHS appointment
+
+**Section 8: Making the Most of NHS Treatment**
+
+**Be an Active Participant:**
+• Come prepared to sessions with questions and updates
+• Practice techniques between sessions
+• Be honest about what's working and what isn't
+• Ask for clarification if you don't understand something
+
+**Set Clear Goals:**
+• Work with your therapist to set specific, achievable goals
+• Regularly review and adjust goals as you progress
+• Celebrate small wins along the way
+• Be patient with the process
+
+**Use Your Existing Skills:**
+• Share the techniques you've learned in this program
+• Build on the foundation you've already created
+• Integrate new skills with what you already know
+• Maintain the progress you've made
+
+**Section 9: Advocacy and Self-Advocacy**
+
+**Know Your Rights:**
+• You have the right to be involved in decisions about your care
+• You can ask for a second opinion if needed
+• You can request a different therapist if the fit isn't right
+• You can access your medical records
+
+**Speak Up for Yourself:**
+• Express your preferences for treatment approaches
+• Share what you've learned about yourself
+• Ask questions if something isn't clear
+• Request additional support if you need it
+
+**Get Support with Advocacy:**
+• Bring a trusted friend or family member to appointments
+• Contact mental health charities for advocacy support
+• Use patient advice and liaison services (PALS) if needed
+• Join patient groups or forums for peer support
+
+**Section 10: Emergency and Crisis Support**
+
+**When to Seek Urgent Help:**
+□ Thoughts of suicide or self-harm
+□ Severe panic attacks that won't subside
+□ Inability to function or care for yourself
+□ Substance use to cope with anxiety
+□ Feeling unsafe or out of control
+
+**How to Access Crisis Support:**
+• **NHS 111:** For urgent but non-emergency mental health needs
+• **Crisis Team:** Contact through your GP or NHS 111
+• **A&E:** For immediate emergencies
+• **Samaritans:** 116 123 for emotional support anytime
+
+**Crisis Planning:**
+• Have emergency numbers easily accessible
+• Identify early warning signs of crisis
+• Plan who to contact and when
+• Know where your nearest crisis services are located
+
+**Section 11: Long-Term Success with NHS Services**
+
+**Building a Good Relationship with Your Mental Health Team:**
+• Be honest and open about your experiences
+• Follow through with agreed plans and homework
+• Communicate any concerns or difficulties
+• Appreciate that building therapeutic relationships takes time
+
+**Continuing Self-Care:**
+• Maintain the healthy habits you've developed
+• Keep using your anxiety management toolkit
 • Stay connected with your support network
+• Continue pursuing your values and goals
 
-**Remember:** You're not starting from scratch. You're building on a strong foundation of skills and self-awareness.`
+**Planning for the Future:**
+• Work towards independence in managing your anxiety
+• Develop a long-term maintenance plan
+• Know how to access support if you need it again
+• Consider how you might help others with similar struggles
+
+**Remember: You're Not Starting from Scratch**
+You're building on a strong foundation of:
+• Self-awareness and understanding
+• Proven anxiety management skills
+• Personal insights and strategies
+• Progress and achievements
+• Resilience and determination
+
+**Your Next Steps:**
+1. Complete your program summary document
+2. Gather any relevant medical records
+3. Prepare your list of questions
+4. Continue practicing your anxiety management skills
+5. Stay connected with your support network
+6. Approach NHS services with confidence in what you've already achieved
+
+You're ready for this next phase of your mental health journey. Trust in the progress you've made and the skills you've developed. NHS services will build on this strong foundation to support your continued growth and recovery.`
             }
           }
         ]
