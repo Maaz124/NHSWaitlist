@@ -286,14 +286,19 @@ export default function CheckIns() {
                         <FormItem>
                           <FormControl>
                             <RadioGroup 
-                              value={field.value} 
-                              onValueChange={field.onChange}
+                              value={field.value || ""} 
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                              }}
                               className="space-y-3"
                             >
                               {questionOptions.map((option) => (
                                 <div 
                                   key={option.value}
                                   className="flex items-center p-4 border border-border rounded-md hover:bg-secondary/50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    field.onChange(option.value);
+                                  }}
                                 >
                                   <RadioGroupItem 
                                     value={option.value} 
