@@ -1893,7 +1893,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
   const handleActivityComplete = (activityId: string) => {
     // In real implementation, this would update the backend
-    console.log(`Completed activity: ${activityId}`);
+    // Activity completed - update progress
   };
 
   const handleStartActivity = (activityId: string) => {

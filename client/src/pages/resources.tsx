@@ -34,7 +34,7 @@ export default function Resources() {
       const doc = generateProgressReport(report.reportData);
       doc.save("waitlist-companion-progress-report.pdf");
     } catch (error) {
-      console.error("Error exporting report:", error);
+      alert("Error generating report. Please try again.");
     }
   };
 

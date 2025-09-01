@@ -6,7 +6,7 @@ import { CrisisBanner } from "@/components/ui/crisis-banner";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -59,19 +59,19 @@ export default function Dashboard() {
       const doc = generateProgressReport(report.reportData);
       doc.save("waitlist-companion-progress-report.pdf");
     } catch (error) {
-      console.error("Error exporting report:", error);
+      alert("Error generating report. Please try again.");
     }
   };
 
   const handleLogMood = () => {
     // In a real app, this would save to the database
-    console.log("Mood logged:", { 
+    const moodData = { 
       mood: currentMood, 
       anxiety: anxietyLevel, 
       energy: energyLevel, 
       note: moodNote,
       timestamp: new Date().toISOString()
-    });
+    };
     
     // Reset form and close dialog
     setCurrentMood(5);
@@ -333,9 +333,11 @@ export default function Dashboard() {
                             <Wind className="w-5 h-5 text-primary" />
                             Quick Breathing Exercise
                           </DialogTitle>
+                          <DialogDescription>
+                            Choose a breathing technique to help you relax and reduce anxiety.
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
-                          <p className="text-muted-foreground">Choose a breathing technique to help you relax and reduce anxiety.</p>
                           <div className="space-y-3">
                             <Button 
                               onClick={handleBreathingExercise}
@@ -389,6 +391,9 @@ export default function Dashboard() {
                             <Smile className="w-5 h-5 text-primary" />
                             Quick Mood Check-In
                           </DialogTitle>
+                          <DialogDescription>
+                            Log your current mood and anxiety levels for tracking your wellbeing.
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-6">
                           <div>
@@ -488,6 +493,9 @@ export default function Dashboard() {
                             <BarChart3 className="w-5 h-5 text-primary" />
                             Quick Progress Overview
                           </DialogTitle>
+                          <DialogDescription>
+                            View your current progress through the anxiety support program.
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-6">
                           <div className="grid grid-cols-2 gap-4">
@@ -563,6 +571,9 @@ export default function Dashboard() {
                             <Headphones className="w-5 h-5 text-primary" />
                             Get Support Now
                           </DialogTitle>
+                          <DialogDescription>
+                            Access immediate support and emergency contacts when you need help.
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
                           <p className="text-muted-foreground">Get immediate support or access additional resources.</p>
