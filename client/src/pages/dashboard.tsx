@@ -15,6 +15,9 @@ import { Calendar, Shield, TrendingUp, Clock, Bell, GraduationCap, FileText, Win
 import { Link, useLocation } from "wouter";
 import { generateProgressReport } from "@/lib/pdf-generator";
 import { cn } from "@/lib/utils";
+import heroImage from "@assets/generated_images/peaceful_mental_health_hero_ce9d4b3d.png";
+import supportImage from "@assets/generated_images/supportive_community_wellness_46a91c38.png";
+import wellnessImage from "@assets/generated_images/mindful_breathing_wellness_a8cd19ea.png";
 
 export default function Dashboard() {
   // For MVP, using a mock user ID - in production this would come from auth
@@ -120,11 +123,36 @@ export default function Dashboard() {
       
       <main className="flex-1 bg-background">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-foreground mb-2">
-              Welcome back, {user.firstName}
-            </h2>
-            <p className="text-muted-foreground">Here's your progress on your interim care journey</p>
+          {/* Hero Welcome Section with Image */}
+          <div className="relative mb-8 rounded-2xl overflow-hidden bg-gradient-to-r from-primary/5 to-accent/5 border">
+            <div className="absolute inset-0">
+              <img 
+                src={heroImage} 
+                alt="Peaceful mental health support" 
+                className="w-full h-full object-cover opacity-40"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-background/60" />
+            </div>
+            <div className="relative p-8 md:p-12">
+              <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-3">
+                Welcome back, {user.firstName}
+              </h2>
+              <p className="text-lg text-muted-foreground mb-6 max-w-2xl">
+                Continue your journey toward better mental health. You're making progress every day, and we're here to support you.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/anxiety-track">
+                  <Button className="bg-primary hover:bg-primary/90">
+                    Continue Your Program
+                  </Button>
+                </Link>
+                <Link href="/check-ins">
+                  <Button variant="outline" className="bg-background/50 backdrop-blur-sm">
+                    Take Check-in
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
 
           {/* Stats Grid */}
@@ -310,7 +338,15 @@ export default function Dashboard() {
               </Card>
 
               {/* Quick Actions */}
-              <Card>
+              <Card className="overflow-hidden">
+                <div className="relative h-24">
+                  <img 
+                    src={wellnessImage} 
+                    alt="Mindful breathing wellness" 
+                    className="w-full h-full object-cover opacity-60"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-background/40" />
+                </div>
                 <CardContent className="p-6">
                   <h3 className="text-xl font-semibold text-card-foreground mb-4">Quick Actions</h3>
                   
