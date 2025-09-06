@@ -264,8 +264,22 @@ export default function CheckIns() {
       <main className="flex-1 bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-foreground mb-2">Weekly Check-ins</h2>
-            <p className="text-muted-foreground">Regular assessments to monitor your wellbeing and ensure your safety</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold text-foreground mb-2">Weekly Check-ins</h2>
+                <p className="text-muted-foreground">Regular assessments to monitor your wellbeing and ensure your safety</p>
+              </div>
+              {assessments.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowHistory(true)}
+                  data-testid="button-view-history"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  View History
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Current Check-in Form */}
