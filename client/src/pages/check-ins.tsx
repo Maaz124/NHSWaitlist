@@ -368,7 +368,7 @@ export default function CheckIns() {
 
       {/* Assessment Details Dialog */}
       <Dialog open={showAssessmentDetail} onOpenChange={setShowAssessmentDetail}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               Week {selectedAssessment?.weekNumber} Assessment Details
@@ -391,7 +391,7 @@ export default function CheckIns() {
                 </div>
                 <div>
                   <span className="font-medium text-muted-foreground">Risk Score:</span>
-                  <p>{selectedAssessment.riskScore}/12</p>
+                  <p>{selectedAssessment.riskScore}/15</p>
                 </div>
                 <div>
                   <span className="font-medium text-muted-foreground">Week Number:</span>
