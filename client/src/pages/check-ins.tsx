@@ -234,7 +234,7 @@ export default function CheckIns() {
                             console.log('Clicked assessment:', assessment);
                             setSelectedAssessment(assessment);
                             setShowAssessmentDetail(true);
-                            console.log('Dialog should open now');
+                            console.log('Dialog should open now, state:', true);
                           }}
                           data-testid={`button-view-assessment-${assessment.weekNumber}`}
                         >
@@ -369,7 +369,11 @@ export default function CheckIns() {
       <Footer />
 
       {/* Assessment Details Dialog */}
-      <Dialog open={showAssessmentDetail} onOpenChange={setShowAssessmentDetail}>
+      {console.log('Rendering dialog, open state:', showAssessmentDetail, 'selectedAssessment:', selectedAssessment)}
+      <Dialog open={showAssessmentDetail} onOpenChange={(open) => {
+        console.log('Dialog onOpenChange called with:', open);
+        setShowAssessmentDetail(open);
+      }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
