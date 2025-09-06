@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import heroImage from "@assets/generated_images/peaceful_mental_health_hero_ce9d4b3d.png";
 import supportImage from "@assets/generated_images/supportive_community_wellness_46a91c38.png";
 import wellnessImage from "@assets/generated_images/mindful_breathing_wellness_a8cd19ea.png";
+import { Footer } from "@/components/ui/footer";
 
 export default function Dashboard() {
   // For MVP, using a mock user ID - in production this would come from auth
@@ -743,28 +744,7 @@ export default function Dashboard() {
         </div>
       </main>
 
-      <footer className="bg-card border-t border-border py-6">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center space-x-6 mb-4 md:mb-0">
-              <p className="text-sm text-muted-foreground">© 2024 Waitlist Companion™</p>
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Terms of Service
-              </a>
-            </div>
-            <div className="flex items-center space-x-4">
-              <p className="text-xs text-muted-foreground">Powered by rethink.org</p>
-              <div className="text-xs text-muted-foreground">
-                <Shield className="inline w-3 h-3 mr-1" />
-                NHS Data Compliant
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

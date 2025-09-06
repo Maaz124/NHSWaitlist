@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, ArrowLeft, ArrowRight, Eye } from "lucide-react";
 import { calculateRiskScore, determineRiskLevel, getRiskColor } from "@/lib/risk-calculator";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Footer } from "@/components/ui/footer";
 
 const weeklyAssessmentSchema = z.object({
   anxietyFrequency: z.string(),
@@ -342,6 +343,7 @@ export default function CheckIns() {
           </Card>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

@@ -29,6 +29,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Footer } from "@/components/ui/footer";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function AnxietyTrack() {
@@ -632,6 +633,7 @@ export default function AnxietyTrack() {
           </Tabs>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Gavel, GraduationCap, FileText, Check, Download, ArrowLeft } from "lucide-react";
 import { generateProgressReport } from "@/lib/pdf-generator";
+import { Footer } from "@/components/ui/footer";
 import { BreathingExercise } from "@/components/BreathingExercise";
 import { ThoughtRecord } from "@/components/ThoughtRecord";
 import { GroundingExercises } from "@/components/GroundingExercises";
@@ -290,7 +291,7 @@ export default function Resources() {
           </div>
         </div>
       </main>
-
+      <Footer />
     </div>
   );
 }
