@@ -34,7 +34,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function AnxietyTrack() {
   const mockUserId = "user-1";
-  const [selectedTab, setSelectedTab] = useState("overview");
+  const [selectedTab, setSelectedTab] = useState("modules");
 
   const { data: modulesData, isLoading } = useQuery({
     queryKey: ["/api/modules", mockUserId],
