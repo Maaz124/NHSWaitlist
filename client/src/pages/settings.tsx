@@ -21,7 +21,6 @@ const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"), 
   email: z.string().email("Valid email is required"),
-  nhsNumber: z.string().optional(),
 });
 
 interface NotificationSettings {
@@ -52,7 +51,6 @@ export default function Settings() {
     firstName: "James",
     lastName: "Smith", 
     email: "james.smith@example.com",
-    nhsNumber: "123 456 7890",
   };
 
   const form = useForm({
@@ -61,7 +59,6 @@ export default function Settings() {
       firstName: mockUser.firstName,
       lastName: mockUser.lastName,
       email: mockUser.email,
-      nhsNumber: mockUser.nhsNumber,
     },
   });
 
@@ -188,20 +185,6 @@ export default function Settings() {
                             <FormLabel>Email Address</FormLabel>
                             <FormControl>
                               <Input type="email" {...field} data-testid="input-email" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="nhsNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>NHS Number</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="123 456 7890" data-testid="input-nhs-number" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
