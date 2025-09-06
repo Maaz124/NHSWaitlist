@@ -1913,10 +1913,12 @@ You're ready for this next phase of your mental health journey. Trust in the pro
           
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Track
-            </Button>
+            <Link href="/anxiety-track">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Track
+              </Button>
+            </Link>
             <div>
               <h1 className="text-2xl font-semibold text-foreground">
                 Week {weekNumber}: {moduleContent.title}
