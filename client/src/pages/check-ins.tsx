@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, ArrowLeft, ArrowRight, Eye } from "lucide-react";
 import { calculateRiskScore, determineRiskLevel, getRiskColor } from "@/lib/risk-calculator";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -77,6 +78,8 @@ export default function CheckIns() {
   const mockUserId = "user-1";
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedAssessment, setSelectedAssessment] = useState<any>(null);
+  const [showAssessmentDetail, setShowAssessmentDetail] = useState(false);
 
   const { data: assessmentsData, isLoading } = useQuery({
     queryKey: ["/api/assessments", mockUserId],
@@ -227,6 +230,10 @@ export default function CheckIns() {
                         <Button 
                           variant="ghost" 
                           size="sm"
+                          onClick={() => {
+                            setSelectedAssessment(assessment);
+                            setShowAssessmentDetail(true);
+                          }}
                           data-testid={`button-view-assessment-${assessment.weekNumber}`}
                         >
                           <Eye className="w-4 h-4 mr-1" />
@@ -344,6 +351,81 @@ export default function CheckIns() {
         </div>
       </main>
       <Footer />
+
+      {/* Assessment Details Dialog */}
+      <Dialog open={showAssessmentDetail} onOpenChange={setShowAssessmentDetail}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Week {selectedAssessment?.weekNumber} Assessment Details
+            </DialogTitle>
+          </DialogHeader>
+          {selectedAssessment && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-muted-foreground">Completed:</span>
+                  <p>{new Date(selectedAssessment.completedAt).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-muted-foreground">Risk Level:</span>
+                  <p>
+                    <Badge variant={getRiskColor(selectedAssessment.riskLevel) as any}>
+                      {selectedAssessment.riskLevel}
+                    </Badge>
+                  </p>
+                </div>
+                <div>
+                  <span className="font-medium text-muted-foreground">Risk Score:</span>
+                  <p>{selectedAssessment.riskScore}/12</p>
+                </div>
+                <div>
+                  <span className="font-medium text-muted-foreground">Week Number:</span>
+                  <p>Week {selectedAssessment.weekNumber}</p>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-3 text-card-foreground">Response Summary</h4>
+                <div className="space-y-2 text-sm">
+                  {selectedAssessment.responses && Object.entries(selectedAssessment.responses).map(([key, value]: [string, any]) => {
+                    const questionMap: Record<string, string> = {
+                      anxietyFrequency: "Anxiety frequency",
+                      worryFrequency: "Worry frequency", 
+                      depressionFrequency: "Depression frequency",
+                      anhedoniaFrequency: "Loss of interest frequency",
+                      sleepQuality: "Sleep quality",
+                      functioningLevel: "Daily functioning level"
+                    };
+                    
+                    const valueMap: Record<string, string> = {
+                      "0": "Not at all",
+                      "1": "Several days", 
+                      "2": "More than half the days",
+                      "3": "Nearly every day",
+                      "excellent": "Excellent",
+                      "good": "Good",
+                      "fair": "Fair", 
+                      "poor": "Poor",
+                      "not-at-all": "Not at all",
+                      "slightly": "Slightly",
+                      "moderately": "Moderately",
+                      "severely": "Severely"
+                    };
+                    
+                    return (
+                      <div key={key} className="flex justify-between">
+                        <span className="text-muted-foreground">{questionMap[key]}:</span>
+                        <span className="font-medium">{valueMap[value] || value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
