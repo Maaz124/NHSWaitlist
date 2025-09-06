@@ -231,8 +231,10 @@ export default function CheckIns() {
                           variant="ghost" 
                           size="sm"
                           onClick={() => {
+                            console.log('Clicked assessment:', assessment);
                             setSelectedAssessment(assessment);
                             setShowAssessmentDetail(true);
+                            console.log('Dialog should open now');
                           }}
                           data-testid={`button-view-assessment-${assessment.weekNumber}`}
                         >
@@ -374,7 +376,7 @@ export default function CheckIns() {
               Week {selectedAssessment?.weekNumber} Assessment Details
             </DialogTitle>
           </DialogHeader>
-          {selectedAssessment && (
+          {selectedAssessment ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
@@ -436,6 +438,10 @@ export default function CheckIns() {
                   })}
                 </div>
               </div>
+            </div>
+          ) : (
+            <div className="p-4 text-center text-muted-foreground">
+              No assessment data available
             </div>
           )}
         </DialogContent>
