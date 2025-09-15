@@ -53,6 +53,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/users/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const updates = req.body;
+      const user = await storage.updateUser(userId, updates);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({ user });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Onboarding
   app.post("/api/onboarding", async (req, res) => {
     try {
