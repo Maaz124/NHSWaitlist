@@ -64,16 +64,22 @@ export default function Settings() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log('Updating profile with data:', data);
       const response = await apiRequest("PATCH", `/api/users/${mockUserId}`, data);
-      return response.json();
+      console.log('Response status:', response.status);
+      const result = await response.json();
+      console.log('Response data:', result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Update successful:', data);
       toast({
         title: "Profile Updated",
         description: "Your profile information has been saved successfully.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Update failed:', error);
       toast({
         title: "Update Failed",
         description: "Failed to update profile. Please try again.",
