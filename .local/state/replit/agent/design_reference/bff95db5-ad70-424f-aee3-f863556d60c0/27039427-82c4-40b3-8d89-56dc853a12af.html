@@ -1,0 +1,1077 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waitlist Companion™ - Interim Care Support</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    popover: {
+                        DEFAULT: "var(--popover)",
+                        foreground: "var(--popover-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                }
+            }
+        }
+    };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --background: hsl(210 40% 98%);
+            --foreground: hsl(222 84% 5%);
+            --card: hsl(0 0% 100%);
+            --card-foreground: hsl(222 84% 5%);
+            --popover: hsl(0 0% 100%);
+            --popover-foreground: hsl(222 84% 5%);
+            --primary: hsl(217 91% 60%);
+            --primary-foreground: hsl(210 40% 98%);
+            --secondary: hsl(210 40% 96%);
+            --secondary-foreground: hsl(222 47% 11%);
+            --muted: hsl(210 40% 96%);
+            --muted-foreground: hsl(215 16% 47%);
+            --accent: hsl(142 76% 36%);
+            --accent-foreground: hsl(210 40% 98%);
+            --destructive: hsl(0 84% 60%);
+            --destructive-foreground: hsl(210 40% 98%);
+            --border: hsl(214 32% 91%);
+            --input: hsl(214 32% 91%);
+            --ring: hsl(217 91% 60%);
+            --radius: 8px;
+            --font-sans: 'Inter', ui-sans-serif, system-ui;
+        }
+        
+        .dark {
+            --background: hsl(222 84% 5%);
+            --foreground: hsl(210 40% 98%);
+            --card: hsl(222 84% 7%);
+            --card-foreground: hsl(210 40% 98%);
+            --popover: hsl(222 84% 7%);
+            --popover-foreground: hsl(210 40% 98%);
+            --primary: hsl(217 91% 60%);
+            --primary-foreground: hsl(222 84% 5%);
+            --secondary: hsl(217 32% 17%);
+            --secondary-foreground: hsl(210 40% 98%);
+            --muted: hsl(217 32% 17%);
+            --muted-foreground: hsl(215 20% 65%);
+            --accent: hsl(142 70% 45%);
+            --accent-foreground: hsl(210 40% 98%);
+            --destructive: hsl(0 63% 31%);
+            --destructive-foreground: hsl(210 40% 98%);
+            --border: hsl(217 32% 17%);
+            --input: hsl(217 32% 17%);
+            --ring: hsl(217 91% 60%);
+        }
+        
+        body {
+            font-family: var(--font-sans);
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring circle {
+            stroke-dasharray: 251.3;
+            stroke-dashoffset: 251.3;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+        
+        .progress-65 {
+            stroke-dashoffset: 87.96;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .crisis-banner {
+            background: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(0 70% 50%) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground min-h-screen font-sans">
+    <!-- @COMPONENT: AppLayout -->
+    <div class="min-h-screen flex flex-col">
+        <!-- @COMPONENT: Header -->
+        <header class="bg-card border-b border-border sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                            <i class="fas fa-heart text-primary-foreground text-sm"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-semibold text-lg text-foreground">Waitlist Companion™</h1>
+                            <p class="text-xs text-muted-foreground">Interim Care Support</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- Crisis Button -->
+                        <button class="crisis-banner text-destructive-foreground px-4 py-2 rounded-md font-medium text-sm hover:opacity-90 transition-opacity" 
+                                data-event="click:handleCrisisSupport" 
+                                data-implementation="Should open crisis support modal with immediate contact options">
+                            <i class="fas fa-phone-alt mr-2"></i>
+                            Crisis Support
+                        </button>
+                        
+                        <!-- User Menu -->
+                        <div class="relative">
+                            <button class="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+                                    data-event="click:toggleUserMenu">
+                                <div class="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
+                                    <span class="text-sm font-medium" data-bind="user.initials">JS</span>
+                                </div>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- @END_COMPONENT: Header -->
+
+        <!-- @COMPONENT: MainContent -->
+        <main class="flex-1 bg-background">
+            <!-- Emergency Crisis Banner -->
+            <div class="crisis-banner text-center py-3 text-destructive-foreground">
+                <div class="max-w-4xl mx-auto px-4">
+                    <p class="text-sm font-medium">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        If you're experiencing a mental health crisis, call 999 or contact Samaritans: 116 123 (free, 24/7)
+                    </p>
+                </div>
+            </div>
+
+            <!-- @COMPONENT: TabNavigation -->
+            <div class="bg-card border-b border-border">
+                <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <nav class="flex space-x-8 overflow-x-auto py-4" aria-label="Main navigation">
+                        <button class="tab-btn whitespace-nowrap pb-2 px-1 border-b-2 border-primary text-primary font-medium text-sm" 
+                                data-tab="dashboard" data-event="click:switchTab">
+                            <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                        </button>
+                        <button class="tab-btn whitespace-nowrap pb-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium text-sm" 
+                                data-tab="anxiety-track" data-event="click:switchTab">
+                            <i class="fas fa-brain mr-2"></i>Anxiety Support
+                        </button>
+                        <button class="tab-btn whitespace-nowrap pb-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium text-sm" 
+                                data-tab="check-ins" data-event="click:switchTab">
+                            <i class="fas fa-clipboard-check mr-2"></i>Check-ins
+                        </button>
+                        <button class="tab-btn whitespace-nowrap pb-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium text-sm" 
+                                data-tab="resources" data-event="click:switchTab">
+                            <i class="fas fa-book-medical mr-2"></i>Resources
+                        </button>
+                        <button class="tab-btn whitespace-nowrap pb-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium text-sm" 
+                                data-tab="settings" data-event="click:switchTab">
+                            <i class="fas fa-cog mr-2"></i>Settings
+                        </button>
+                    </nav>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: TabNavigation -->
+
+            <!-- @COMPONENT: DashboardTab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <!-- Welcome Section -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-semibold text-foreground mb-2">Welcome back, <span data-bind="user.firstName" data-mock="true">James</span></h2>
+                        <p class="text-muted-foreground">Here's your progress on your interim care journey</p>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Current Week -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-medium text-card-foreground">Current Week</h3>
+                                <i class="fas fa-calendar-week text-primary"></i>
+                            </div>
+                            <div class="text-3xl font-bold text-primary mb-1" data-bind="currentWeek" data-mock="true">3</div>
+                            <p class="text-sm text-muted-foreground">of 6 weeks</p>
+                        </div>
+
+                        <!-- Risk Level -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-medium text-card-foreground">Risk Level</h3>
+                                <i class="fas fa-shield-alt text-accent"></i>
+                            </div>
+                            <div class="text-3xl font-bold text-accent mb-1" data-bind="riskLevel" data-mock="true">Low</div>
+                            <p class="text-sm text-muted-foreground">Last checked today</p>
+                        </div>
+
+                        <!-- Completion Rate -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-medium text-card-foreground">Completion</h3>
+                                <i class="fas fa-chart-line text-primary"></i>
+                            </div>
+                            <div class="text-3xl font-bold text-primary mb-1" data-bind="completionRate" data-mock="true">85%</div>
+                            <p class="text-sm text-muted-foreground">Activities completed</p>
+                        </div>
+
+                        <!-- Next Check-in -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-medium text-card-foreground">Next Check-in</h3>
+                                <i class="fas fa-clock text-muted-foreground"></i>
+                            </div>
+                            <div class="text-lg font-semibold text-foreground mb-1" data-bind="nextCheckin" data-mock="true">Tomorrow</div>
+                            <p class="text-sm text-muted-foreground">Weekly assessment due</p>
+                        </div>
+                    </div>
+
+                    <!-- Progress Overview -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- 6-Week Progress -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <h3 class="text-xl font-semibold text-card-foreground mb-6">6-Week Anxiety Support Progress</h3>
+                            
+                            <div class="flex items-center justify-center mb-6">
+                                <div class="relative w-32 h-32">
+                                    <svg class="progress-ring w-32 h-32" viewBox="0 0 84 84">
+                                        <circle cx="42" cy="42" r="40" stroke="hsl(214 32% 91%)" stroke-width="4" fill="none"></circle>
+                                        <circle cx="42" cy="42" r="40" stroke="hsl(217 91% 60%)" stroke-width="4" fill="none" 
+                                                class="progress-65" data-bind="progressPercentage" data-mock="true"></circle>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <span class="text-2xl font-bold text-primary" data-bind="progressText" data-mock="true">65%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Weekly Modules -->
+                            <div class="space-y-3">
+                                <!-- @MAP: weeklyModules.map(module => ( -->
+                                <div class="flex items-center p-3 bg-accent bg-opacity-10 rounded-md">
+                                    <i class="fas fa-check-circle text-accent mr-3"></i>
+                                    <div class="flex-1">
+                                        <p class="font-medium text-card-foreground" data-mock="true">Week 1: Understanding Anxiety</p>
+                                        <p class="text-sm text-muted-foreground" data-mock="true">Completed • 45 min</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center p-3 bg-accent bg-opacity-10 rounded-md">
+                                    <i class="fas fa-check-circle text-accent mr-3"></i>
+                                    <div class="flex-1">
+                                        <p class="font-medium text-card-foreground" data-mock="true">Week 2: Breathing Techniques</p>
+                                        <p class="text-sm text-muted-foreground" data-mock="true">Completed • 38 min</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center p-3 bg-primary bg-opacity-10 rounded-md border-l-4 border-primary">
+                                    <i class="fas fa-play-circle text-primary mr-3"></i>
+                                    <div class="flex-1">
+                                        <p class="font-medium text-card-foreground" data-mock="true">Week 3: Cognitive Strategies</p>
+                                        <p class="text-sm text-muted-foreground" data-mock="true">In Progress • 15/40 min</p>
+                                    </div>
+                                    <button class="text-primary hover:text-primary/80 text-sm font-medium" 
+                                            data-event="click:continueModule">Continue</button>
+                                </div>
+                                
+                                <div class="flex items-center p-3 bg-muted rounded-md opacity-60">
+                                    <i class="fas fa-lock text-muted-foreground mr-3"></i>
+                                    <div class="flex-1">
+                                        <p class="font-medium text-muted-foreground" data-mock="true">Week 4: Mindfulness Practice</p>
+                                        <p class="text-sm text-muted-foreground" data-mock="true">Locked • Complete week 3 first</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+
+                        <!-- Recent Activities & Insights -->
+                        <div class="space-y-6">
+                            <!-- Risk Assessment Summary -->
+                            <div class="bg-card p-6 rounded-lg border border-border">
+                                <h3 class="text-xl font-semibold text-card-foreground mb-4">Risk Assessment Summary</h3>
+                                
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between p-3 bg-accent bg-opacity-10 rounded-md">
+                                        <div class="flex items-center">
+                                            <div class="w-3 h-3 bg-accent rounded-full mr-3"></div>
+                                            <span class="text-sm font-medium text-card-foreground" data-mock="true">Overall Wellbeing</span>
+                                        </div>
+                                        <span class="text-sm text-accent font-semibold" data-bind="wellbeingScore" data-mock="true">Good</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between p-3 bg-secondary rounded-md">
+                                        <div class="flex items-center">
+                                            <div class="w-3 h-3 bg-primary rounded-full mr-3"></div>
+                                            <span class="text-sm font-medium text-card-foreground" data-mock="true">Anxiety Level</span>
+                                        </div>
+                                        <span class="text-sm text-primary font-semibold" data-bind="anxietyLevel" data-mock="true">Moderate</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between p-3 bg-secondary rounded-md">
+                                        <div class="flex items-center">
+                                            <div class="w-3 h-3 bg-muted-foreground rounded-full mr-3"></div>
+                                            <span class="text-sm font-medium text-card-foreground" data-mock="true">Sleep Quality</span>
+                                        </div>
+                                        <span class="text-sm text-muted-foreground font-semibold" data-bind="sleepQuality" data-mock="true">Fair</span>
+                                    </div>
+                                </div>
+                                
+                                <button class="w-full mt-4 bg-primary text-primary-foreground py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
+                                        data-event="click:takeWeeklyAssessment" 
+                                        data-implementation="Should navigate to weekly risk assessment form">
+                                    Take Weekly Assessment
+                                </button>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="bg-card p-6 rounded-lg border border-border">
+                                <h3 class="text-xl font-semibold text-card-foreground mb-4">Quick Actions</h3>
+                                
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button class="flex flex-col items-center p-4 bg-secondary hover:bg-secondary/80 rounded-md transition-colors text-center"
+                                            data-event="click:practiceBreathing">
+                                        <i class="fas fa-wind text-primary text-xl mb-2"></i>
+                                        <span class="text-sm font-medium text-secondary-foreground">Practice Breathing</span>
+                                    </button>
+                                    
+                                    <button class="flex flex-col items-center p-4 bg-secondary hover:bg-secondary/80 rounded-md transition-colors text-center"
+                                            data-event="click:logMood">
+                                        <i class="fas fa-smile text-primary text-xl mb-2"></i>
+                                        <span class="text-sm font-medium text-secondary-foreground">Log Mood</span>
+                                    </button>
+                                    
+                                    <button class="flex flex-col items-center p-4 bg-secondary hover:bg-secondary/80 rounded-md transition-colors text-center"
+                                            data-event="click:viewProgress">
+                                        <i class="fas fa-chart-bar text-primary text-xl mb-2"></i>
+                                        <span class="text-sm font-medium text-secondary-foreground">View Progress</span>
+                                    </button>
+                                    
+                                    <button class="flex flex-col items-center p-4 bg-secondary hover:bg-secondary/80 rounded-md transition-colors text-center"
+                                            data-event="click:contactSupport">
+                                        <i class="fas fa-headset text-primary text-xl mb-2"></i>
+                                        <span class="text-sm font-medium text-secondary-foreground">Get Support</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming & Reminders -->
+                    <div class="mt-8 bg-card p-6 rounded-lg border border-border">
+                        <h3 class="text-xl font-semibold text-card-foreground mb-6">Upcoming & Reminders</h3>
+                        
+                        <div class="space-y-4">
+                            <!-- @MAP: upcomingItems.map(item => ( -->
+                            <div class="flex items-center p-4 bg-primary bg-opacity-5 border-l-4 border-primary rounded-r-md">
+                                <i class="fas fa-bell text-primary mr-4"></i>
+                                <div class="flex-1">
+                                    <p class="font-medium text-card-foreground" data-mock="true">Weekly check-in reminder</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">Due tomorrow at 2:00 PM</p>
+                                </div>
+                                <button class="text-primary hover:text-primary/80 text-sm font-medium" 
+                                        data-event="click:completeCheckIn">Complete Now</button>
+                            </div>
+                            
+                            <div class="flex items-center p-4 bg-accent bg-opacity-5 border-l-4 border-accent rounded-r-md">
+                                <i class="fas fa-graduation-cap text-accent mr-4"></i>
+                                <div class="flex-1">
+                                    <p class="font-medium text-card-foreground" data-mock="true">Module 3: Cognitive Strategies</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">Continue where you left off</p>
+                                </div>
+                                <button class="text-accent hover:text-accent/80 text-sm font-medium" 
+                                        data-event="click:continueModule">Continue</button>
+                            </div>
+                            
+                            <div class="flex items-center p-4 bg-secondary rounded-md">
+                                <i class="fas fa-file-export text-muted-foreground mr-4"></i>
+                                <div class="flex-1">
+                                    <p class="font-medium text-card-foreground" data-mock="true">Export progress report</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">Ready for NHS handoff</p>
+                                </div>
+                                <button class="text-primary hover:text-primary/80 text-sm font-medium" 
+                                        data-event="click:exportReport" 
+                                        data-implementation="Should generate and download PDF report">Download PDF</button>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: DashboardTab -->
+
+            <!-- @COMPONENT: AnxietyTrackTab -->
+            <div id="anxiety-track" class="tab-content">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-semibold text-foreground mb-2">6-Week Anxiety Support Track</h2>
+                        <p class="text-muted-foreground">Evidence-based modules designed to help you manage anxiety while waiting for NHS support</p>
+                    </div>
+
+                    <!-- Progress Banner -->
+                    <div class="bg-gradient-to-r from-primary to-accent p-6 rounded-lg text-primary-foreground mb-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-1">You're making great progress!</h3>
+                                <p class="text-primary-foreground/80" data-mock="true">Week 3 of 6 • 65% complete</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold" data-bind="totalMinutes" data-mock="true">127</p>
+                                <p class="text-sm text-primary-foreground/80">minutes completed</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Modules Grid -->
+                    <div class="space-y-4">
+                        <!-- @MAP: anxietyModules.map(module => ( -->
+                        <!-- Week 1 - Completed -->
+                        <div class="bg-card border border-border rounded-lg overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-start space-x-4 flex-1">
+                                        <div class="w-12 h-12 bg-accent rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-check text-accent-foreground text-lg"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="text-lg font-semibold text-card-foreground mb-2" data-mock="true">Week 1: Understanding Anxiety</h4>
+                                            <p class="text-muted-foreground mb-3" data-mock="true">Learn what anxiety is, how it affects your body and mind, and why it happens. Build your foundation for recovery.</p>
+                                            <div class="flex items-center space-x-4 text-sm text-muted-foreground">
+                                                <span><i class="fas fa-clock mr-1"></i>45 minutes</span>
+                                                <span><i class="fas fa-list mr-1"></i>4 activities</span>
+                                                <span class="text-accent font-medium">Completed</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="text-primary hover:text-primary/80 text-sm font-medium" 
+                                            data-event="click:reviewModule">Review</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Week 2 - Completed -->
+                        <div class="bg-card border border-border rounded-lg overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-start space-x-4 flex-1">
+                                        <div class="w-12 h-12 bg-accent rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-check text-accent-foreground text-lg"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="text-lg font-semibold text-card-foreground mb-2" data-mock="true">Week 2: Breathing & Relaxation</h4>
+                                            <p class="text-muted-foreground mb-3" data-mock="true">Master practical breathing techniques and progressive muscle relaxation to manage physical anxiety symptoms.</p>
+                                            <div class="flex items-center space-x-4 text-sm text-muted-foreground">
+                                                <span><i class="fas fa-clock mr-1"></i>38 minutes</span>
+                                                <span><i class="fas fa-list mr-1"></i>5 activities</span>
+                                                <span class="text-accent font-medium">Completed</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="text-primary hover:text-primary/80 text-sm font-medium" 
+                                            data-event="click:reviewModule">Review</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Week 3 - Current -->
+                        <div class="bg-card border-2 border-primary rounded-lg overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-start space-x-4 flex-1">
+                                        <div class="w-12 h-12 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-play text-primary-foreground text-lg"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="text-lg font-semibold text-card-foreground mb-2" data-mock="true">Week 3: Cognitive Strategies</h4>
+                                            <p class="text-muted-foreground mb-3" data-mock="true">Learn to identify and challenge anxious thoughts with cognitive behavioral techniques.</p>
+                                            <div class="flex items-center space-x-4 text-sm text-muted-foreground mb-4">
+                                                <span><i class="fas fa-clock mr-1"></i>40 minutes</span>
+                                                <span><i class="fas fa-list mr-1"></i>3 activities</span>
+                                                <span class="text-primary font-medium">In Progress</span>
+                                            </div>
+                                            <!-- Progress Bar -->
+                                            <div class="w-full bg-secondary rounded-full h-2 mb-2">
+                                                <div class="bg-primary h-2 rounded-full" style="width: 37.5%" data-bind="moduleProgress"></div>
+                                            </div>
+                                            <p class="text-xs text-muted-foreground" data-mock="true">15 of 40 minutes completed</p>
+                                        </div>
+                                    </div>
+                                    <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium hover:bg-primary/90 transition-colors" 
+                                            data-event="click:continueModule">Continue</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Week 4 - Locked -->
+                        <div class="bg-card border border-border rounded-lg overflow-hidden opacity-60">
+                            <div class="p-6">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-start space-x-4 flex-1">
+                                        <div class="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-lock text-muted-foreground text-lg"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="text-lg font-semibold text-muted-foreground mb-2" data-mock="true">Week 4: Mindfulness & Grounding</h4>
+                                            <p class="text-muted-foreground mb-3" data-mock="true">Develop mindfulness skills and grounding techniques to stay present during anxious moments.</p>
+                                            <div class="flex items-center space-x-4 text-sm text-muted-foreground">
+                                                <span><i class="fas fa-clock mr-1"></i>35 minutes</span>
+                                                <span><i class="fas fa-list mr-1"></i>4 activities</span>
+                                                <span>Complete Week 3 to unlock</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: AnxietyTrackTab -->
+
+            <!-- @COMPONENT: CheckInsTab -->
+            <div id="check-ins" class="tab-content">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-semibold text-foreground mb-2">Weekly Check-ins</h2>
+                        <p class="text-muted-foreground">Regular assessments to monitor your wellbeing and ensure your safety</p>
+                    </div>
+
+                    <!-- Current Check-in Form -->
+                    <div class="bg-card p-6 rounded-lg border border-border mb-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-semibold text-card-foreground">This Week's Assessment</h3>
+                            <span class="px-3 py-1 bg-primary bg-opacity-10 text-primary text-sm font-medium rounded-full" data-mock="true">Due Today</span>
+                        </div>
+
+                        <!-- @STATE: currentQuestion:number = 1, totalQuestions:number = 8 -->
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-muted-foreground" data-bind="progressText" data-mock="true">Question 1 of 8</span>
+                                <span class="text-sm text-muted-foreground" data-bind="timeEstimate" data-mock="true">~5 min remaining</span>
+                            </div>
+                            <div class="w-full bg-secondary rounded-full h-2">
+                                <div class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 12.5%" data-bind="checkInProgress"></div>
+                            </div>
+                        </div>
+
+                        <!-- Question Content -->
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-lg font-medium text-card-foreground mb-4" data-mock="true">
+                                    Over the past week, how often have you been bothered by feeling nervous, anxious, or on edge?
+                                </label>
+                                
+                                <div class="space-y-3">
+                                    <label class="flex items-center p-4 border border-border rounded-md hover:bg-secondary/50 cursor-pointer transition-colors">
+                                        <input type="radio" name="anxiety-frequency" value="0" class="mr-3 text-primary focus:ring-primary" data-implementation="PHQ-4 scoring system">
+                                        <span class="text-card-foreground" data-mock="true">Not at all</span>
+                                    </label>
+                                    <label class="flex items-center p-4 border border-border rounded-md hover:bg-secondary/50 cursor-pointer transition-colors">
+                                        <input type="radio" name="anxiety-frequency" value="1" class="mr-3 text-primary focus:ring-primary">
+                                        <span class="text-card-foreground" data-mock="true">Several days</span>
+                                    </label>
+                                    <label class="flex items-center p-4 border border-border rounded-md hover:bg-secondary/50 cursor-pointer transition-colors">
+                                        <input type="radio" name="anxiety-frequency" value="2" class="mr-3 text-primary focus:ring-primary">
+                                        <span class="text-card-foreground" data-mock="true">More than half the days</span>
+                                    </label>
+                                    <label class="flex items-center p-4 border border-border rounded-md hover:bg-secondary/50 cursor-pointer transition-colors">
+                                        <input type="radio" name="anxiety-frequency" value="3" class="mr-3 text-primary focus:ring-primary">
+                                        <span class="text-card-foreground" data-mock="true">Nearly every day</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between pt-6">
+                                <button class="px-6 py-3 border border-border text-muted-foreground rounded-md hover:bg-secondary transition-colors" 
+                                        data-event="click:previousQuestion">
+                                    <i class="fas fa-chevron-left mr-2"></i>Previous
+                                </button>
+                                <button class="px-6 py-3 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors" 
+                                        data-event="click:nextQuestion"
+                                        data-implementation="Should validate selection and advance to next question">
+                                    Next <i class="fas fa-chevron-right ml-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Check-in History -->
+                    <div class="bg-card p-6 rounded-lg border border-border">
+                        <h3 class="text-xl font-semibold text-card-foreground mb-6">Assessment History</h3>
+                        
+                        <div class="space-y-4">
+                            <!-- @MAP: checkInHistory.map(assessment => ( -->
+                            <div class="flex items-center justify-between p-4 bg-secondary rounded-md">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check text-accent-foreground"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-card-foreground" data-mock="true">Week 2 Assessment</p>
+                                        <p class="text-sm text-muted-foreground" data-mock="true">Completed 7 days ago • Risk: Low</p>
+                                    </div>
+                                </div>
+                                <button class="text-primary hover:text-primary/80 text-sm font-medium" 
+                                        data-event="click:viewAssessment">View Details</button>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-secondary rounded-md">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check text-accent-foreground"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-card-foreground" data-mock="true">Week 1 Assessment</p>
+                                        <p class="text-sm text-muted-foreground" data-mock="true">Completed 14 days ago • Risk: Moderate</p>
+                                    </div>
+                                </div>
+                                <button class="text-primary hover:text-primary/80 text-sm font-medium" 
+                                        data-event="click:viewAssessment">View Details</button>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-secondary rounded-md">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user-plus text-primary-foreground"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-card-foreground" data-mock="true">Initial Screening</p>
+                                        <p class="text-sm text-muted-foreground" data-mock="true">Completed 21 days ago • Baseline established</p>
+                                    </div>
+                                </div>
+                                <button class="text-primary hover:text-primary/80 text-sm font-medium" 
+                                        data-event="click:viewAssessment">View Details</button>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: CheckInsTab -->
+
+            <!-- @COMPONENT: ResourcesTab -->
+            <div id="resources" class="tab-content">
+                <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-semibold text-foreground mb-2">Support Resources</h2>
+                        <p class="text-muted-foreground">Additional tools and information to support your mental health journey</p>
+                    </div>
+
+                    <!-- Emergency Contacts -->
+                    <div class="bg-destructive bg-opacity-10 border border-destructive p-6 rounded-lg mb-8">
+                        <h3 class="text-lg font-semibold text-destructive mb-4">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Emergency Support
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <p class="font-semibold text-destructive mb-1">Emergency Services</p>
+                                <p class="text-lg font-bold text-destructive" data-mock="true">999</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="font-semibold text-destructive mb-1">Samaritans</p>
+                                <p class="text-lg font-bold text-destructive" data-mock="true">116 123</p>
+                                <p class="text-xs text-destructive/80">Free, 24/7</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="font-semibold text-destructive mb-1">Crisis Text Line</p>
+                                <p class="text-lg font-bold text-destructive" data-mock="true">Text SHOUT to 85258</p>
+                                <p class="text-xs text-destructive/80">Free, 24/7</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resource Categories -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Self-Help Tools -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <div class="text-center mb-4">
+                                <div class="w-16 h-16 bg-primary bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-tools text-primary text-2xl"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-card-foreground">Self-Help Tools</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <button class="w-full text-left p-3 bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
+                                        data-event="click:openTool">
+                                    <p class="font-medium text-secondary-foreground" data-mock="true">Breathing Exercise</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">4-7-8 technique</p>
+                                </button>
+                                <button class="w-full text-left p-3 bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
+                                        data-event="click:openTool">
+                                    <p class="font-medium text-secondary-foreground" data-mock="true">Thought Record</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">Challenge anxious thoughts</p>
+                                </button>
+                                <button class="w-full text-left p-3 bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
+                                        data-event="click:openTool">
+                                    <p class="font-medium text-secondary-foreground" data-mock="true">Mood Tracker</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">Daily wellbeing log</p>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Educational Content -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <div class="text-center mb-4">
+                                <div class="w-16 h-16 bg-accent bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-graduation-cap text-accent text-2xl"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-card-foreground">Educational Content</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <button class="w-full text-left p-3 bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
+                                        data-event="click:openResource">
+                                    <p class="font-medium text-secondary-foreground" data-mock="true">Understanding Anxiety</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">NHS-approved guide</p>
+                                </button>
+                                <button class="w-full text-left p-3 bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
+                                        data-event="click:openResource">
+                                    <p class="font-medium text-secondary-foreground" data-mock="true">Sleep & Anxiety</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">Evidence-based tips</p>
+                                </button>
+                                <button class="w-full text-left p-3 bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
+                                        data-event="click:openResource">
+                                    <p class="font-medium text-secondary-foreground" data-mock="true">Lifestyle Factors</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">Diet, exercise & wellbeing</p>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Export -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <div class="text-center mb-4">
+                                <div class="w-16 h-16 bg-secondary bg-opacity-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-file-export text-muted-foreground text-2xl"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-card-foreground">Clinical Handoff</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="p-4 bg-accent bg-opacity-10 rounded-md">
+                                    <p class="text-sm text-accent font-medium mb-2">
+                                        <i class="fas fa-check-circle mr-2"></i>Report Ready
+                                    </p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">Your progress data is ready for NHS handoff when your appointment becomes available.</p>
+                                </div>
+                                
+                                <button class="w-full bg-primary text-primary-foreground py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
+                                        data-event="click:exportReport" 
+                                        data-implementation="Should generate comprehensive PDF with assessment scores, module completion, risk history">
+                                    <i class="fas fa-download mr-2"></i>Download Progress Report (PDF)
+                                </button>
+                                
+                                <p class="text-xs text-muted-foreground text-center" data-mock="true">
+                                    Report includes assessment scores, module completion, and clinical recommendations
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: ResourcesTab -->
+
+            <!-- @COMPONENT: SettingsTab -->
+            <div id="settings" class="tab-content">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-semibold text-foreground mb-2">Settings</h2>
+                        <p class="text-muted-foreground">Manage your account, notifications, and privacy preferences</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Profile Settings -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <h3 class="text-lg font-semibold text-card-foreground mb-4">Profile Information</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-card-foreground mb-2">First Name</label>
+                                    <input type="text" value="James" data-bind="user.firstName" data-mock="true" 
+                                           class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-card-foreground mb-2">Last Name</label>
+                                    <input type="text" value="Smith" data-bind="user.lastName" data-mock="true" 
+                                           class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-card-foreground mb-2">Email</label>
+                                    <input type="email" value="james.smith@example.com" data-bind="user.email" data-mock="true" 
+                                           class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-card-foreground mb-2">NHS Number</label>
+                                    <input type="text" value="••• ••• ••••" data-bind="user.nhsNumber" data-mock="true" 
+                                           class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notification Settings -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <h3 class="text-lg font-semibold text-card-foreground mb-4">Notifications</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-card-foreground">Weekly Check-in Reminders</p>
+                                        <p class="text-sm text-muted-foreground">Get reminded when it's time for your weekly assessment</p>
+                                    </div>
+                                    <button class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-primary transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" 
+                                            data-event="click:toggleNotification" data-state="enabled">
+                                        <span class="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-primary-foreground shadow ring-0 transition duration-200 ease-in-out"></span>
+                                    </button>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-card-foreground">Module Reminders</p>
+                                        <p class="text-sm text-muted-foreground">Gentle nudges to continue your anxiety support track</p>
+                                    </div>
+                                    <button class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-primary transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" 
+                                            data-event="click:toggleNotification" data-state="enabled">
+                                        <span class="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-primary-foreground shadow ring-0 transition duration-200 ease-in-out"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Privacy & Data -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <h3 class="text-lg font-semibold text-card-foreground mb-4">Privacy & Data</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <h4 class="font-medium text-card-foreground mb-2">Data Sharing with NHS</h4>
+                                    <p class="text-sm text-muted-foreground mb-3">Allow sharing of progress data when transitioning to NHS services</p>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="nhs-sharing" checked data-implementation="GDPR compliant data sharing consent" 
+                                               class="mr-3 text-primary focus:ring-primary rounded">
+                                        <label for="nhs-sharing" class="text-sm text-card-foreground">Enable NHS data sharing</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="pt-4 border-t border-border">
+                                    <button class="text-primary hover:text-primary/80 text-sm font-medium" 
+                                            data-event="click:downloadData"
+                                            data-implementation="Should provide GDPR data export">
+                                        <i class="fas fa-download mr-2"></i>Download My Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Support -->
+                        <div class="bg-card p-6 rounded-lg border border-border">
+                            <h3 class="text-lg font-semibold text-card-foreground mb-4">Support</h3>
+                            
+                            <div class="space-y-3">
+                                <button class="w-full text-left p-3 bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
+                                        data-event="click:openSupport">
+                                    <p class="font-medium text-secondary-foreground" data-mock="true">Contact Support Team</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">Get help with technical issues</p>
+                                </button>
+                                <button class="w-full text-left p-3 bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
+                                        data-event="click:openFAQ">
+                                    <p class="font-medium text-secondary-foreground" data-mock="true">Frequently Asked Questions</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">Common questions and answers</p>
+                                </button>
+                                <button class="w-full text-left p-3 bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
+                                        data-event="click:provideFeedback">
+                                    <p class="font-medium text-secondary-foreground" data-mock="true">Provide Feedback</p>
+                                    <p class="text-sm text-muted-foreground" data-mock="true">Help us improve the app</p>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: SettingsTab -->
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+
+        <!-- @COMPONENT: Footer -->
+        <footer class="bg-card border-t border-border py-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="flex items-center space-x-6 mb-4 md:mb-0">
+                        <p class="text-sm text-muted-foreground">© 2024 Waitlist Companion™</p>
+                        <a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</a>
+                        <a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</a>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <p class="text-xs text-muted-foreground">Powered by rethink.org</p>
+                        <div class="text-xs text-muted-foreground">
+                            <i class="fas fa-shield-alt mr-1"></i>NHS Data Compliant
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- @END_COMPONENT: Footer -->
+    </div>
+    <!-- @END_COMPONENT: AppLayout -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        (function() {
+            // Tab switching functionality
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            function switchTab(targetTab) {
+                // Remove active states
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('border-primary', 'text-primary');
+                    btn.classList.add('border-transparent', 'text-muted-foreground');
+                });
+                
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Add active state to clicked tab
+                const activeButton = document.querySelector(`[data-tab="${targetTab}"]`);
+                if (activeButton) {
+                    activeButton.classList.add('border-primary', 'text-primary');
+                    activeButton.classList.remove('border-transparent', 'text-muted-foreground');
+                }
+                
+                // Show corresponding content
+                const activeContent = document.getElementById(targetTab);
+                if (activeContent) {
+                    activeContent.classList.add('active');
+                }
+            }
+            
+            // Add click listeners to tab buttons
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    switchTab(targetTab);
+                });
+            });
+            
+            // Toggle switches functionality
+            const toggles = document.querySelectorAll('[data-event*="toggleNotification"]');
+            toggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const isEnabled = this.classList.contains('bg-primary');
+                    
+                    if (isEnabled) {
+                        this.classList.remove('bg-primary');
+                        this.classList.add('bg-muted');
+                        this.querySelector('span').classList.remove('translate-x-5');
+                        this.querySelector('span').classList.add('translate-x-0');
+                    } else {
+                        this.classList.add('bg-primary');
+                        this.classList.remove('bg-muted');
+                        this.querySelector('span').classList.add('translate-x-5');
+                        this.querySelector('span').classList.remove('translate-x-0');
+                    }
+                });
+            });
+            
+            // Simulate check-in form progression
+            let currentQuestion = 1;
+            const totalQuestions = 8;
+            
+            const nextButton = document.querySelector('[data-event="click:nextQuestion"]');
+            const prevButton = document.querySelector('[data-event="click:previousQuestion"]');
+            
+            if (nextButton) {
+                nextButton.addEventListener('click', function() {
+                    if (currentQuestion < totalQuestions) {
+                        currentQuestion++;
+                        // Update progress bar
+                        const progressBar = document.querySelector('[data-bind="checkInProgress"]');
+                        if (progressBar) {
+                            const percentage = (currentQuestion / totalQuestions) * 100;
+                            progressBar.style.width = percentage + '%';
+                        }
+                        
+                        // Update question counter
+                        const progressText = document.querySelector('[data-bind="progressText"]');
+                        if (progressText) {
+                            progressText.textContent = `Question ${currentQuestion} of ${totalQuestions}`;
+                        }
+                        
+                        // Update time estimate
+                        const timeEstimate = document.querySelector('[data-bind="timeEstimate"]');
+                        if (timeEstimate) {
+                            const remainingTime = Math.max(1, Math.ceil((totalQuestions - currentQuestion) * 0.75));
+                            timeEstimate.textContent = `~${remainingTime} min remaining`;
+                        }
+                    }
+                });
+            }
+            
+            if (prevButton) {
+                prevButton.addEventListener('click', function() {
+                    if (currentQuestion > 1) {
+                        currentQuestion--;
+                        // Update progress bar
+                        const progressBar = document.querySelector('[data-bind="checkInProgress"]');
+                        if (progressBar) {
+                            const percentage = (currentQuestion / totalQuestions) * 100;
+                            progressBar.style.width = percentage + '%';
+                        }
+                        
+                        // Update question counter
+                        const progressText = document.querySelector('[data-bind="progressText"]');
+                        if (progressText) {
+                            progressText.textContent = `Question ${currentQuestion} of ${totalQuestions}`;
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
