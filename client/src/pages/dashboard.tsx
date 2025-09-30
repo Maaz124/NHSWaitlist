@@ -275,13 +275,15 @@ export default function Dashboard() {
                           )}
                         </div>
                         {(isCompleted || isInProgress) && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            data-testid={`button-${isCompleted ? 'review' : 'continue'}-module-${module.weekNumber}`}
-                          >
-                            {isCompleted ? "Review" : "Continue"}
-                          </Button>
+                          <Link href={`/anxiety-track/module/${module.weekNumber}`}>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              data-testid={`button-${isCompleted ? 'review' : 'continue'}-module-${module.weekNumber}`}
+                            >
+                              {isCompleted ? "Review" : "Continue"}
+                            </Button>
+                          </Link>
                         )}
                       </div>
                     );
