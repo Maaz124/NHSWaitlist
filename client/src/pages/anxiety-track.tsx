@@ -55,26 +55,6 @@ export default function AnxietyTrack() {
     },
   });
 
-  const handleContinueModule = (module: any) => {
-    // Simulate progress - in real app this would track actual activity completion
-    const newMinutesCompleted = Math.min(
-      module.minutesCompleted + 10, 
-      module.estimatedMinutes
-    );
-    
-    const updates: any = { minutesCompleted: newMinutesCompleted };
-    
-    if (newMinutesCompleted >= module.estimatedMinutes) {
-      updates.completedAt = new Date();
-      updates.activitiesCompleted = module.activitiesTotal;
-    }
-    
-    updateModuleMutation.mutate({
-      moduleId: module.id,
-      updates,
-    });
-  };
-
   const handleCompleteModule = (module: any) => {
     const updates = {
       completedAt: new Date().toISOString(),
@@ -504,15 +484,6 @@ export default function AnxietyTrack() {
                             
                             {isInProgress && (
                               <>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleContinueModule(module)}
-                                  disabled={updateModuleMutation.isPending}
-                                  data-testid={`button-quick-continue-${module.weekNumber}`}
-                                >
-                                  Quick Practice
-                                </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
