@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -106,6 +106,25 @@ export default function Onboarding() {
   const [step, setStep] = useState<"personal" | "screening">("personal");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userId, setUserId] = useState<string>("");
+  const [errorMsg, setErrorMsg] = useState<string>("");
+
+  // If already authenticated, skip personal step
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.user?.id) {
+            setUserId(data.user.id);
+            setStep("screening");
+          }
+        }
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
 
   const userForm = useForm({
     resolver: zodResolver(userSchema),
@@ -124,12 +143,21 @@ export default function Onboarding() {
 
   const createUserMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/users", data);
+      const response = await apiRequest("POST", "/api/auth/signup", data);
       return response.json();
     },
     onSuccess: (data) => {
       setUserId(data.user.id);
       setStep("screening");
+      setErrorMsg("");
+    },
+    onError: async (err: any) => {
+      try {
+        const message = String(err?.message || "Signup failed");
+        setErrorMsg(message.includes("User already exists") ? "An account with this email already exists. Please log in instead." : message);
+      } catch {
+        setErrorMsg("Signup failed. Please try again.");
+      }
     },
   });
 
@@ -144,6 +172,7 @@ export default function Onboarding() {
   });
 
   const onUserSubmit = (data: any) => {
+    setErrorMsg("");
     createUserMutation.mutate(data);
   };
 
@@ -180,6 +209,11 @@ export default function Onboarding() {
           <CardContent>
             <Form {...userForm}>
               <form onSubmit={userForm.handleSubmit(onUserSubmit)} className="space-y-4">
+                {errorMsg && (
+                  <div className="text-sm text-destructive border border-destructive/30 bg-destructive/10 rounded p-2">
+                    {errorMsg}
+                  </div>
+                )}
                 <FormField
                   control={userForm.control}
                   name="firstName"
@@ -276,12 +310,14 @@ export default function Onboarding() {
         <CardContent>
           <Form {...onboardingForm}>
             <FormField
+              key={currentQ.id}
               control={onboardingForm.control}
               name={currentQ.id as keyof typeof onboardingForm.formState.defaultValues}
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
                     <RadioGroup 
+                      key={currentQ.id}
                       value={field.value} 
                       onValueChange={field.onChange}
                       className="space-y-3"
@@ -293,12 +329,12 @@ export default function Onboarding() {
                         >
                           <RadioGroupItem 
                             value={option.value} 
-                            id={option.value}
+                            id={`${currentQ.id}-${option.value}`}
                             className="mr-3"
                             data-testid={`radio-${currentQ.id}-${option.value}`}
                           />
                           <Label 
-                            htmlFor={option.value}
+                            htmlFor={`${currentQ.id}-${option.value}`}
                             className="text-card-foreground cursor-pointer flex-1"
                           >
                             {option.label}

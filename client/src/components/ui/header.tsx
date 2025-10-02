@@ -49,6 +49,17 @@ export function Header({ user }: HeaderProps) {
                   <User className="w-4 h-4 mr-2" />
                   Profile Settings
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    try {
+                      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+                    } catch {}
+                    window.location.href = "/login";
+                  }}
+                  data-testid="button-logout"
+                >
+                  Sign out
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

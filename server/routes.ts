@@ -3,7 +3,59 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertOnboardingResponseSchema, insertWeeklyAssessmentSchema } from "@shared/schema";
 
+function requireAuth(req: any, res: any, next: any) {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      const existingUser = await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(400).json({ error: "User already exists" });
+      }
+      const user = await storage.createUser(userData);
+      await storage.initializeAnxietyModules(user.id);
+      (req as any).session.userId = user.id;
+      res.json({ user });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email } = req.body || {};
+      if (!email) return res.status(400).json({ error: "Email is required" });
+      const user = await storage.getUserByEmail(email);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      (req as any).session.userId = user.id;
+      res.json({ user });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session?.destroy(() => {
+      res.json({ success: true });
+    });
+  });
+
+  app.get("/api/auth/me", async (req: any, res) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const user = await storage.getUser(req.session.userId);
+    if (!user) return res.status(401).json({ error: "Unauthorized" });
+    res.json({ user });
+  });
+
   // User registration/login (simplified for MVP)
   app.post("/api/users", async (req, res) => {
     try {

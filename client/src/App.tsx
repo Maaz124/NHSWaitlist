@@ -11,6 +11,8 @@ import AnxietyTrack from "@/pages/anxiety-track";
 import CheckIns from "@/pages/check-ins";
 import Resources from "@/pages/resources";
 import Settings from "@/pages/settings";
+import Login from "@/pages/login";
+import Signup from "@/pages/signup";
 
 const ModuleDetail = lazy(() => import("@/pages/module-detail"));
 
@@ -32,6 +34,8 @@ function Router() {
       <Route path="/check-ins" component={CheckIns} />
       <Route path="/resources" component={Resources} />
       <Route path="/settings" component={Settings} />
+      <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
       <Route component={NotFound} />
     </Switch>
   );
