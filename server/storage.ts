@@ -1,5 +1,6 @@
 import { type User, type InsertUser, type OnboardingResponse, type InsertOnboardingResponse, type WeeklyAssessment, type InsertWeeklyAssessment, type AnxietyModule, type InsertAnxietyModule, type ProgressReport, type InsertProgressReport } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { PostgresStorage } from "./postgres-storage";
 
 export interface IStorage {
   // User management
@@ -225,4 +226,7 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Use PostgreSQL storage if DATABASE_URL is available, otherwise use in-memory storage
+export const storage = process.env.DATABASE_URL 
+  ? new PostgresStorage() 
+  : new MemStorage();

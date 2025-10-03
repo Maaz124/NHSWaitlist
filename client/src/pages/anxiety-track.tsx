@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Header } from "@/components/ui/header";
 import { TabNavigation } from "@/components/ui/tab-navigation";
 import { CrisisBanner } from "@/components/ui/crisis-banner";
@@ -33,15 +33,37 @@ import { Footer } from "@/components/ui/footer";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function AnxietyTrack() {
-  const mockUserId = "user-1";
+  const [, setLocation] = useLocation();
   const [selectedTab, setSelectedTab] = useState("modules");
 
+  // Get authenticated user data
+  const { data: authData } = useQuery({
+    queryKey: ["/api/auth/me"],
+    queryFn: async () => {
+      const response = await fetch("/api/auth/me", { credentials: "include" });
+      if (!response.ok) throw new Error("Not authenticated");
+      return response.json();
+    },
+  });
+
+  const userId = authData?.user?.id;
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (authData === undefined) return; // Still loading
+    if (!authData?.user?.id) {
+      setLocation("/onboarding");
+    }
+  }, [authData, setLocation]);
+
   const { data: modulesData, isLoading } = useQuery({
-    queryKey: ["/api/modules", mockUserId],
+    queryKey: ["/api/modules", userId],
+    enabled: !!userId,
   });
 
   const { data: dashboardData } = useQuery({
-    queryKey: ["/api/dashboard", mockUserId],
+    queryKey: ["/api/dashboard", userId],
+    enabled: !!userId,
   });
 
   const updateModuleMutation = useMutation({
@@ -50,8 +72,8 @@ export default function AnxietyTrack() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/modules", mockUserId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard", mockUserId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/modules", userId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard", userId] });
     },
   });
 
@@ -67,6 +89,24 @@ export default function AnxietyTrack() {
       updates,
     });
   };
+
+  // Show loading state while checking authentication
+  if (authData === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show loading state if not authenticated (redirect will happen)
+  if (!userId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Redirecting...</div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/ui/header";
 import { TabNavigation } from "@/components/ui/tab-navigation";
@@ -21,9 +21,27 @@ import wellnessImage from "@assets/generated_images/mindful_breathing_wellness_a
 import { Footer } from "@/components/ui/footer";
 
 export default function Dashboard() {
-  // For MVP, using a mock user ID - in production this would come from auth
-  const mockUserId = "user-1";
   const [, setLocation] = useLocation();
+  
+  // Get authenticated user data
+  const { data: authData } = useQuery({
+    queryKey: ["/api/auth/me"],
+    queryFn: async () => {
+      const response = await fetch("/api/auth/me", { credentials: "include" });
+      if (!response.ok) throw new Error("Not authenticated");
+      return response.json();
+    },
+  });
+
+  const userId = authData?.user?.id;
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (authData === undefined) return; // Still loading
+    if (!authData?.user?.id) {
+      setLocation("/onboarding");
+    }
+  }, [authData, setLocation]);
   
   // Quick action states
   const [breathingDialogOpen, setBreathingDialogOpen] = useState(false);
@@ -38,23 +56,27 @@ export default function Dashboard() {
   const [moodNote, setMoodNote] = useState("");
 
   const { data: dashboardData, isLoading } = useQuery({
-    queryKey: ["/api/dashboard", mockUserId],
+    queryKey: ["/api/dashboard", userId],
+    enabled: !!userId,
   });
 
   const { data: modulesData } = useQuery({
-    queryKey: ["/api/modules", mockUserId],
+    queryKey: ["/api/modules", userId],
+    enabled: !!userId,
   });
 
   const { data: userData } = useQuery({
-    queryKey: ["/api/users", mockUserId],
+    queryKey: ["/api/users", userId],
+    enabled: !!userId,
   });
 
   const handleExportReport = async () => {
+    if (!userId) return;
     try {
       const response = await fetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: mockUserId }),
+        body: JSON.stringify({ userId }),
       });
       
       if (!response.ok) throw new Error("Failed to generate report");
@@ -66,6 +88,24 @@ export default function Dashboard() {
       alert("Error generating report. Please try again.");
     }
   };
+
+  // Show loading state while checking authentication
+  if (authData === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show loading state if not authenticated (redirect will happen)
+  if (!userId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Redirecting...</div>
+      </div>
+    );
+  }
 
   const handleLogMood = () => {
     // In a real app, this would save to the database

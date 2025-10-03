@@ -1,0 +1,183 @@
+import { eq, desc } from "drizzle-orm";
+import { db, schema } from "./db";
+
+// Check if database is available
+if (!db) {
+  throw new Error("Database connection not available. Please set DATABASE_URL environment variable.");
+}
+import { 
+  type User, 
+  type InsertUser, 
+  type OnboardingResponse, 
+  type InsertOnboardingResponse, 
+  type WeeklyAssessment, 
+  type InsertWeeklyAssessment, 
+  type AnxietyModule, 
+  type InsertAnxietyModule, 
+  type ProgressReport, 
+  type InsertProgressReport 
+} from "@shared/schema";
+import { IStorage } from "./storage";
+
+export class PostgresStorage implements IStorage {
+  // User management
+  async getUser(id: string): Promise<User | undefined> {
+    const result = await db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
+    return result[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const result = await db.insert(schema.users).values(insertUser).returning();
+    return result[0];
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User> {
+    const result = await db.update(schema.users).set(updates).where(eq(schema.users.id, id)).returning();
+    if (result.length === 0) throw new Error("User not found");
+    return result[0];
+  }
+
+  // Onboarding
+  async createOnboardingResponse(insertResponse: InsertOnboardingResponse): Promise<OnboardingResponse> {
+    const result = await db.insert(schema.onboardingResponses).values(insertResponse).returning();
+    return result[0];
+  }
+
+  async getOnboardingResponse(userId: string): Promise<OnboardingResponse | undefined> {
+    const result = await db.select().from(schema.onboardingResponses).where(eq(schema.onboardingResponses.userId, userId)).limit(1);
+    return result[0];
+  }
+
+  // Weekly assessments
+  async createWeeklyAssessment(insertAssessment: InsertWeeklyAssessment): Promise<WeeklyAssessment> {
+    const result = await db.insert(schema.weeklyAssessments).values(insertAssessment).returning();
+    return result[0];
+  }
+
+  async getWeeklyAssessments(userId: string): Promise<WeeklyAssessment[]> {
+    return await db.select().from(schema.weeklyAssessments)
+      .where(eq(schema.weeklyAssessments.userId, userId))
+      .orderBy(desc(schema.weeklyAssessments.weekNumber));
+  }
+
+  async getLatestWeeklyAssessment(userId: string): Promise<WeeklyAssessment | undefined> {
+    const result = await db.select().from(schema.weeklyAssessments)
+      .where(eq(schema.weeklyAssessments.userId, userId))
+      .orderBy(desc(schema.weeklyAssessments.weekNumber))
+      .limit(1);
+    return result[0];
+  }
+
+  // Anxiety modules
+  async createAnxietyModule(insertModule: InsertAnxietyModule): Promise<AnxietyModule> {
+    const result = await db.insert(schema.anxietyModules).values(insertModule).returning();
+    return result[0];
+  }
+
+  async getAnxietyModules(userId: string): Promise<AnxietyModule[]> {
+    return await db.select().from(schema.anxietyModules)
+      .where(eq(schema.anxietyModules.userId, userId))
+      .orderBy(schema.anxietyModules.weekNumber);
+  }
+
+  async updateAnxietyModule(id: string, updates: Partial<AnxietyModule>): Promise<AnxietyModule> {
+    const result = await db.update(schema.anxietyModules)
+      .set({ ...updates, lastAccessedAt: new Date() })
+      .where(eq(schema.anxietyModules.id, id))
+      .returning();
+    if (result.length === 0) throw new Error("Module not found");
+    return result[0];
+  }
+
+  async initializeAnxietyModules(userId: string): Promise<void> {
+    const defaultModules = [
+      {
+        userId,
+        weekNumber: 1,
+        title: "Understanding Anxiety",
+        description: "Learn what anxiety is, how it affects your body and mind, and why it happens. Build your foundation for recovery.",
+        estimatedMinutes: 45,
+        activitiesTotal: 4,
+        activitiesCompleted: 0,
+        minutesCompleted: 0,
+        isLocked: false,
+      },
+      {
+        userId,
+        weekNumber: 2,
+        title: "Breathing & Relaxation",
+        description: "Master practical breathing techniques and progressive muscle relaxation to manage physical anxiety symptoms.",
+        estimatedMinutes: 38,
+        activitiesTotal: 5,
+        activitiesCompleted: 0,
+        minutesCompleted: 0,
+        isLocked: false,
+      },
+      {
+        userId,
+        weekNumber: 3,
+        title: "Cognitive Strategies",
+        description: "Learn to identify and challenge anxious thoughts with cognitive behavioral techniques.",
+        estimatedMinutes: 40,
+        activitiesTotal: 3,
+        activitiesCompleted: 0,
+        minutesCompleted: 0,
+        isLocked: false,
+      },
+      {
+        userId,
+        weekNumber: 4,
+        title: "Mindfulness & Grounding",
+        description: "Develop mindfulness skills and grounding techniques to stay present during anxious moments.",
+        estimatedMinutes: 35,
+        activitiesTotal: 4,
+        activitiesCompleted: 0,
+        minutesCompleted: 0,
+        isLocked: false,
+      },
+      {
+        userId,
+        weekNumber: 5,
+        title: "Behavioral Activation",
+        description: "Build healthy routines and gradually expose yourself to anxiety-provoking situations in a safe way.",
+        estimatedMinutes: 42,
+        activitiesTotal: 4,
+        activitiesCompleted: 0,
+        minutesCompleted: 0,
+        isLocked: false,
+      },
+      {
+        userId,
+        weekNumber: 6,
+        title: "Relapse Prevention",
+        description: "Create your personal toolkit for maintaining progress and preparing for NHS transition.",
+        estimatedMinutes: 30,
+        activitiesTotal: 3,
+        activitiesCompleted: 0,
+        minutesCompleted: 0,
+        isLocked: false,
+      },
+    ];
+
+    for (const moduleData of defaultModules) {
+      await this.createAnxietyModule(moduleData);
+    }
+  }
+
+  // Progress reports
+  async createProgressReport(insertReport: InsertProgressReport): Promise<ProgressReport> {
+    const result = await db.insert(schema.progressReports).values(insertReport).returning();
+    return result[0];
+  }
+
+  async getProgressReports(userId: string): Promise<ProgressReport[]> {
+    return await db.select().from(schema.progressReports)
+      .where(eq(schema.progressReports.userId, userId))
+      .orderBy(desc(schema.progressReports.generatedAt));
+  }
+}

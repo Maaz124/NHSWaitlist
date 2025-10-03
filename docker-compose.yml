@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: nhs-waitlist-db
+    environment:
+      POSTGRES_DB: nhs_waitlist
+      POSTGRES_USER: nhs_user
+      POSTGRES_PASSWORD: nhs_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nhs_user -d nhs_waitlist"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nhs-network
+
+  # NHS Waitlist Application
+  app:
+    build: .
+    container_name: nhs-waitlist-app
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://nhs_user:nhs_password@postgres:5432/nhs_waitlist
+      SESSION_SECRET: your-super-secret-session-key-change-in-production
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nhs-network
+    restart: unless-stopped
+
+  # Development version (optional)
+  app-dev:
+    build: .
+    container_name: nhs-waitlist-dev
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      DATABASE_URL: postgresql://nhs_user:nhs_password@postgres:5432/nhs_waitlist
+      SESSION_SECRET: dev-session-secret
+    ports:
+      - "5001:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nhs-network
+    command: npm run dev
+    profiles:
+      - dev
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  nhs-network:
+    driver: bridge

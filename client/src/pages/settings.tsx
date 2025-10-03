@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Header } from "@/components/ui/header";
 import { TabNavigation } from "@/components/ui/tab-navigation";
 import { CrisisBanner } from "@/components/ui/crisis-banner";
@@ -33,8 +34,28 @@ interface PrivacySettings {
 }
 
 export default function Settings() {
-  const mockUserId = "user-1";
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  // Get authenticated user data
+  const { data: authData } = useQuery({
+    queryKey: ["/api/auth/me"],
+    queryFn: async () => {
+      const response = await fetch("/api/auth/me", { credentials: "include" });
+      if (!response.ok) throw new Error("Not authenticated");
+      return response.json();
+    },
+  });
+
+  const userId = authData?.user?.id;
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (authData === undefined) return; // Still loading
+    if (!authData?.user?.id) {
+      setLocation("/onboarding");
+    }
+  }, [authData, setLocation]);
   
   const [notifications, setNotifications] = useState<NotificationSettings>({
     weeklyCheckInReminders: true,
@@ -45,13 +66,8 @@ export default function Settings() {
     nhsDataSharing: true,
   });
 
-  // Mock user data - in production this would come from API
-  const mockUser = {
-    id: mockUserId,
-    firstName: "James",
-    lastName: "Smith", 
-    email: "james.smith@example.com",
-  };
+  // Use authenticated user data
+  const user = authData?.user;
 
   const form = useForm({
     resolver: zodResolver(profileSchema),
