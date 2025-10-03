@@ -31,39 +31,29 @@ import {
 import { cn } from "@/lib/utils";
 import { Footer } from "@/components/ui/footer";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useUser } from "@/contexts/UserContext";
 
 export default function AnxietyTrack() {
   const [, setLocation] = useLocation();
   const [selectedTab, setSelectedTab] = useState("modules");
-
-  // Get authenticated user data
-  const { data: authData } = useQuery({
-    queryKey: ["/api/auth/me"],
-    queryFn: async () => {
-      const response = await fetch("/api/auth/me", { credentials: "include" });
-      if (!response.ok) throw new Error("Not authenticated");
-      return response.json();
-    },
-  });
-
-  const userId = authData?.user?.id;
+  const { user, isLoading: userLoading, isAuthenticated } = useUser();
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (authData === undefined) return; // Still loading
-    if (!authData?.user?.id) {
+    if (userLoading) return; // Still loading
+    if (!isAuthenticated) {
       setLocation("/onboarding");
     }
-  }, [authData, setLocation]);
+  }, [isAuthenticated, userLoading, setLocation]);
 
   const { data: modulesData, isLoading } = useQuery({
-    queryKey: ["/api/modules", userId],
-    enabled: !!userId,
+    queryKey: ["/api/modules", user?.id],
+    enabled: !!user?.id,
   });
 
   const { data: dashboardData } = useQuery({
-    queryKey: ["/api/dashboard", userId],
-    enabled: !!userId,
+    queryKey: ["/api/dashboard", user?.id],
+    enabled: !!user?.id,
   });
 
   const updateModuleMutation = useMutation({
@@ -72,8 +62,8 @@ export default function AnxietyTrack() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/modules", userId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard", userId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/modules", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard", user?.id] });
     },
   });
 
@@ -91,7 +81,7 @@ export default function AnxietyTrack() {
   };
 
   // Show loading state while checking authentication
-  if (authData === undefined) {
+  if (userLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">Loading...</div>
@@ -100,7 +90,7 @@ export default function AnxietyTrack() {
   }
 
   // Show loading state if not authenticated (redirect will happen)
-  if (!userId) {
+  if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">Redirecting...</div>

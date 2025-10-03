@@ -15,6 +15,7 @@ import { Calendar, Shield, TrendingUp, Clock, Bell, GraduationCap, FileText, Win
 import { Link, useLocation } from "wouter";
 import { generateProgressReport } from "@/lib/pdf-generator";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/contexts/UserContext";
 import heroImage from "@assets/generated_images/peaceful_mental_health_hero_ce9d4b3d.png";
 import supportImage from "@assets/generated_images/supportive_community_wellness_46a91c38.png";
 import wellnessImage from "@assets/generated_images/mindful_breathing_wellness_a8cd19ea.png";
@@ -22,26 +23,15 @@ import { Footer } from "@/components/ui/footer";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
-  
-  // Get authenticated user data
-  const { data: authData } = useQuery({
-    queryKey: ["/api/auth/me"],
-    queryFn: async () => {
-      const response = await fetch("/api/auth/me", { credentials: "include" });
-      if (!response.ok) throw new Error("Not authenticated");
-      return response.json();
-    },
-  });
-
-  const userId = authData?.user?.id;
+  const { user, isLoading: userLoading, isAuthenticated } = useUser();
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (authData === undefined) return; // Still loading
-    if (!authData?.user?.id) {
+    if (userLoading) return; // Still loading
+    if (!isAuthenticated) {
       setLocation("/onboarding");
     }
-  }, [authData, setLocation]);
+  }, [isAuthenticated, userLoading, setLocation]);
   
   // Quick action states
   const [breathingDialogOpen, setBreathingDialogOpen] = useState(false);
@@ -56,27 +46,22 @@ export default function Dashboard() {
   const [moodNote, setMoodNote] = useState("");
 
   const { data: dashboardData, isLoading } = useQuery({
-    queryKey: ["/api/dashboard", userId],
-    enabled: !!userId,
+    queryKey: ["/api/dashboard", user?.id],
+    enabled: !!user?.id,
   });
 
   const { data: modulesData } = useQuery({
-    queryKey: ["/api/modules", userId],
-    enabled: !!userId,
-  });
-
-  const { data: userData } = useQuery({
-    queryKey: ["/api/users", userId],
-    enabled: !!userId,
+    queryKey: ["/api/modules", user?.id],
+    enabled: !!user?.id,
   });
 
   const handleExportReport = async () => {
-    if (!userId) return;
+    if (!user?.id) return;
     try {
       const response = await fetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId: user.id }),
       });
       
       if (!response.ok) throw new Error("Failed to generate report");
@@ -90,7 +75,7 @@ export default function Dashboard() {
   };
 
   // Show loading state while checking authentication
-  if (authData === undefined) {
+  if (userLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">Loading...</div>
@@ -99,7 +84,7 @@ export default function Dashboard() {
   }
 
   // Show loading state if not authenticated (redirect will happen)
-  if (!userId) {
+  if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">Redirecting...</div>
@@ -151,7 +136,6 @@ export default function Dashboard() {
 
   const dashboard = (dashboardData as any)?.dashboardData || {};
   const modules = (modulesData as any)?.modules || [];
-  const user = { firstName: "James", lastName: "Smith", email: "james.smith@example.com" };
 
   const nextCheckInDate = new Date(dashboard.nextCheckInDue);
   const isCheckInDue = nextCheckInDate <= new Date();

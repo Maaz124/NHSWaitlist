@@ -11,6 +11,21 @@ function requireAuth(req: any, res: any, next: any) {
   next();
 }
 
+function validateUserAccess(req: any, res: any, next: any) {
+  const requestedUserId = req.params.userId;
+  const sessionUserId = req.session?.userId;
+  
+  if (!sessionUserId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  
+  if (requestedUserId && requestedUserId !== sessionUserId) {
+    return res.status(403).json({ error: "Forbidden: Access denied" });
+  }
+  
+  next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth
   app.post("/api/auth/signup", async (req, res) => {
@@ -114,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:userId", async (req, res) => {
+  app.get("/api/users/:userId", requireAuth, validateUserAccess, async (req, res) => {
     try {
       const { userId } = req.params;
       const user = await storage.getUser(userId);
@@ -129,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/users/:userId", async (req, res) => {
+  app.patch("/api/users/:userId", requireAuth, validateUserAccess, async (req, res) => {
     try {
       const { userId } = req.params;
       const updates = req.body;
@@ -146,9 +161,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Onboarding
-  app.post("/api/onboarding", async (req, res) => {
+  app.post("/api/onboarding", requireAuth, async (req, res) => {
     try {
-      const { userId, responses } = req.body;
+      const { responses } = req.body;
+      const userId = req.session.userId;
       const riskScore = calculateRiskScore(responses);
       const baselineAnxietyLevel = determineRiskLevel(riskScore);
 
@@ -166,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/onboarding/:userId", async (req, res) => {
+  app.get("/api/onboarding/:userId", requireAuth, validateUserAccess, async (req, res) => {
     try {
       const { userId } = req.params;
       const response = await storage.getOnboardingResponse(userId);
@@ -177,9 +193,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Weekly assessments
-  app.post("/api/assessments", async (req, res) => {
+  app.post("/api/assessments", requireAuth, async (req, res) => {
     try {
-      const { userId, weekNumber, responses } = req.body;
+      const { weekNumber, responses } = req.body;
+      const userId = req.session.userId;
       const riskScore = calculateRiskScore(responses);
       const riskLevel = determineRiskLevel(riskScore);
       const needsEscalation = riskLevel === "crisis" || riskLevel === "high";
@@ -200,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/assessments/:userId", async (req, res) => {
+  app.get("/api/assessments/:userId", requireAuth, validateUserAccess, async (req, res) => {
     try {
       const { userId } = req.params;
       const assessments = await storage.getWeeklyAssessments(userId);
@@ -210,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/assessments/:userId/latest", async (req, res) => {
+  app.get("/api/assessments/:userId/latest", requireAuth, validateUserAccess, async (req, res) => {
     try {
       const { userId } = req.params;
       const assessment = await storage.getLatestWeeklyAssessment(userId);
@@ -221,7 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Anxiety modules
-  app.get("/api/modules/:userId", async (req, res) => {
+  app.get("/api/modules/:userId", requireAuth, validateUserAccess, async (req, res) => {
     try {
       const { userId } = req.params;
       let modules = await storage.getAnxietyModules(userId);
@@ -238,19 +255,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/modules/:id", async (req, res) => {
+  app.patch("/api/modules/:id", requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
       const updates = req.body;
-      const module = await storage.updateAnxietyModule(id, updates);
-      res.json({ module });
+      
+      // Verify the module belongs to the authenticated user
+      const module = await storage.getAnxietyModules(req.session.userId);
+      const targetModule = module.find(m => m.id === id);
+      if (!targetModule) {
+        return res.status(403).json({ error: "Forbidden: Module not found or access denied" });
+      }
+      
+      const updatedModule = await storage.updateAnxietyModule(id, updates);
+      res.json({ module: updatedModule });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
   });
 
   // Dashboard data
-  app.get("/api/dashboard/:userId", async (req, res) => {
+  app.get("/api/dashboard/:userId", requireAuth, validateUserAccess, async (req, res) => {
     try {
       const { userId } = req.params;
       
@@ -281,9 +306,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Progress report generation
-  app.post("/api/reports", async (req, res) => {
+  app.post("/api/reports", requireAuth, async (req, res) => {
     try {
-      const { userId } = req.body;
+      const userId = req.session.userId;
       
       const user = await storage.getUser(userId);
       const onboarding = await storage.getOnboardingResponse(userId);
