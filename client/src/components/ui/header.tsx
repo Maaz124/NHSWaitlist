@@ -2,6 +2,7 @@ import { Heart, ChevronDown, User } from "lucide-react";
 import { CrisisButton } from "./crisis-banner";
 import { Button } from "./button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./dropdown-menu";
+import { useEffect, useState } from "react";
 
 interface HeaderProps {
   user?: {
@@ -12,7 +13,21 @@ interface HeaderProps {
 }
 
 export function Header({ user }: HeaderProps) {
-  const initials = user ? `${user.firstName[0]}${user.lastName[0]}` : "U";
+  const [sessionUser, setSessionUser] = useState<typeof user | null>(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.user) setSessionUser(data.user);
+        }
+      } catch {}
+    })();
+  }, []);
+
+  const activeUser = sessionUser || user || undefined;
+  const initials = activeUser ? `${activeUser.firstName?.[0] || ""}${activeUser.lastName?.[0] || ""}` || "U" : "U";
 
   return (
     <header className="bg-card border-b border-border sticky top-0 z-50">
@@ -45,8 +60,18 @@ export function Header({ user }: HeaderProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <div className="px-2 py-2 text-sm">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center mr-2">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-medium">{activeUser ? `${activeUser.firstName} ${activeUser.lastName}` : "Profile"}</div>
+                      <div className="text-muted-foreground text-xs">{activeUser?.email || ""}</div>
+                    </div>
+                  </div>
+                </div>
                 <DropdownMenuItem>
-                  <User className="w-4 h-4 mr-2" />
                   Profile Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem
