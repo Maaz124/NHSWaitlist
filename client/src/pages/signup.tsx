@@ -11,6 +11,7 @@ export default function Signup() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [nhsNumber, setNhsNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const user = { firstName: "", lastName: "", email: "" } as any;
@@ -23,7 +24,7 @@ export default function Signup() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ firstName, lastName, email, nhsNumber }),
+        body: JSON.stringify({ firstName, lastName, email, password, nhsNumber }),
       });
       if (!res.ok) throw new Error(await res.text());
       setLocation("/onboarding");
@@ -54,6 +55,10 @@ export default function Signup() {
                 <div>
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
                 <div>
                   <Label htmlFor="nhs">NHS Number (optional)</Label>

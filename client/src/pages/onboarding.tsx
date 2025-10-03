@@ -18,6 +18,7 @@ const userSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Valid email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   nhsNumber: z.string().optional(),
 });
 
@@ -132,6 +133,7 @@ export default function Onboarding() {
       firstName: "",
       lastName: "",
       email: "",
+      password: "",
       nhsNumber: "",
     },
   });
@@ -250,6 +252,20 @@ export default function Onboarding() {
                       <FormLabel>Email Address</FormLabel>
                       <FormControl>
                         <Input type="email" {...field} data-testid="input-email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={userForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" {...field} data-testid="input-password" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

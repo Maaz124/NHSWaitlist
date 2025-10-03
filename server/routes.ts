@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertOnboardingResponseSchema, insertWeeklyAssessmentSchema } from "@shared/schema";
+import bcrypt from "bcrypt";
 
 function requireAuth(req: any, res: any, next: any) {
   if (!req.session || !req.session.userId) {
@@ -19,10 +20,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (existingUser) {
         return res.status(400).json({ error: "User already exists" });
       }
-      const user = await storage.createUser(userData);
+      
+      // Hash the password before storing
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      const userWithHashedPassword = { ...userData, password: hashedPassword };
+      
+      const user = await storage.createUser(userWithHashedPassword);
       await storage.initializeAnxietyModules(user.id);
       (req as any).session.userId = user.id;
-      res.json({ user });
+      
+      // Don't return the password in the response
+      const { password, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -30,12 +39,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { email } = req.body || {};
+      const { email, password } = req.body || {};
       if (!email) return res.status(400).json({ error: "Email is required" });
+      if (!password) return res.status(400).json({ error: "Password is required" });
+      
       const user = await storage.getUserByEmail(email);
-      if (!user) return res.status(404).json({ error: "User not found" });
+      if (!user) return res.status(401).json({ error: "Invalid email or password" });
+      
+      // Verify the password
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+      
       (req as any).session.userId = user.id;
-      res.json({ user });
+      
+      // Don't return the password in the response
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -53,7 +74,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     const user = await storage.getUser(req.session.userId);
     if (!user) return res.status(401).json({ error: "Unauthorized" });
-    res.json({ user });
+    
+    // Don't return the password in the response
+    const { password, ...userWithoutPassword } = user;
+    res.json({ user: userWithoutPassword });
   });
 
   // User registration/login (simplified for MVP)

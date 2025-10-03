@@ -9,6 +9,7 @@ import { useLocation, Link } from "wouter";
 export default function Login() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const user = { firstName: "", lastName: "", email: "" } as any;
 
@@ -20,7 +21,7 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password }),
       });
       if (!res.ok) throw new Error(await res.text());
       setLocation("/");
@@ -43,6 +44,10 @@ export default function Login() {
                 <div>
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? "Logging in..." : "Log in"}
