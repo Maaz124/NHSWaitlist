@@ -15,9 +15,10 @@ import { RelaxationTools } from "@/components/RelaxationTools";
 import { AnxietyGuideComprehensive } from "@/components/AnxietyGuideComprehensive";
 import { SleepGuideComprehensive } from "@/components/SleepGuideComprehensive";
 import { LifestyleGuideComprehensive } from "@/components/LifestyleGuideComprehensive";
+import { useUser } from "@/contexts/UserContext";
 
 export default function Resources() {
-  const mockUserId = "user-1";
+  const { user } = useUser();
   const [activeToolView, setActiveToolView] = useState<string | null>(null);
   
 
@@ -26,7 +27,7 @@ export default function Resources() {
       const response = await fetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: mockUserId }),
+        body: JSON.stringify({ userId: user?.id }),
       });
       
       if (!response.ok) throw new Error("Failed to generate report");

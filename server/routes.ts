@@ -165,6 +165,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { responses } = req.body;
       const userId = req.session.userId;
+      
+      // Check if user has already completed onboarding
+      const existingResponse = await storage.getOnboardingResponse(userId);
+      if (existingResponse) {
+        return res.status(400).json({ error: "Onboarding already completed" });
+      }
+      
       const riskScore = calculateRiskScore(responses);
       const baselineAnxietyLevel = determineRiskLevel(riskScore);
 

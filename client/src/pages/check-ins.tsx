@@ -18,6 +18,7 @@ import { Check, ArrowLeft, ArrowRight, Eye } from "lucide-react";
 import { calculateRiskScore, determineRiskLevel, getRiskColor } from "@/lib/risk-calculator";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Footer } from "@/components/ui/footer";
+import { useUser } from "@/contexts/UserContext";
 
 const weeklyAssessmentSchema = z.object({
   anxietyFrequency: z.string(),
@@ -75,14 +76,15 @@ const frequencyOptions = [
 ];
 
 export default function CheckIns() {
-  const mockUserId = "user-1";
+  const { user } = useUser();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null);
   const [showAssessmentDetail, setShowAssessmentDetail] = useState(false);
 
   const { data: assessmentsData, isLoading } = useQuery({
-    queryKey: ["/api/assessments", mockUserId],
+    queryKey: ["/api/assessments", user?.id],
+    enabled: !!user?.id,
   });
 
   const form = useForm({
@@ -104,8 +106,8 @@ export default function CheckIns() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/assessments", mockUserId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard", mockUserId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/assessments", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard", user?.id] });
       setShowHistory(true);
       form.reset();
       setCurrentQuestion(0);
@@ -131,7 +133,7 @@ export default function CheckIns() {
     const weekNumber = ((assessmentsData as any)?.assessments?.length || 0) + 1;
     
     createAssessmentMutation.mutate({
-      userId: mockUserId,
+      userId: user?.id,
       weekNumber,
       responses,
     });

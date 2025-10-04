@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import { Header } from "@/components/ui/header";
+import { useUser } from "@/contexts/UserContext";
 import { TabNavigation } from "@/components/ui/tab-navigation";
 import { CrisisBanner } from "@/components/ui/crisis-banner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +58,7 @@ const activityIcons = {
 export default function ModuleDetail() {
   const [match, params] = useRoute("/anxiety-track/module/:weekNumber");
   const weekNumber = parseInt((params as any)?.weekNumber || "1");
-  const mockUserId = "user-1";
+  const { user } = useUser();
   
   const [currentActivity, setCurrentActivity] = useState<string | null>(null);
   const [timer, setTimer] = useState(0);
@@ -77,7 +78,8 @@ export default function ModuleDetail() {
   }, [isTimerRunning]);
 
   const { data: modulesData, isLoading } = useQuery({
-    queryKey: ["/api/modules", mockUserId],
+    queryKey: ["/api/modules", user?.id],
+    enabled: !!user?.id,
   });
 
   const updateModuleMutation = useMutation({
@@ -86,7 +88,7 @@ export default function ModuleDetail() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/modules", mockUserId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/modules", user?.id] });
     },
   });
 

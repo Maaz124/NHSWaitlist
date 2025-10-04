@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -108,24 +108,60 @@ export default function Onboarding() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userId, setUserId] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const hasCheckedOnboarding = useRef(false);
 
-  // If already authenticated, skip personal step
+  // If already authenticated, skip personal step and check if onboarding is completed
   useEffect(() => {
+    if (hasCheckedOnboarding.current) return;
+    hasCheckedOnboarding.current = true;
+    
+    let isMounted = true;
+    
     (async () => {
       try {
         const res = await fetch("/api/auth/me", { credentials: "include" });
-        if (res.ok) {
+        if (res.ok && isMounted) {
           const data = await res.json();
           if (data?.user?.id) {
             setUserId(data.user.id);
             setStep("screening");
+            
+            // Check if user has already completed onboarding
+            try {
+              const onboardingRes = await fetch(`/api/onboarding/${data.user.id}`, { 
+                credentials: "include",
+                headers: {
+                  'Cache-Control': 'no-cache',
+                  'Pragma': 'no-cache'
+                }
+              });
+              if (onboardingRes.ok && isMounted) {
+                const onboardingData = await onboardingRes.json();
+                console.log("Onboarding check response:", onboardingData);
+                if (onboardingData?.response) {
+                  console.log("User has completed onboarding, redirecting to dashboard");
+                  // User has already completed onboarding, redirect to dashboard
+                  setLocation("/");
+                  return;
+                }
+              }
+            } catch (error) {
+              console.log("Onboarding check error:", error);
+            }
           }
+        } else if (isMounted) {
+          // Not authenticated, redirect to login
+          setLocation("/login");
         }
       } catch {
         // ignore
       }
     })();
-  }, []);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array to run only once
 
   const userForm = useForm({
     resolver: zodResolver(userSchema),
@@ -168,8 +204,17 @@ export default function Onboarding() {
       const response = await apiRequest("POST", "/api/onboarding", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Onboarding submitted successfully:", data);
       setLocation("/");
+    },
+    onError: (error: any) => {
+      console.error("Onboarding submission error:", error);
+      if (error?.message?.includes("already completed")) {
+        setLocation("/");
+      } else {
+        setErrorMsg("Failed to save your responses. Please try again.");
+      }
     },
   });
 
@@ -185,7 +230,6 @@ export default function Onboarding() {
       // Submit onboarding
       const responses = onboardingForm.getValues();
       createOnboardingMutation.mutate({
-        userId,
         responses,
       });
     }

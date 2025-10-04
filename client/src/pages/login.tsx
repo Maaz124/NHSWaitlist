@@ -16,18 +16,93 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
     try {
+      console.log("Attempting login...");
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ email, password }),
       });
-      if (!res.ok) throw new Error(await res.text());
-      setLocation("/");
-    } catch (err) {
-      alert("Login failed. Please check your email and try again.");
-    } finally {
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Login failed:", errorText);
+        throw new Error(errorText);
+      }
+      
+      const data = await res.json();
+      console.log("Login response:", data);
+      const userId = data.user?.id;
+      
+      if (!userId) {
+        console.error("No user ID in response");
+        alert("Login failed. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Check if user has completed onboarding
+      try {
+        console.log("Checking onboarding status for user:", userId);
+        const onboardingRes = await fetch(`/api/onboarding/${userId}`, { 
+          credentials: "include",
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        if (onboardingRes.ok) {
+          const onboardingData = await onboardingRes.json();
+          console.log("Onboarding check response:", onboardingData);
+          
+          if (onboardingData?.response) {
+            console.log("User has completed onboarding, redirecting to dashboard");
+            setIsSubmitting(false);
+            // Small delay to ensure state updates are processed
+            setTimeout(() => {
+              setLocation("/");
+              // Fallback navigation
+              window.location.href = "/";
+            }, 100);
+            return;
+          } else {
+            console.log("User hasn't completed onboarding, redirecting to onboarding");
+            setIsSubmitting(false);
+            // Small delay to ensure state updates are processed
+            setTimeout(() => {
+              setLocation("/onboarding");
+              // Fallback navigation
+              window.location.href = "/onboarding";
+            }, 100);
+            return;
+          }
+        } else {
+          console.log("Couldn't check onboarding status, redirecting to onboarding");
+          setIsSubmitting(false);
+          setTimeout(() => {
+            setLocation("/onboarding");
+            // Fallback navigation
+            window.location.href = "/onboarding";
+          }, 100);
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking onboarding status:", error);
+        setIsSubmitting(false);
+        setTimeout(() => {
+          setLocation("/onboarding");
+          // Fallback navigation
+          window.location.href = "/onboarding";
+        }, 100);
+        return;
+      }
+      
+    } catch (err: any) {
+      console.error("Login error:", err);
+      alert("Login failed. Please check your email and password.");
       setIsSubmitting(false);
     }
   };

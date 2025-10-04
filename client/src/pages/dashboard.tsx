@@ -25,13 +25,39 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { user, isLoading: userLoading, isAuthenticated } = useUser();
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated or onboarding not completed
   useEffect(() => {
     if (userLoading) return; // Still loading
     if (!isAuthenticated) {
-      setLocation("/onboarding");
+      setLocation("/login");
+      return;
     }
-  }, [isAuthenticated, userLoading, setLocation]);
+    
+    // Check if user has completed onboarding
+    if (user?.id) {
+      const checkOnboarding = async () => {
+        try {
+          const res = await fetch(`/api/onboarding/${user.id}`, { 
+            credentials: "include",
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (!data?.response) {
+              // User hasn't completed onboarding, redirect to onboarding
+              setLocation("/onboarding");
+            }
+          }
+        } catch (error) {
+          console.error("Error checking onboarding status:", error);
+        }
+      };
+      checkOnboarding();
+    }
+  }, [isAuthenticated, userLoading, user?.id, setLocation]);
   
   // Quick action states
   const [breathingDialogOpen, setBreathingDialogOpen] = useState(false);
