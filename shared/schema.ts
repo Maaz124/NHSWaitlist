@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -90,6 +90,25 @@ export const thoughtRecords = pgTable("thought_records", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const moodEntries = pgTable("mood_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  entryDate: date("entry_date").notNull(), // The date this mood entry is for
+  mood: integer("mood").notNull(), // 1-10 scale
+  energy: integer("energy").notNull(), // 1-10 scale
+  anxiety: integer("anxiety").notNull(), // 1-10 scale
+  sleep: integer("sleep").notNull(), // 1-10 scale
+  emotions: jsonb("emotions"), // Array of emotion strings
+  activities: jsonb("activities"), // Array of activity strings
+  thoughts: text("thoughts"),
+  gratitude: jsonb("gratitude"), // Array of gratitude strings
+  challenges: text("challenges"),
+  wins: text("wins"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertOnboardingResponseSchema = createInsertSchema(onboardingResponses).omit({ id: true, completedAt: true });
 export const insertWeeklyAssessmentSchema = createInsertSchema(weeklyAssessments).omit({ id: true, completedAt: true });
@@ -97,6 +116,7 @@ export const insertAnxietyModuleSchema = createInsertSchema(anxietyModules).omit
 export const insertModuleActivitySchema = createInsertSchema(moduleActivities).omit({ id: true, completedAt: true });
 export const insertProgressReportSchema = createInsertSchema(progressReports).omit({ id: true, generatedAt: true });
 export const insertThoughtRecordSchema = createInsertSchema(thoughtRecords).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({ id: true, createdAt: true, updatedAt: true });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -112,3 +132,5 @@ export type ProgressReport = typeof progressReports.$inferSelect;
 export type InsertProgressReport = z.infer<typeof insertProgressReportSchema>;
 export type ThoughtRecord = typeof thoughtRecords.$inferSelect;
 export type InsertThoughtRecord = z.infer<typeof insertThoughtRecordSchema>;
+export type MoodEntry = typeof moodEntries.$inferSelect;
+export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;

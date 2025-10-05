@@ -427,6 +427,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mood Entries API
+  app.post("/api/mood-entries", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const { entryDate, mood, energy, anxiety, sleep, emotions, activities, thoughts, gratitude, challenges, wins, notes } = req.body;
+      
+      const moodEntry = await storage.createMoodEntry({
+        userId,
+        entryDate,
+        mood,
+        energy,
+        anxiety,
+        sleep,
+        emotions,
+        activities,
+        thoughts,
+        gratitude,
+        challenges,
+        wins,
+        notes
+      });
+
+      res.json(moodEntry);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/mood-entries/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const moodEntries = await storage.getMoodEntries(userId);
+      res.json(moodEntries);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/mood-entries/date/:userId/:date", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId, date } = req.params;
+      const moodEntry = await storage.getMoodEntryByDate(userId, date);
+      res.json(moodEntry);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/mood-entries/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const moodEntry = await storage.updateMoodEntry(id, updates);
+      res.json(moodEntry);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/mood-entries/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteMoodEntry(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

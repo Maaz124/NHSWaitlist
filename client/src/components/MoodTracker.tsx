@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
+import { apiRequest } from "@/lib/queryClient";
+import { useUser } from "@/contexts/UserContext";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Smile,
   Frown,
@@ -43,8 +47,10 @@ interface MoodEntry {
 }
 
 export function MoodTracker() {
-  const [entries, setEntries] = useState<MoodEntry[]>([]);
+  const { user } = useUser();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
   const [currentEntry, setCurrentEntry] = useState<Partial<MoodEntry>>({
     mood: 5,
     energy: 5,
@@ -58,10 +64,122 @@ export function MoodTracker() {
     wins: "",
     notes: ""
   });
+  const [isProgrammaticLoad, setIsProgrammaticLoad] = useState(false);
+  const [lastSavedHash, setLastSavedHash] = useState<string>("");
 
   const [newEmotion, setNewEmotion] = useState("");
   const [newActivity, setNewActivity] = useState("");
   const [activeTab, setActiveTab] = useState("daily");
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+
+  // Load mood entries from database
+  const { data: entries = [], refetch: refetchEntries } = useQuery({
+    queryKey: ["/api/mood-entries", user?.id],
+    enabled: !!user?.id,
+  });
+
+  // Create mood entry mutation
+  const createMoodEntryMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch("/api/mood-entries", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const text = await response.text();
+        if (response.status === 401) {
+          throw new Error("Authentication required. Please log in again.");
+        }
+        throw new Error(`HTTP ${response.status}: ${text}`);
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setCurrentEntryId(data.id);
+      setLastSavedHash(JSON.stringify({
+        entryDate: selectedDate.toISOString().split('T')[0],
+        ...{
+          mood: currentEntry.mood || 5,
+          energy: currentEntry.energy || 5,
+          anxiety: currentEntry.anxiety || 3,
+          sleep: currentEntry.sleep || 7,
+          emotions: currentEntry.emotions || [],
+          activities: currentEntry.activities || [],
+          thoughts: currentEntry.thoughts || "",
+          gratitude: (currentEntry.gratitude || []).filter(item => item.trim()),
+          challenges: currentEntry.challenges || "",
+          wins: currentEntry.wins || "",
+          notes: currentEntry.notes || ""
+        }
+      }));
+      refetchEntries();
+    },
+    onError: (error: any) => {
+      console.error("Failed to create mood entry:", error);
+      toast({
+        title: "Save Failed",
+        description: `Failed to save mood entry: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update mood entry mutation
+  const updateMoodEntryMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+      const response = await fetch(`/api/mood-entries/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(updates),
+      });
+      
+      if (!response.ok) {
+        const text = await response.text();
+        if (response.status === 401) {
+          throw new Error("Authentication required. Please log in again.");
+        }
+        throw new Error(`HTTP ${response.status}: ${text}`);
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      setLastSavedHash(JSON.stringify({
+        entryDate: selectedDate.toISOString().split('T')[0],
+        ...{
+          mood: currentEntry.mood || 5,
+          energy: currentEntry.energy || 5,
+          anxiety: currentEntry.anxiety || 3,
+          sleep: currentEntry.sleep || 7,
+          emotions: currentEntry.emotions || [],
+          activities: currentEntry.activities || [],
+          thoughts: currentEntry.thoughts || "",
+          gratitude: (currentEntry.gratitude || []).filter(item => item.trim()),
+          challenges: currentEntry.challenges || "",
+          wins: currentEntry.wins || "",
+          notes: currentEntry.notes || ""
+        }
+      }));
+      refetchEntries();
+    },
+    onError: (error: any) => {
+      console.error("Failed to update mood entry:", error);
+      toast({
+        title: "Update Failed",
+        description: `Failed to update mood entry: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
 
   const emotionOptions = [
     { name: "Happy", color: "bg-yellow-400", textColor: "text-yellow-800" },
@@ -97,8 +215,8 @@ export function MoodTracker() {
   const getMoodColor = (mood: number) => {
     if (mood >= 8) return "bg-green-500";
     if (mood >= 6) return "bg-yellow-500";
-    if (mood >= 4) return "bg-orange-500";
-    return "bg-red-500";
+    if (mood === 5) return "bg-orange-500";
+    return "bg-red-500"; // mood 1-4
   };
 
   const toggleEmotion = (emotion: string) => {
@@ -154,10 +272,84 @@ export function MoodTracker() {
     }));
   };
 
+  // Auto-save functionality
+  useEffect(() => {
+    if (!user?.id) return;
+    if (isProgrammaticLoad) return; // skip while we're loading existing entry into form
+
+    const { mood, energy, anxiety, sleep, emotions, activities, thoughts, gratitude, challenges, wins, notes } = currentEntry;
+
+    // Only auto-save if we have the minimum required fields
+    if (mood !== undefined && energy !== undefined && anxiety !== undefined && sleep !== undefined) {
+      // Build a normalized snapshot for hashing to avoid duplicate saves
+      const snapshot = JSON.stringify({
+        entryDate: selectedDate.toISOString().split('T')[0],
+        mood: mood || 5,
+        energy: energy || 5,
+        anxiety: anxiety || 3,
+        sleep: sleep || 7,
+        emotions: emotions || [],
+        activities: activities || [],
+        thoughts: thoughts || "",
+        gratitude: (gratitude || []).map((g) => g.trim()).filter(Boolean),
+        challenges: challenges || "",
+        wins: wins || "",
+        notes: notes || ""
+      });
+
+      // If nothing changed since last successful save, skip
+      if (snapshot === lastSavedHash) return;
+
+      // If a mutation is ongoing, skip to prevent churn
+      if (createMoodEntryMutation.isPending || updateMoodEntryMutation.isPending) return;
+
+      setIsAutoSaving(true);
+
+      // Clear existing timeout
+      clearTimeout((window as any).moodEntrySaveTimeout);
+
+      (window as any).moodEntrySaveTimeout = setTimeout(() => {
+        const saveData = {
+          userId: user.id,
+          entryDate: selectedDate.toISOString().split('T')[0], // YYYY-MM-DD format
+          mood: mood || 5,
+          energy: energy || 5,
+          anxiety: anxiety || 3,
+          sleep: sleep || 7,
+          emotions: emotions || [],
+          activities: activities || [],
+          thoughts: thoughts || "",
+          gratitude: (gratitude || []).map((g) => g.trim()).filter(Boolean),
+          challenges: challenges || "",
+          wins: wins || "",
+          notes: notes || ""
+        };
+
+        if (currentEntryId) {
+          // Update existing entry
+          updateMoodEntryMutation.mutate({ id: currentEntryId, updates: saveData }, {
+            onSettled: () => setIsAutoSaving(false)
+          });
+        } else {
+          // Create new entry
+          createMoodEntryMutation.mutate(saveData, {
+            onSettled: () => setIsAutoSaving(false)
+          });
+        }
+      }, 600); // 600ms debounce
+    }
+
+    return () => {
+      clearTimeout((window as any).moodEntrySaveTimeout);
+    };
+  }, [currentEntry.mood, currentEntry.energy, currentEntry.anxiety, currentEntry.sleep, currentEntry.emotions, currentEntry.activities, currentEntry.thoughts, currentEntry.gratitude, currentEntry.challenges, currentEntry.wins, currentEntry.notes, user?.id, currentEntryId, selectedDate, lastSavedHash, isProgrammaticLoad, createMoodEntryMutation.isPending, updateMoodEntryMutation.isPending]);
+
   const saveEntry = () => {
-    const entry: MoodEntry = {
-      id: `${selectedDate.toISOString().split('T')[0]}-${Date.now()}`,
-      date: selectedDate,
+    if (!user?.id) return;
+
+    const saveData = {
+      userId: user.id,
+      entryDate: selectedDate.toISOString().split('T')[0], // YYYY-MM-DD format
       mood: currentEntry.mood || 5,
       energy: currentEntry.energy || 5,
       anxiety: currentEntry.anxiety || 3,
@@ -171,50 +363,98 @@ export function MoodTracker() {
       notes: currentEntry.notes || ""
     };
 
-    setEntries(prev => {
-      const filtered = prev.filter(e => e.date.toDateString() !== selectedDate.toDateString());
-      return [entry, ...filtered].sort((a, b) => b.date.getTime() - a.date.getTime());
-    });
-
-    // Reset form
-    setCurrentEntry({
-      mood: 5,
-      energy: 5,
-      anxiety: 3,
-      sleep: 7,
-      emotions: [],
-      activities: [],
-      thoughts: "",
-      gratitude: [""],
-      challenges: "",
-      wins: "",
-      notes: ""
-    });
+    if (currentEntryId) {
+      // Update existing entry
+      updateMoodEntryMutation.mutate({
+        id: currentEntryId,
+        updates: saveData
+      }, {
+        onSuccess: () => {
+          toast({
+            title: "Entry Updated",
+            description: "Your mood entry has been updated successfully.",
+          });
+        }
+      });
+    } else {
+      // Create new entry
+      createMoodEntryMutation.mutate(saveData, {
+        onSuccess: () => {
+          toast({
+            title: "Entry Saved",
+            description: "Your mood entry has been saved successfully.",
+          });
+        }
+      });
+    }
   };
 
   const loadEntryForDate = (date: Date) => {
-    const existing = entries.find(e => e.date.toDateString() === date.toDateString());
+    const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const existing = entries.find(e => e.entryDate === dateString);
+    setIsProgrammaticLoad(true);
     if (existing) {
+      setCurrentEntryId(existing.id);
       setCurrentEntry({
         mood: existing.mood,
         energy: existing.energy,
         anxiety: existing.anxiety,
         sleep: existing.sleep,
-        emotions: existing.emotions,
-        activities: existing.activities,
-        thoughts: existing.thoughts,
-        gratitude: existing.gratitude.length > 0 ? existing.gratitude : [""],
-        challenges: existing.challenges,
-        wins: existing.wins,
-        notes: existing.notes
+        emotions: existing.emotions || [],
+        activities: existing.activities || [],
+        thoughts: existing.thoughts || "",
+        gratitude: (existing.gratitude && existing.gratitude.length > 0) ? existing.gratitude : [""],
+        challenges: existing.challenges || "",
+        wins: existing.wins || "",
+        notes: existing.notes || ""
       });
+      // Update lastSavedHash to the loaded snapshot to avoid immediate re-save
+      setLastSavedHash(JSON.stringify({
+        entryDate: dateString,
+        mood: existing.mood,
+        energy: existing.energy,
+        anxiety: existing.anxiety,
+        sleep: existing.sleep,
+        emotions: existing.emotions || [],
+        activities: existing.activities || [],
+        thoughts: existing.thoughts || "",
+        gratitude: (existing.gratitude || []).map((g: string) => g.trim()).filter(Boolean),
+        challenges: existing.challenges || "",
+        wins: existing.wins || "",
+        notes: existing.notes || ""
+      }));
+    } else {
+      setCurrentEntryId(null);
+      setCurrentEntry({
+        mood: 5,
+        energy: 5,
+        anxiety: 3,
+        sleep: 7,
+        emotions: [],
+        activities: [],
+        thoughts: "",
+        gratitude: [""],
+        challenges: "",
+        wins: "",
+        notes: ""
+      });
+      setLastSavedHash("");
     }
+    // Allow autosave after state is settled
+    setTimeout(() => setIsProgrammaticLoad(false), 0);
   };
+
+  // Load entry when selected date changes
+  useEffect(() => {
+    loadEntryForDate(selectedDate);
+  }, [selectedDate, entries]);
 
   const getAverageForPeriod = (days: number) => {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
-    const recentEntries = entries.filter(e => e.date >= cutoff);
+    const cutoffString = cutoff.toISOString().split('T')[0];
+    
+    const recentEntries = entries.filter(e => e.entryDate >= cutoffString);
     
     if (recentEntries.length === 0) return null;
     
@@ -284,7 +524,7 @@ export function MoodTracker() {
                 </CardTitle>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">
-                    {selectedDate.toLocaleDateString()}
+                    {selectedDate.toLocaleDateString('en-GB')}
                   </Badge>
                   <input
                     type="date"
@@ -304,10 +544,18 @@ export function MoodTracker() {
               {/* Core Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label className="flex items-center gap-2 mb-3">
-                    <Heart className="w-4 h-4" />
-                    Overall Mood (1-10)
-                  </Label>
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="flex items-center gap-2">
+                      <Heart className="w-4 h-4" />
+                      Overall Mood (1-10)
+                    </Label>
+                    {isAutoSaving && (
+                      <Badge variant="secondary" className="text-xs">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                        Saving...
+                      </Badge>
+                    )}
+                  </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-4">
                       <span className="text-sm w-12">Terrible</span>
@@ -605,32 +853,80 @@ export function MoodTracker() {
                   }}
                   className="rounded-md border"
                   modifiers={{
-                    hasEntry: (date) => entries.some(e => e.date.toDateString() === date.toDateString()),
-                    highMood: (date) => {
-                      const entry = entries.find(e => e.date.toDateString() === date.toDateString());
-                      return entry ? entry.mood >= 8 : false;
+                    hasEntry: (date) => entries.some(e => e.entryDate === date.toISOString().split('T')[0]),
+                    mood1: (date) => {
+                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
+                      return entry ? entry.mood === 1 : false;
                     },
-                    lowMood: (date) => {
-                      const entry = entries.find(e => e.date.toDateString() === date.toDateString());
-                      return entry ? entry.mood <= 4 : false;
+                    mood2: (date) => {
+                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
+                      return entry ? entry.mood === 2 : false;
+                    },
+                    mood3: (date) => {
+                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
+                      return entry ? entry.mood === 3 : false;
+                    },
+                    mood4: (date) => {
+                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
+                      return entry ? entry.mood === 4 : false;
+                    },
+                    mood5: (date) => {
+                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
+                      return entry ? entry.mood === 5 : false;
+                    },
+                    mood6: (date) => {
+                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
+                      return entry ? entry.mood === 6 : false;
+                    },
+                    mood7: (date) => {
+                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
+                      return entry ? entry.mood === 7 : false;
+                    },
+                    mood8: (date) => {
+                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
+                      return entry ? entry.mood === 8 : false;
+                    },
+                    mood9: (date) => {
+                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
+                      return entry ? entry.mood === 9 : false;
+                    },
+                    mood10: (date) => {
+                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
+                      return entry ? entry.mood === 10 : false;
                     }
                   }}
                   modifiersStyles={{
                     hasEntry: { fontWeight: 'bold' },
-                    highMood: { backgroundColor: '#22c55e', color: 'white' },
-                    lowMood: { backgroundColor: '#ef4444', color: 'white' }
+                    mood1: { backgroundColor: '#dc2626', color: 'white' }, // Red
+                    mood2: { backgroundColor: '#dc2626', color: 'white' }, // Red
+                    mood3: { backgroundColor: '#dc2626', color: 'white' }, // Red
+                    mood4: { backgroundColor: '#dc2626', color: 'white' }, // Red
+                    mood5: { backgroundColor: '#f97316', color: 'white' }, // Orange
+                    mood6: { backgroundColor: '#eab308', color: 'white' }, // Yellow
+                    mood7: { backgroundColor: '#eab308', color: 'white' }, // Yellow
+                    mood8: { backgroundColor: '#22c55e', color: 'white' }, // Green
+                    mood9: { backgroundColor: '#22c55e', color: 'white' }, // Green
+                    mood10: { backgroundColor: '#22c55e', color: 'white' } // Green
                   }}
                 />
               </div>
               
-              <div className="flex justify-center gap-4 mt-4 text-sm">
+              <div className="flex justify-center gap-3 mt-4 text-sm flex-wrap">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500 rounded"></div>
-                  <span>Good mood (8+)</span>
+                  <div className="w-4 h-4 bg-red-600 rounded"></div>
+                  <span>Mood 1-4</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-500 rounded"></div>
-                  <span>Difficult mood (≤4)</span>
+                  <div className="w-4 h-4 bg-orange-500 rounded"></div>
+                  <span>Mood 5</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+                  <span>Mood 6-7</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-green-500 rounded"></div>
+                  <span>Mood 8-10</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-gray-800 rounded"></div>
@@ -786,7 +1082,7 @@ export function MoodTracker() {
                         <div className="flex items-center justify-between mb-3">
                           <h4 className="font-medium flex items-center gap-2">
                             {getMoodIcon(entry.mood)}
-                            {entry.date.toLocaleDateString()}
+                            {new Date(entry.entryDate).toLocaleDateString('en-GB')}
                           </h4>
                           <div className="flex items-center gap-2">
                             <Badge variant="outline">Mood: {entry.mood}/10</Badge>

@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db, schema } from "./db";
 
 // Check if database is available
@@ -35,7 +35,9 @@ import {
   type ProgressReport, 
   type InsertProgressReport,
   type ThoughtRecord,
-  type InsertThoughtRecord
+  type InsertThoughtRecord,
+  type MoodEntry,
+  type InsertMoodEntry
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -234,5 +236,46 @@ export class PostgresStorage implements IStorage {
 
   async deleteThoughtRecord(id: string): Promise<void> {
     await db.delete(schema.thoughtRecords).where(eq(schema.thoughtRecords.id, id));
+  }
+
+  // Mood Entries CRUD operations
+  async createMoodEntry(insertEntry: InsertMoodEntry): Promise<MoodEntry> {
+    const result = await db.insert(schema.moodEntries).values(insertEntry).returning();
+    return result[0];
+  }
+
+  async getMoodEntries(userId: string): Promise<MoodEntry[]> {
+    return await db.select().from(schema.moodEntries)
+      .where(eq(schema.moodEntries.userId, userId))
+      .orderBy(desc(schema.moodEntries.entryDate));
+  }
+
+  async getMoodEntry(id: string): Promise<MoodEntry | null> {
+    const result = await db.select().from(schema.moodEntries)
+      .where(eq(schema.moodEntries.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async getMoodEntryByDate(userId: string, entryDate: string): Promise<MoodEntry | null> {
+    const result = await db.select().from(schema.moodEntries)
+      .where(and(
+        eq(schema.moodEntries.userId, userId),
+        eq(schema.moodEntries.entryDate, entryDate)
+      ))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async updateMoodEntry(id: string, updates: Partial<InsertMoodEntry>): Promise<MoodEntry> {
+    const result = await db.update(schema.moodEntries)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(schema.moodEntries.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteMoodEntry(id: string): Promise<void> {
+    await db.delete(schema.moodEntries).where(eq(schema.moodEntries.id, id));
   }
 }

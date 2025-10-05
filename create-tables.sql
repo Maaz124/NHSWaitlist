@@ -98,6 +98,26 @@ CREATE TABLE IF NOT EXISTS thought_records (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Create mood_entries table
+CREATE TABLE IF NOT EXISTS mood_entries (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    entry_date DATE NOT NULL,
+    mood INTEGER NOT NULL,
+    energy INTEGER NOT NULL,
+    anxiety INTEGER NOT NULL,
+    sleep INTEGER NOT NULL,
+    emotions JSONB,
+    activities JSONB,
+    thoughts TEXT,
+    gratitude JSONB,
+    challenges TEXT,
+    wins TEXT,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Create health_check table (if not exists)
 CREATE TABLE IF NOT EXISTS health_check (
     id SERIAL PRIMARY KEY,
