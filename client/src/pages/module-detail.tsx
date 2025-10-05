@@ -2010,9 +2010,12 @@ You're ready for this next phase of your mental health journey. Trust in the pro
     });
     
     const newActivitiesCompleted = completedActivities.length;
-    const newMinutesCompleted = completedActivities.reduce((total: number, a: any) => {
+    const calculatedMinutes = completedActivities.reduce((total: number, a: any) => {
       return total + (a.estimatedMinutes || 0);
     }, 0);
+    
+    // Cap minutesCompleted at the module's estimatedMinutes to prevent >100% completion
+    const newMinutesCompleted = Math.min(calculatedMinutes, module.estimatedMinutes);
     
     // Update module progress
     const updates = {

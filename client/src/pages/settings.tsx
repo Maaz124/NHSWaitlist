@@ -21,8 +21,7 @@ import { useUser } from "@/contexts/UserContext";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"), 
-  email: z.string().email("Valid email is required"),
+  lastName: z.string().min(1, "Last name is required"),
 });
 
 interface NotificationSettings {
@@ -76,9 +75,19 @@ export default function Settings() {
     defaultValues: {
       firstName: authUser?.firstName || user?.firstName || "",
       lastName: authUser?.lastName || user?.lastName || "",
-      email: authUser?.email || user?.email || "",
     },
   });
+
+  // Update form values when user data changes
+  useEffect(() => {
+    const currentUser = authUser || user;
+    if (currentUser) {
+      form.reset({
+        firstName: currentUser.firstName || "",
+        lastName: currentUser.lastName || "",
+      });
+    }
+  }, [authUser, user, form]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -91,6 +100,8 @@ export default function Settings() {
     },
     onSuccess: (data) => {
       console.log('Update successful:', data);
+      // Invalidate user queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       toast({
         title: "Profile Updated",
         description: "Your profile information has been saved successfully.",
@@ -219,19 +230,17 @@ export default function Settings() {
                         )}
                       />
                       
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email Address</FormLabel>
-                            <FormControl>
-                              <Input type="email" {...field} data-testid="input-email" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-card-foreground">Email Address</label>
+                        <div className="flex items-center p-3 bg-muted rounded-md">
+                          <span className="text-sm text-muted-foreground">
+                            {authUser?.email || user?.email || "No email available"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Email address cannot be changed for security reasons
+                        </p>
+                      </div>
                     </div>
                     
                     <Button 

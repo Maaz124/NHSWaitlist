@@ -3,6 +3,7 @@ import { CrisisButton } from "./crisis-banner";
 import { Button } from "./button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./dropdown-menu";
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 
 interface HeaderProps {
   user?: {
@@ -13,6 +14,7 @@ interface HeaderProps {
 }
 
 export function Header({ user }: HeaderProps) {
+  const [, setLocation] = useLocation();
   const [sessionUser, setSessionUser] = useState<typeof user | null>(null);
   useEffect(() => {
     (async () => {
@@ -71,7 +73,10 @@ export function Header({ user }: HeaderProps) {
                     </div>
                   </div>
                 </div>
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setLocation("/settings")}
+                  data-testid="button-profile-settings"
+                >
                   Profile Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem

@@ -305,6 +305,7 @@ pm2 ecosystem.config.js
 - ✅ **HTTPS enabled** (recommended for production)
 - ✅ **Firewall rules** configured
 - ✅ **Regular backups** scheduled
+- ✅ **Email changes disabled** for security (users cannot change email addresses)
 
 ---
 

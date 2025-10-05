@@ -148,7 +148,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const updates = req.body;
-      const user = await storage.updateUser(userId, updates);
+      
+      // Remove email from updates to prevent email changes
+      const { email, ...allowedUpdates } = updates;
+      
+      const user = await storage.updateUser(userId, allowedUpdates);
       
       if (!user) {
         return res.status(404).json({ error: "User not found" });
