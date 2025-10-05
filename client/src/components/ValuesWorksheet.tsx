@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,9 +60,15 @@ const valueExamples = {
   fun: ["Playfulness", "Humor", "Enjoyment", "Spontaneity", "Celebration"]
 };
 
-export function ValuesWorksheet() {
+interface ValuesWorksheetProps {
+  initialData?: ValuesData;
+  onDataChange?: (data: ValuesData) => void;
+  onSave?: (data: ValuesData) => void;
+}
+
+export function ValuesWorksheet({ initialData, onDataChange, onSave }: ValuesWorksheetProps = {}) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [valuesData, setValuesData] = useState<ValuesData>({
+  const [valuesData, setValuesData] = useState<ValuesData>(initialData || {
     lifeAreas: defaultLifeAreas,
     top3Values: ["", "", ""],
     valuesInAction: {
@@ -84,6 +90,20 @@ export function ValuesWorksheet() {
       value3: { name: "", currentState: "", idealState: "", barriers: "", weeklyAction: "" }
     }
   });
+
+  // Load initial data when component mounts or initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setValuesData(initialData);
+    }
+  }, [initialData]);
+
+  // Auto-save when data changes
+  useEffect(() => {
+    if (onDataChange) {
+      onDataChange(valuesData);
+    }
+  }, [valuesData, onDataChange]);
 
   const updateLifeArea = (index: number, field: keyof LifeArea, value: any) => {
     setValuesData(prev => ({

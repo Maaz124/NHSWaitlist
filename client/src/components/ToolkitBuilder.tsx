@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,7 +77,13 @@ interface ToolkitSection {
   };
 }
 
-export function ToolkitBuilder() {
+interface ToolkitBuilderProps {
+  initialData?: ToolkitSection;
+  onDataChange?: (data: ToolkitSection) => void;
+  onSave?: (data: ToolkitSection) => void;
+}
+
+export function ToolkitBuilder({ initialData, onDataChange, onSave }: ToolkitBuilderProps = {}) {
   const [toolkit, setToolkit] = useState<ToolkitSection>({
     emergency_techniques: {
       breathing: [],
@@ -128,6 +134,20 @@ export function ToolkitBuilder() {
       reminder_phrases: []
     }
   });
+
+  // Load initial data when component mounts or initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setToolkit(initialData);
+    }
+  }, [initialData]);
+
+  // Auto-save when data changes
+  useEffect(() => {
+    if (onDataChange) {
+      onDataChange(toolkit);
+    }
+  }, [toolkit, onDataChange]);
 
   const emergencyTechniques = {
     breathing: [

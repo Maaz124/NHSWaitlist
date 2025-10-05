@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/ui/header";
 import { TabNavigation } from "@/components/ui/tab-navigation";
 import { CrisisBanner } from "@/components/ui/crisis-banner";
@@ -16,10 +16,20 @@ import { AnxietyGuideComprehensive } from "@/components/AnxietyGuideComprehensiv
 import { SleepGuideComprehensive } from "@/components/SleepGuideComprehensive";
 import { LifestyleGuideComprehensive } from "@/components/LifestyleGuideComprehensive";
 import { useUser } from "@/contexts/UserContext";
+import { useLocation } from "wouter";
 
 export default function Resources() {
-  const { user } = useUser();
+  const [, setLocation] = useLocation();
+  const { user, isLoading: userLoading, isAuthenticated } = useUser();
   const [activeToolView, setActiveToolView] = useState<string | null>(null);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (userLoading) return; // Still loading
+    if (!isAuthenticated) {
+      setLocation("/login");
+    }
+  }, [isAuthenticated, userLoading, setLocation]);
   
 
   const handleExportReport = async () => {
@@ -62,6 +72,24 @@ export default function Resources() {
         return null;
     }
   };
+
+  // Show loading state while checking authentication
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show loading state if not authenticated (redirect will happen)
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Redirecting...</div>
+      </div>
+    );
+  }
 
   if (activeToolView) {
     return (

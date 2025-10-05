@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { Header } from "@/components/ui/header";
 import { useUser } from "@/contexts/UserContext";
 import { TabNavigation } from "@/components/ui/tab-navigation";
@@ -57,14 +57,27 @@ const activityIcons = {
 
 export default function ModuleDetail() {
   const [match, params] = useRoute("/anxiety-track/module/:weekNumber");
+  const [, setLocation] = useLocation();
   const weekNumber = parseInt((params as any)?.weekNumber || "1");
-  const { user } = useUser();
+  const { user, isLoading: userLoading, isAuthenticated } = useUser();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (userLoading) return; // Still loading
+    if (!isAuthenticated) {
+      setLocation("/login");
+    }
+  }, [isAuthenticated, userLoading, setLocation]);
   
   const [currentActivity, setCurrentActivity] = useState<string | null>(null);
   const [timer, setTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [notes, setNotes] = useState("");
   const [reflections, setReflections] = useState<Record<string, string>>({});
+  const [worksheetData, setWorksheetData] = useState<{[key: string]: {[key: string]: boolean}}>({});
+  const [moduleCompleted, setModuleCompleted] = useState(false);
+  const [reflectionSaving, setReflectionSaving] = useState(false);
+  const [notesSaving, setNotesSaving] = useState(false);
 
   // Timer effect
   useEffect(() => {
@@ -85,12 +98,73 @@ export default function ModuleDetail() {
   const updateModuleMutation = useMutation({
     mutationFn: async ({ moduleId, updates }: { moduleId: string; updates: any }) => {
       const response = await apiRequest("PATCH", `/api/modules/${moduleId}`, updates);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/modules", user?.id] });
     },
+    onError: (error: any) => {
+      console.error("Failed to update module:", error);
+      alert(`Failed to update module: ${error.message}`);
+    },
   });
+
+  const modules = (modulesData as any)?.modules || [];
+  const module = modules.find((m: any) => m.weekNumber === weekNumber);
+
+  // Load existing worksheet data when module changes
+  useEffect(() => {
+    if (module?.userProgress) {
+      const loadedWorksheetData: {[key: string]: {[key: string]: boolean}} = {};
+      const loadedReflectionData: Record<string, string> = {};
+      
+      Object.keys(module.userProgress).forEach(activityId => {
+        const progress = module.userProgress[activityId];
+        if (progress.worksheetData) {
+          loadedWorksheetData[activityId] = progress.worksheetData;
+        }
+        if (progress.reflectionData) {
+          Object.assign(loadedReflectionData, progress.reflectionData);
+        }
+      });
+      
+      setWorksheetData(loadedWorksheetData);
+      setReflections(loadedReflectionData);
+    }
+    
+    // Load module notes if they exist, otherwise reset to empty
+    if (module?.userProgress?.moduleNotes) {
+      setNotes(module.userProgress.moduleNotes);
+    } else {
+      setNotes(""); // Reset notes when switching modules or no notes exist
+    }
+    
+    // Reset saving states when module changes
+    setReflectionSaving(false);
+    setNotesSaving(false);
+  }, [module]);
+
+  // Show loading state while checking authentication
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show loading state if not authenticated (redirect will happen)
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Redirecting...</div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -100,8 +174,23 @@ export default function ModuleDetail() {
     );
   }
 
-  const modules = (modulesData as any)?.modules || [];
-  const module = modules.find((m: any) => m.weekNumber === weekNumber);
+  // Function to merge static content with user progress
+  const getModuleContentWithProgress = (weekNumber: number, moduleData: any) => {
+    const staticContent = getModuleContent(weekNumber);
+    const userProgress = moduleData?.userProgress || {};
+    
+    // Merge activity completion status with user progress
+    const activitiesWithProgress = staticContent.activities.map((activity: any) => ({
+      ...activity,
+      isCompleted: userProgress[activity.id]?.completed || false,
+      completedAt: userProgress[activity.id]?.completedAt || null
+    }));
+    
+    return {
+      ...staticContent,
+      activities: activitiesWithProgress
+    };
+  };
 
   if (!module) {
     return (
@@ -1884,7 +1973,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
     return contents[weekNumber as keyof typeof contents] || contents[1];
   };
 
-  const moduleContent = getModuleContent(weekNumber);
+  const moduleContent = getModuleContentWithProgress(weekNumber, module || {});
   const activities: ModuleActivity[] = moduleContent.activities;
 
   const formatTime = (seconds: number) => {
@@ -1894,14 +1983,90 @@ You're ready for this next phase of your mental health journey. Trust in the pro
   };
 
   const handleActivityComplete = (activityId: string) => {
-    // In real implementation, this would update the backend
-    // Activity completed - update progress
+    if (!module) return;
+    
+    // Get current module content with progress
+    const moduleContent = getModuleContentWithProgress(module.weekNumber, module);
+    const activity = moduleContent.activities.find((a: any) => a.id === activityId);
+    if (!activity) return;
+    
+    // Toggle completion status
+    const newCompletionStatus = !activity.isCompleted;
+    
+    // Calculate new progress counters
+    const updatedUserProgress = {
+      ...(module.userProgress || {}),
+      [activityId]: {
+        ...(module.userProgress?.[activityId] || {}), // Preserve existing data like worksheetData
+        completed: newCompletionStatus,
+        completedAt: newCompletionStatus ? new Date().toISOString() : null
+      }
+    };
+    
+    // Count completed activities and minutes using the updated progress
+    const completedActivities = moduleContent.activities.filter((a: any) => {
+      const activityProgress = updatedUserProgress[a.id];
+      return activityProgress?.completed || false;
+    });
+    
+    const newActivitiesCompleted = completedActivities.length;
+    const newMinutesCompleted = completedActivities.reduce((total: number, a: any) => {
+      return total + (a.estimatedMinutes || 0);
+    }, 0);
+    
+    // Update module progress
+    const updates = {
+      activitiesCompleted: newActivitiesCompleted,
+      minutesCompleted: newMinutesCompleted,
+      userProgress: updatedUserProgress
+    };
+    
+    // Save to backend
+    updateModuleMutation.mutate({
+      moduleId: module.id,
+      updates,
+    });
   };
 
   const handleStartActivity = (activityId: string) => {
     setCurrentActivity(activityId);
     setIsTimerRunning(true);
     setTimer(0);
+  };
+
+  const handleWorksheetCheckboxChange = (activityId: string, category: string, itemIndex: number, checked: boolean) => {
+    const newWorksheetData = {
+      ...worksheetData,
+      [activityId]: {
+        ...worksheetData[activityId],
+        [`${category}-${itemIndex}`]: checked
+      }
+    };
+    
+    setWorksheetData(newWorksheetData);
+    
+    // Auto-save worksheet data when checkbox changes
+    if (module) {
+      const updatedUserProgress = {
+        ...(module.userProgress || {}),
+        [activityId]: {
+          ...(module.userProgress?.[activityId] || {}),
+          worksheetData: newWorksheetData[activityId] || {}
+        }
+      };
+      
+      // Save to backend immediately
+      updateModuleMutation.mutate({
+        moduleId: module.id,
+        updates: {
+          userProgress: updatedUserProgress
+        },
+      });
+    }
+  };
+
+  const getWorksheetCheckboxState = (activityId: string, category: string, itemIndex: number) => {
+    return worksheetData[activityId]?.[`${category}-${itemIndex}`] || false;
   };
 
   return (
@@ -2077,7 +2242,14 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                 <div className="grid grid-cols-2 gap-2">
                                   {category.items.map((item: string, itemIdx: number) => (
                                     <div key={itemIdx} className="flex items-center space-x-2">
-                                      <Checkbox id={`${category.category}-${itemIdx}`} />
+                                      <Checkbox 
+                                        id={`${category.category}-${itemIdx}`}
+                                        checked={getWorksheetCheckboxState(activity.id, category.category, itemIdx)}
+                                        onCheckedChange={(checked) => 
+                                          handleWorksheetCheckboxChange(activity.id, category.category, itemIdx, !!checked)
+                                        }
+                                        data-testid={`checkbox-${activity.id}-${category.category}-${itemIdx}`}
+                                      />
                                       <label 
                                         htmlFor={`${category.category}-${itemIdx}`}
                                         className="text-sm"
@@ -2089,30 +2261,163 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                 </div>
                               </div>
                             ))}
+                            <div className="pt-4 border-t">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  // Save worksheet data to module progress
+                                  const updatedUserProgress = {
+                                    ...module.userProgress,
+                                    [activity.id]: {
+                                      ...module.userProgress?.[activity.id],
+                                      worksheetData: worksheetData[activity.id] || {}
+                                    }
+                                  };
+                                  
+                                  // Recalculate progress counters
+                                  const moduleContent = getModuleContentWithProgress(module.weekNumber, module);
+                                  const completedActivities = moduleContent.activities.filter((a: any) => {
+                                    const activityProgress = updatedUserProgress[a.id];
+                                    return activityProgress?.completed || false;
+                                  });
+                                  
+                                  const newActivitiesCompleted = completedActivities.length;
+                                  const newMinutesCompleted = completedActivities.reduce((total: number, a: any) => {
+                                    return total + (a.estimatedMinutes || 0);
+                                  }, 0);
+                                  
+                                  const updates = {
+                                    activitiesCompleted: newActivitiesCompleted,
+                                    minutesCompleted: newMinutesCompleted,
+                                    userProgress: updatedUserProgress
+                                  };
+                                  
+                                  updateModuleMutation.mutate({
+                                    moduleId: module.id,
+                                    updates,
+                                  });
+                                }}
+                              >
+                                Save Worksheet
+                              </Button>
+                            </div>
                           </div>
                         )}
 
                         {activity.type === 'worksheet' && activity.id === 'values-assessment' && (
                           <div className="mt-6">
-                            <ValuesWorksheet />
+                            <ValuesWorksheet 
+                              initialData={module?.userProgress?.['values-assessment']?.worksheetData}
+                              onDataChange={(data) => {
+                                // Auto-save worksheet data when it changes
+                                if (module) {
+                                  const updatedUserProgress = {
+                                    ...(module.userProgress || {}),
+                                    'values-assessment': {
+                                      ...(module.userProgress?.['values-assessment'] || {}),
+                                      worksheetData: data
+                                    }
+                                  };
+                                  
+                                  // Debounce the save to avoid too many API calls
+                                  clearTimeout((window as any).valuesWorksheetSaveTimeout);
+                                  (window as any).valuesWorksheetSaveTimeout = setTimeout(() => {
+                                    updateModuleMutation.mutate({
+                                      moduleId: module.id,
+                                      updates: { userProgress: updatedUserProgress },
+                                    });
+                                  }, 1000);
+                                }
+                              }}
+                            />
                           </div>
                         )}
 
                         {activity.type === 'assessment' && activity.id === 'progress-review' && (
                           <div className="mt-6">
-                            <ProgressTracker />
+                            <ProgressTracker 
+                              initialData={module?.userProgress?.['progress-review']?.worksheetData}
+                              onDataChange={(data) => {
+                                // Auto-save worksheet data when it changes
+                                if (module) {
+                                  const updatedUserProgress = {
+                                    ...(module.userProgress || {}),
+                                    'progress-review': {
+                                      ...(module.userProgress?.['progress-review'] || {}),
+                                      worksheetData: data
+                                    }
+                                  };
+                                  
+                                  // Debounce the save to avoid too many API calls
+                                  clearTimeout((window as any).progressTrackerSaveTimeout);
+                                  (window as any).progressTrackerSaveTimeout = setTimeout(() => {
+                                    updateModuleMutation.mutate({
+                                      moduleId: module.id,
+                                      updates: { userProgress: updatedUserProgress },
+                                    });
+                                  }, 1000);
+                                }
+                              }}
+                            />
                           </div>
                         )}
 
                         {activity.type === 'worksheet' && activity.id === 'personal-toolkit' && (
                           <div className="mt-6">
-                            <ToolkitBuilder />
+                            <ToolkitBuilder 
+                              initialData={module?.userProgress?.['personal-toolkit']?.worksheetData}
+                              onDataChange={(data) => {
+                                // Auto-save worksheet data when it changes
+                                if (module) {
+                                  const updatedUserProgress = {
+                                    ...(module.userProgress || {}),
+                                    'personal-toolkit': {
+                                      ...(module.userProgress?.['personal-toolkit'] || {}),
+                                      worksheetData: data
+                                    }
+                                  };
+                                  
+                                  // Debounce the save to avoid too many API calls
+                                  clearTimeout((window as any).toolkitBuilderSaveTimeout);
+                                  (window as any).toolkitBuilderSaveTimeout = setTimeout(() => {
+                                    updateModuleMutation.mutate({
+                                      moduleId: module.id,
+                                      updates: { userProgress: updatedUserProgress },
+                                    });
+                                  }, 1000);
+                                }
+                              }}
+                            />
                           </div>
                         )}
 
                         {activity.type === 'worksheet' && activity.id === 'relapse-prevention-plan' && (
                           <div className="mt-6">
-                            <RelapsePlanner />
+                            <RelapsePlanner 
+                              initialData={module?.userProgress?.['relapse-prevention-plan']?.worksheetData}
+                              onDataChange={(data) => {
+                                // Auto-save worksheet data when it changes
+                                if (module) {
+                                  const updatedUserProgress = {
+                                    ...(module.userProgress || {}),
+                                    'relapse-prevention-plan': {
+                                      ...(module.userProgress?.['relapse-prevention-plan'] || {}),
+                                      worksheetData: data
+                                    }
+                                  };
+                                  
+                                  // Debounce the save to avoid too many API calls
+                                  clearTimeout((window as any).relapsePlannerSaveTimeout);
+                                  (window as any).relapsePlannerSaveTimeout = setTimeout(() => {
+                                    updateModuleMutation.mutate({
+                                      moduleId: module.id,
+                                      updates: { userProgress: updatedUserProgress },
+                                    });
+                                  }, 1000);
+                                }
+                              }}
+                            />
                           </div>
                         )}
 
@@ -2130,14 +2435,105 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                 <Textarea
                                   placeholder="Write your thoughts here..."
                                   value={reflections[`${activity.id}-${idx}`] || ""}
-                                  onChange={(e) => setReflections(prev => ({
-                                    ...prev,
-                                    [`${activity.id}-${idx}`]: e.target.value
-                                  }))}
+                                  onChange={(e) => {
+                                    const newReflections = {
+                                      ...reflections,
+                                      [`${activity.id}-${idx}`]: e.target.value
+                                    };
+                                    setReflections(newReflections);
+                                    
+                                    // Auto-save reflection data when user types
+                                    if (module) {
+                                      const updatedUserProgress = {
+                                        ...(module.userProgress || {}),
+                                        [activity.id]: {
+                                          ...(module.userProgress?.[activity.id] || {}),
+                                          reflectionData: Object.keys(newReflections)
+                                            .filter(key => key.startsWith(activity.id))
+                                            .reduce((acc, key) => {
+                                              acc[key] = newReflections[key];
+                                              return acc;
+                                            }, {} as Record<string, string>)
+                                        }
+                                      };
+                                      
+                                      // Debounce the save to avoid too many API calls
+                                      clearTimeout((window as any).reflectionSaveTimeout);
+                                      (window as any).reflectionSaveTimeout = setTimeout(() => {
+                                        setReflectionSaving(true);
+                                        updateModuleMutation.mutate({
+                                          moduleId: module.id,
+                                          updates: { userProgress: updatedUserProgress },
+                                        }, {
+                                          onSuccess: () => {
+                                            setReflectionSaving(false);
+                                          },
+                                          onError: () => {
+                                            setReflectionSaving(false);
+                                          }
+                                        });
+                                      }, 1000); // Save 1 second after user stops typing
+                                    }
+                                  }}
                                   data-testid={`textarea-reflection-${activity.id}-${idx}`}
                                 />
                               </div>
                             ))}
+                            
+                            {/* Auto-save indicator */}
+                            {reflectionSaving && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin" />
+                                Auto-saving...
+                              </div>
+                            )}
+                            
+                            <div className="pt-4 border-t">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  // Save reflection data to module progress
+                                  const updatedUserProgress = {
+                                    ...module.userProgress,
+                                    [activity.id]: {
+                                      ...module.userProgress?.[activity.id],
+                                      reflectionData: Object.keys(reflections)
+                                        .filter(key => key.startsWith(activity.id))
+                                        .reduce((acc, key) => {
+                                          acc[key] = reflections[key];
+                                          return acc;
+                                        }, {} as Record<string, string>)
+                                    }
+                                  };
+                                  
+                                  // Recalculate progress counters
+                                  const moduleContent = getModuleContentWithProgress(module.weekNumber, module);
+                                  const completedActivities = moduleContent.activities.filter((a: any) => {
+                                    const activityProgress = updatedUserProgress[a.id];
+                                    return activityProgress?.completed || false;
+                                  });
+                                  
+                                  const newActivitiesCompleted = completedActivities.length;
+                                  const newMinutesCompleted = completedActivities.reduce((total: number, a: any) => {
+                                    return total + (a.estimatedMinutes || 0);
+                                  }, 0);
+                                  
+                                  const updates = {
+                                    activitiesCompleted: newActivitiesCompleted,
+                                    minutesCompleted: newMinutesCompleted,
+                                    userProgress: updatedUserProgress
+                                  };
+                                  
+                                  updateModuleMutation.mutate({
+                                    moduleId: module.id,
+                                    updates,
+                                  });
+                                }}
+                              >
+                                Save Reflections
+                              </Button>
+                            </div>
                           </div>
                         )}
 
@@ -2174,10 +2570,151 @@ You're ready for this next phase of your mental health journey. Trust in the pro
               <Textarea
                 placeholder="Write down any insights, questions, or thoughts about this module..."
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={(e) => {
+                  const newNotes = e.target.value;
+                  setNotes(newNotes);
+                  
+                  // Auto-save notes when user types
+                  if (module) {
+                    const updatedUserProgress = {
+                      ...(module.userProgress || {}),
+                      moduleNotes: newNotes
+                    };
+                    
+                    // Debounce the save to avoid too many API calls
+                    clearTimeout((window as any).notesSaveTimeout);
+                    (window as any).notesSaveTimeout = setTimeout(() => {
+                      setNotesSaving(true);
+                      updateModuleMutation.mutate({
+                        moduleId: module.id,
+                        updates: { userProgress: updatedUserProgress },
+                      }, {
+                        onSuccess: () => {
+                          setNotesSaving(false);
+                        },
+                        onError: () => {
+                          setNotesSaving(false);
+                        }
+                      });
+                    }, 1000); // Save 1 second after user stops typing
+                  }
+                }}
                 className="min-h-[100px]"
                 data-testid="textarea-module-notes"
               />
+              
+              {/* Auto-save indicator for notes */}
+              {notesSaving && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+                  <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  Auto-saving notes...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Module Completion Section */}
+          <Card className="mt-6 border-primary/20">
+            <CardContent className="p-6">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {module?.activitiesCompleted >= module?.activitiesTotal 
+                        ? "Ready to Complete Module!" 
+                        : "Keep Going!"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {module?.activitiesCompleted || 0} of {module?.activitiesTotal || 0} activities completed
+                    </p>
+                  </div>
+                </div>
+                
+                {(() => {
+                  // Calculate actual completion status based on user progress
+                  const moduleContent = getModuleContentWithProgress(weekNumber, module || {});
+                  const actualCompletedActivities = moduleContent.activities.filter((a: any) => a.isCompleted).length;
+                  const actualTotalActivities = moduleContent.activities.length;
+                  const isActuallyComplete = actualCompletedActivities >= actualTotalActivities;
+                  
+                  return isActuallyComplete ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        Great job! You've completed all {actualTotalActivities} activities in this module. You can now mark it as complete.
+                      </p>
+                      <Button 
+                        size="lg" 
+                        onClick={() => {
+                          if (!module) return;
+                          
+                          // Recalculate final progress to ensure accuracy
+                          const moduleContent = getModuleContentWithProgress(weekNumber, module);
+                          const completedActivities = moduleContent.activities.filter((a: any) => a.isCompleted);
+                          const finalActivitiesCompleted = completedActivities.length;
+                          const finalMinutesCompleted = completedActivities.reduce((total: number, a: any) => {
+                            return total + (a.estimatedMinutes || 0);
+                          }, 0);
+                          
+                          const updates = {
+                            completedAt: new Date().toISOString(),
+                            minutesCompleted: finalMinutesCompleted,
+                            activitiesCompleted: finalActivitiesCompleted
+                            // Don't send userProgress here - let the backend preserve existing data
+                          };
+                          
+                          updateModuleMutation.mutate({
+                            moduleId: module.id,
+                            updates,
+                          }, {
+                            onSuccess: () => {
+                              // Show success state
+                              setModuleCompleted(true);
+                              
+                              // Redirect to anxiety track page after successful completion
+                              setTimeout(() => {
+                                setLocation("/anxiety-track");
+                              }, 1500); // Show success message for 1.5 seconds
+                            }
+                          });
+                        }}
+                        disabled={updateModuleMutation.isPending || moduleCompleted}
+                        className="px-8"
+                        data-testid="button-finish-module"
+                      >
+                        {moduleCompleted ? (
+                          <>
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Module Completed! Redirecting...
+                          </>
+                        ) : updateModuleMutation.isPending ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                            Completing...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Finish Module
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        Complete all activities above to finish this module.
+                      </p>
+                      <Progress 
+                        value={actualCompletedActivities / actualTotalActivities * 100} 
+                        className="w-full max-w-xs mx-auto h-2"
+                      />
+                    </div>
+                  );
+                })()}
+              </div>
             </CardContent>
           </Card>
         </div>

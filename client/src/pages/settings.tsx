@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Download, Phone, MessageSquare, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useUser } from "@/contexts/UserContext";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -36,6 +37,15 @@ interface PrivacySettings {
 export default function Settings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user, isLoading: userLoading, isAuthenticated } = useUser();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (userLoading) return; // Still loading
+    if (!isAuthenticated) {
+      setLocation("/login");
+    }
+  }, [isAuthenticated, userLoading, setLocation]);
 
   // Get authenticated user data
   const { data: authData } = useQuery({
@@ -48,14 +58,6 @@ export default function Settings() {
   });
 
   const userId = authData?.user?.id;
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (authData === undefined) return; // Still loading
-    if (!authData?.user?.id) {
-      setLocation("/onboarding");
-    }
-  }, [authData, setLocation]);
   
   const [notifications, setNotifications] = useState<NotificationSettings>({
     weeklyCheckInReminders: true,
@@ -67,21 +69,21 @@ export default function Settings() {
   });
 
   // Use authenticated user data
-  const user = authData?.user;
+  const authUser = authData?.user;
 
   const form = useForm({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: mockUser.firstName,
-      lastName: mockUser.lastName,
-      email: mockUser.email,
+      firstName: authUser?.firstName || user?.firstName || "",
+      lastName: authUser?.lastName || user?.lastName || "",
+      email: authUser?.email || user?.email || "",
     },
   });
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log('Updating profile with data:', data);
-      const response = await apiRequest("PATCH", `/api/users/${mockUserId}`, data);
+      const response = await apiRequest("PATCH", `/api/users/${userId}`, data);
       console.log('Response status:', response.status);
       const result = await response.json();
       console.log('Response data:', result);
@@ -106,7 +108,7 @@ export default function Settings() {
 
   const downloadDataMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/reports", { userId: mockUserId });
+      const response = await apiRequest("POST", "/api/reports", { userId: userId });
       return response.json();
     },
     onSuccess: () => {
@@ -149,9 +151,27 @@ export default function Settings() {
     downloadDataMutation.mutate();
   };
 
+  // Show loading state while checking authentication
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show loading state if not authenticated (redirect will happen)
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Redirecting...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={mockUser} />
+      <Header user={authUser || user} />
       <CrisisBanner />
       <TabNavigation />
       

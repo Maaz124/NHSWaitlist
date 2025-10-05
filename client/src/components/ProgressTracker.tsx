@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,7 +32,7 @@ interface WeeklyRating {
 
 interface BeforeAfterRating {
   category: string;
-  icon: any;
+  icon: string;
   before: number;
   after: number;
   changes: string;
@@ -52,7 +52,13 @@ interface SuccessStory {
   learnings: string;
 }
 
-export function ProgressTracker() {
+interface ProgressTrackerProps {
+  initialData?: any;
+  onDataChange?: (data: any) => void;
+  onSave?: (data: any) => void;
+}
+
+export function ProgressTracker({ initialData, onDataChange, onSave }: ProgressTrackerProps = {}) {
   const [weeklyRatings, setWeeklyRatings] = useState<WeeklyRating[]>([
     { week: 1, helpfulness: 5, keyTakeaway: "", mostHelpfulTechnique: "", improvementArea: "" },
     { week: 2, helpfulness: 5, keyTakeaway: "", mostHelpfulTechnique: "", improvementArea: "" },
@@ -62,12 +68,12 @@ export function ProgressTracker() {
   ]);
 
   const [beforeAfterRatings, setBeforeAfterRatings] = useState<BeforeAfterRating[]>([
-    { category: "Anxiety Management", icon: Brain, before: 3, after: 7, changes: "" },
-    { category: "Daily Functioning", icon: Home, before: 4, after: 8, changes: "" },
-    { category: "Confidence", icon: Star, before: 3, after: 7, changes: "" },
-    { category: "Relationships", icon: Users, before: 5, after: 8, changes: "" },
-    { category: "Work/School Performance", icon: Briefcase, before: 4, after: 7, changes: "" },
-    { category: "Overall Quality of Life", icon: Heart, before: 4, after: 8, changes: "" }
+    { category: "Anxiety Management", icon: "brain", before: 3, after: 7, changes: "" },
+    { category: "Daily Functioning", icon: "home", before: 4, after: 8, changes: "" },
+    { category: "Confidence", icon: "star", before: 3, after: 7, changes: "" },
+    { category: "Relationships", icon: "users", before: 5, after: 8, changes: "" },
+    { category: "Work/School Performance", icon: "briefcase", before: 4, after: 7, changes: "" },
+    { category: "Overall Quality of Life", icon: "heart", before: 4, after: 8, changes: "" }
   ]);
 
   const [readinessRatings, setReadinessRatings] = useState<ReadinessRating[]>([
@@ -104,6 +110,44 @@ export function ProgressTracker() {
   const [reflectionAnswers, setReflectionAnswers] = useState<string[]>(
     new Array(6).fill("")
   );
+
+  // Load initial data when component mounts or initialData changes
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.weeklyRatings) setWeeklyRatings(initialData.weeklyRatings);
+      if (initialData.beforeAfterRatings) setBeforeAfterRatings(initialData.beforeAfterRatings);
+      if (initialData.readinessRatings) setReadinessRatings(initialData.readinessRatings);
+      if (initialData.currentChallenges) setCurrentChallenges(initialData.currentChallenges);
+      if (initialData.keyInsights) setKeyInsights(initialData.keyInsights);
+      if (initialData.successStories) setSuccessStories(initialData.successStories);
+      if (initialData.reflectionAnswers) setReflectionAnswers(initialData.reflectionAnswers);
+    }
+  }, [initialData]);
+
+  // Auto-save when data changes
+  useEffect(() => {
+    if (onDataChange) {
+      const allData = {
+        weeklyRatings,
+        beforeAfterRatings,
+        readinessRatings,
+        currentChallenges,
+        keyInsights,
+        successStories,
+        reflectionAnswers
+      };
+      onDataChange(allData);
+    }
+  }, [weeklyRatings, beforeAfterRatings, readinessRatings, currentChallenges, keyInsights, successStories, reflectionAnswers, onDataChange]);
+
+  const iconMap = {
+    brain: Brain,
+    home: Home,
+    star: Star,
+    users: Users,
+    briefcase: Briefcase,
+    heart: Heart
+  };
 
   const weekTopics = [
     { week: 1, title: "Understanding Anxiety", color: "bg-blue-100 text-blue-800" },
@@ -326,7 +370,7 @@ export function ProgressTracker() {
         </CardHeader>
         <CardContent className="space-y-6">
           {beforeAfterRatings.map((rating, index) => {
-            const IconComponent = rating.icon;
+            const IconComponent = iconMap[rating.icon as keyof typeof iconMap];
             const improvement = rating.after - rating.before;
             
             return (

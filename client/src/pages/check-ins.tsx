@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,6 +19,7 @@ import { calculateRiskScore, determineRiskLevel, getRiskColor } from "@/lib/risk
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Footer } from "@/components/ui/footer";
 import { useUser } from "@/contexts/UserContext";
+import { useLocation } from "wouter";
 
 const weeklyAssessmentSchema = z.object({
   anxietyFrequency: z.string(),
@@ -76,7 +77,16 @@ const frequencyOptions = [
 ];
 
 export default function CheckIns() {
-  const { user } = useUser();
+  const [, setLocation] = useLocation();
+  const { user, isLoading: userLoading, isAuthenticated } = useUser();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (userLoading) return; // Still loading
+    if (!isAuthenticated) {
+      setLocation("/login");
+    }
+  }, [isAuthenticated, userLoading, setLocation]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null);
@@ -138,6 +148,24 @@ export default function CheckIns() {
       responses,
     });
   };
+
+  // Show loading state while checking authentication
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show loading state if not authenticated (redirect will happen)
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Redirecting...</div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,7 +61,13 @@ interface ResilienceHabit {
   habits: string[];
 }
 
-export function RelapsePlanner() {
+interface RelapsePlannerProps {
+  initialData?: any;
+  onDataChange?: (data: any) => void;
+  onSave?: (data: any) => void;
+}
+
+export function RelapsePlanner({ initialData, onDataChange, onSave }: RelapsePlannerProps = {}) {
   const [highRiskSituations, setHighRiskSituations] = useState<HighRiskSituation[]>([
     {
       category: "Life Transitions",
@@ -169,6 +175,35 @@ export function RelapsePlanner() {
     maintenanceStrategy: "",
     completionNotes: ""
   });
+
+  // Load initial data when component mounts or initialData changes
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.highRiskSituations) setHighRiskSituations(initialData.highRiskSituations);
+      if (initialData.warningSigns) setWarningSigns(initialData.warningSigns);
+      if (initialData.actionPlans) setActionPlans(initialData.actionPlans);
+      if (initialData.supportContacts) setSupportContacts(initialData.supportContacts);
+      if (initialData.longTermGoals) setLongTermGoals(initialData.longTermGoals);
+      if (initialData.resilienceHabits) setResilienceHabits(initialData.resilienceHabits);
+      if (initialData.personalizedPlan) setPersonalizedPlan(initialData.personalizedPlan);
+    }
+  }, [initialData]);
+
+  // Auto-save when data changes
+  useEffect(() => {
+    if (onDataChange) {
+      const allData = {
+        highRiskSituations,
+        warningSigns,
+        actionPlans,
+        supportContacts,
+        longTermGoals,
+        resilienceHabits,
+        personalizedPlan
+      };
+      onDataChange(allData);
+    }
+  }, [highRiskSituations, warningSigns, actionPlans, supportContacts, longTermGoals, resilienceHabits, personalizedPlan, onDataChange]);
 
   const warningSignOptions = {
     yellow: [

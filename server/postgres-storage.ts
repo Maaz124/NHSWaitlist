@@ -5,6 +5,24 @@ import { db, schema } from "./db";
 if (!db) {
   throw new Error("Database connection not available. Please set DATABASE_URL environment variable.");
 }
+
+// Utility function to safely convert string dates to Date objects
+function safeParseDates(obj: any, dateFields: string[]): any {
+  const result = { ...obj };
+  
+  dateFields.forEach(field => {
+    if (result[field] && typeof result[field] === 'string') {
+      try {
+        result[field] = new Date(result[field]);
+      } catch (error) {
+        console.warn(`Failed to parse date field ${field}:`, result[field]);
+        delete result[field]; // Remove invalid date fields
+      }
+    }
+  });
+  
+  return result;
+}
 import { 
   type User, 
   type InsertUser, 
@@ -44,7 +62,8 @@ export class PostgresStorage implements IStorage {
 
   // Onboarding
   async createOnboardingResponse(insertResponse: InsertOnboardingResponse): Promise<OnboardingResponse> {
-    const result = await db.insert(schema.onboardingResponses).values(insertResponse).returning();
+    const processedResponse = safeParseDates(insertResponse, ['completedAt']);
+    const result = await db.insert(schema.onboardingResponses).values(processedResponse).returning();
     return result[0];
   }
 
@@ -55,7 +74,8 @@ export class PostgresStorage implements IStorage {
 
   // Weekly assessments
   async createWeeklyAssessment(insertAssessment: InsertWeeklyAssessment): Promise<WeeklyAssessment> {
-    const result = await db.insert(schema.weeklyAssessments).values(insertAssessment).returning();
+    const processedAssessment = safeParseDates(insertAssessment, ['completedAt']);
+    const result = await db.insert(schema.weeklyAssessments).values(processedAssessment).returning();
     return result[0];
   }
 
@@ -86,8 +106,10 @@ export class PostgresStorage implements IStorage {
   }
 
   async updateAnxietyModule(id: string, updates: Partial<AnxietyModule>): Promise<AnxietyModule> {
+    const processedUpdates = safeParseDates(updates, ['completedAt', 'lastAccessedAt']);
+    
     const result = await db.update(schema.anxietyModules)
-      .set({ ...updates, lastAccessedAt: new Date() })
+      .set({ ...processedUpdates, lastAccessedAt: new Date() })
       .where(eq(schema.anxietyModules.id, id))
       .returning();
     if (result.length === 0) throw new Error("Module not found");
