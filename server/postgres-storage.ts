@@ -33,7 +33,9 @@ import {
   type AnxietyModule, 
   type InsertAnxietyModule, 
   type ProgressReport, 
-  type InsertProgressReport 
+  type InsertProgressReport,
+  type ThoughtRecord,
+  type InsertThoughtRecord
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -201,5 +203,36 @@ export class PostgresStorage implements IStorage {
     return await db.select().from(schema.progressReports)
       .where(eq(schema.progressReports.userId, userId))
       .orderBy(desc(schema.progressReports.generatedAt));
+  }
+
+  // Thought records
+  async createThoughtRecord(insertRecord: InsertThoughtRecord): Promise<ThoughtRecord> {
+    const result = await db.insert(schema.thoughtRecords).values(insertRecord).returning();
+    return result[0];
+  }
+
+  async getThoughtRecords(userId: string): Promise<ThoughtRecord[]> {
+    return await db.select().from(schema.thoughtRecords)
+      .where(eq(schema.thoughtRecords.userId, userId))
+      .orderBy(desc(schema.thoughtRecords.createdAt));
+  }
+
+  async getThoughtRecord(id: string): Promise<ThoughtRecord | null> {
+    const result = await db.select().from(schema.thoughtRecords)
+      .where(eq(schema.thoughtRecords.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async updateThoughtRecord(id: string, updates: Partial<InsertThoughtRecord>): Promise<ThoughtRecord> {
+    const result = await db.update(schema.thoughtRecords)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(schema.thoughtRecords.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteThoughtRecord(id: string): Promise<void> {
+    await db.delete(schema.thoughtRecords).where(eq(schema.thoughtRecords.id, id));
   }
 }

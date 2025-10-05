@@ -78,6 +78,26 @@ CREATE TABLE IF NOT EXISTS progress_reports (
     generated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Create thought_records table
+CREATE TABLE IF NOT EXISTS thought_records (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    situation TEXT NOT NULL,
+    emotion TEXT NOT NULL,
+    intensity INTEGER NOT NULL,
+    physical_sensations TEXT,
+    automatic_thought TEXT,
+    evidence_for TEXT,
+    evidence_against TEXT,
+    balanced_thought TEXT,
+    new_emotion TEXT,
+    new_intensity INTEGER,
+    action_plan TEXT,
+    selected_distortions JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Create health_check table (if not exists)
 CREATE TABLE IF NOT EXISTS health_check (
     id SERIAL PRIMARY KEY,

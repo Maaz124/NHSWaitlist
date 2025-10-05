@@ -349,6 +349,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Thought Records API
+  app.post("/api/thought-records", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const { situation, emotion, intensity, physicalSensations, automaticThought, evidenceFor, evidenceAgainst, balancedThought, newEmotion, newIntensity, actionPlan, selectedDistortions } = req.body;
+      
+      // Debug log to help diagnose auth/body issues
+      console.log('[POST /api/thought-records] userId:', userId, 'body keys:', Object.keys(req.body || {}));
+      
+      const thoughtRecord = await storage.createThoughtRecord({
+        userId,
+        situation,
+        emotion,
+        intensity,
+        physicalSensations,
+        automaticThought,
+        evidenceFor,
+        evidenceAgainst,
+        balancedThought,
+        newEmotion,
+        newIntensity,
+        actionPlan,
+        selectedDistortions
+      });
+
+      res.json(thoughtRecord);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/thought-records/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const thoughtRecords = await storage.getThoughtRecords(userId);
+      res.json(thoughtRecords);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/thought-records/single/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const thoughtRecord = await storage.getThoughtRecord(id);
+      
+      if (!thoughtRecord) {
+        return res.status(404).json({ error: "Thought record not found" });
+      }
+      
+      res.json(thoughtRecord);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/thought-records/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const thoughtRecord = await storage.updateThoughtRecord(id, updates);
+      res.json(thoughtRecord);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/thought-records/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteThoughtRecord(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +21,9 @@ import {
   TrendingDown,
   Save
 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useUser } from "@/contexts/UserContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface ThoughtRecord {
   id: string;
@@ -44,6 +48,8 @@ interface CognitiveDistortion {
 }
 
 export function ThoughtRecord() {
+  const { user } = useUser();
+  const { toast } = useToast();
   const [currentRecord, setCurrentRecord] = useState<Partial<ThoughtRecord>>({
     situation: "",
     emotion: "",
@@ -61,6 +67,112 @@ export function ThoughtRecord() {
   const [savedRecords, setSavedRecords] = useState<ThoughtRecord[]>([]);
   const [selectedDistortions, setSelectedDistortions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("situation");
+  const [currentRecordId, setCurrentRecordId] = useState<string | null>(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+
+  // Load saved thought records
+  const { data: savedThoughtRecords = [], refetch: refetchThoughtRecords } = useQuery({
+    queryKey: ["/api/thought-records", user?.id],
+    enabled: !!user?.id,
+  });
+
+  // Create thought record mutation
+  const createThoughtRecordMutation = useMutation({
+    mutationFn: async (data: any) => {
+      console.log("Creating thought record with data:", data);
+      try {
+        const response = await fetch("/api/thought-records", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(data),
+        });
+        
+        console.log("Create response status:", response.status);
+        
+        if (!response.ok) {
+          const text = await response.text();
+          console.error("Response text:", text);
+          if (response.status === 401) {
+            throw new Error("Authentication required. Please log in again.");
+          }
+          throw new Error(`HTTP ${response.status}: ${text}`);
+        }
+        
+        return await response.json();
+      } catch (error: any) {
+        console.error("Network error:", error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      console.log("Thought record created successfully:", data);
+      setCurrentRecordId(data.id);
+      refetchThoughtRecords();
+      toast({
+        title: "Record Saved",
+        description: "Your thought record has been saved successfully.",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Failed to create thought record:", error);
+      toast({
+        title: "Save Failed",
+        description: `Failed to save thought record: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update thought record mutation
+  const updateThoughtRecordMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+      console.log("Updating thought record:", id, updates);
+      try {
+        const response = await fetch(`/api/thought-records/${id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(updates),
+        });
+        
+        console.log("Update response status:", response.status);
+        
+        if (!response.ok) {
+          const text = await response.text();
+          console.error("Response text:", text);
+          if (response.status === 401) {
+            throw new Error("Authentication required. Please log in again.");
+          }
+          throw new Error(`HTTP ${response.status}: ${text}`);
+        }
+        
+        return await response.json();
+      } catch (error: any) {
+        console.error("Network error:", error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      console.log("Thought record updated successfully:", data);
+      toast({
+        title: "Record Updated",
+        description: "Your thought record has been updated successfully.",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Failed to update thought record:", error);
+      toast({
+        title: "Update Failed",
+        description: `Failed to update thought record: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
 
   const cognitiveDistortions: CognitiveDistortion[] = [
     {
@@ -146,10 +258,67 @@ export function ThoughtRecord() {
     );
   };
 
+  // Auto-save functionality for thought record sections
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const { situation, emotion, intensity, physicalSensations, automaticThought, evidenceFor, evidenceAgainst, balancedThought, newEmotion, newIntensity, actionPlan } = currentRecord;
+    
+    // Only auto-save if we have the minimum required fields (situation + emotion)
+    if (situation && emotion && intensity !== undefined) {
+      setIsAutoSaving(true);
+      
+      // Clear existing timeout
+      clearTimeout((window as any).thoughtRecordSaveTimeout);
+      
+      (window as any).thoughtRecordSaveTimeout = setTimeout(() => {
+        const saveData = {
+          userId: user.id,
+          situation,
+          emotion,
+          intensity,
+          physicalSensations: physicalSensations || "",
+          automaticThought: automaticThought || "",
+          evidenceFor: evidenceFor || "",
+          evidenceAgainst: evidenceAgainst || "",
+          balancedThought: balancedThought || "",
+          newEmotion: newEmotion || "",
+          newIntensity: newIntensity || null,
+          actionPlan: actionPlan || "",
+          selectedDistortions
+        };
+
+        if (currentRecordId) {
+          // Update existing record
+          updateThoughtRecordMutation.mutate({
+            id: currentRecordId,
+            updates: saveData
+          }, {
+            onSettled: () => {
+              setIsAutoSaving(false);
+            }
+          });
+        } else {
+          // Create new record
+          createThoughtRecordMutation.mutate(saveData, {
+            onSettled: () => {
+              setIsAutoSaving(false);
+            }
+          });
+        }
+      }, 1000); // Debounce for 1 second
+    }
+
+    return () => {
+      clearTimeout((window as any).thoughtRecordSaveTimeout);
+    };
+  }, [currentRecord.situation, currentRecord.emotion, currentRecord.intensity, currentRecord.physicalSensations, currentRecord.automaticThought, currentRecord.evidenceFor, currentRecord.evidenceAgainst, currentRecord.balancedThought, currentRecord.newEmotion, currentRecord.newIntensity, currentRecord.actionPlan, selectedDistortions, user?.id, currentRecordId]);
+
   const saveRecord = () => {
-    const record: ThoughtRecord = {
-      id: Date.now().toString(),
-      date: new Date(),
+    if (!user?.id) return;
+
+    const saveData = {
+      userId: user.id,
       situation: currentRecord.situation || "",
       emotion: currentRecord.emotion || "",
       intensity: currentRecord.intensity || 5,
@@ -159,13 +328,36 @@ export function ThoughtRecord() {
       evidenceAgainst: currentRecord.evidenceAgainst || "",
       balancedThought: currentRecord.balancedThought || "",
       newEmotion: currentRecord.newEmotion || "",
-      newIntensity: currentRecord.newIntensity || 3,
-      actionPlan: currentRecord.actionPlan || ""
+      newIntensity: currentRecord.newIntensity || null,
+      actionPlan: currentRecord.actionPlan || "",
+      selectedDistortions
     };
 
-    setSavedRecords(prev => [record, ...prev].slice(0, 10));
-    
-    // Reset form
+    if (currentRecordId) {
+      // Update existing record
+      updateThoughtRecordMutation.mutate({
+        id: currentRecordId,
+        updates: saveData
+      }, {
+        onSuccess: () => {
+          refetchThoughtRecords();
+          // Reset form after successful save
+          resetForm();
+        }
+      });
+    } else {
+      // Create new record
+      createThoughtRecordMutation.mutate(saveData, {
+        onSuccess: () => {
+          refetchThoughtRecords();
+          // Reset form after successful save
+          resetForm();
+        }
+      });
+    }
+  };
+
+  const resetForm = () => {
     setCurrentRecord({
       situation: "",
       emotion: "",
@@ -180,6 +372,26 @@ export function ThoughtRecord() {
       actionPlan: ""
     });
     setSelectedDistortions([]);
+    setCurrentRecordId(null);
+    setActiveTab("situation");
+  };
+
+  const loadRecord = (record: any) => {
+    setCurrentRecord({
+      situation: record.situation || "",
+      emotion: record.emotion || "",
+      intensity: record.intensity || 5,
+      physicalSensations: record.physicalSensations || "",
+      automaticThought: record.automaticThought || "",
+      evidenceFor: record.evidenceFor || "",
+      evidenceAgainst: record.evidenceAgainst || "",
+      balancedThought: record.balancedThought || "",
+      newEmotion: record.newEmotion || "",
+      newIntensity: record.newIntensity || 3,
+      actionPlan: record.actionPlan || ""
+    });
+    setSelectedDistortions(record.selectedDistortions || []);
+    setCurrentRecordId(record.id);
     setActiveTab("situation");
   };
 
@@ -250,7 +462,15 @@ export function ThoughtRecord() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="situation">What happened? (Be specific and factual)</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="situation">What happened? (Be specific and factual)</Label>
+                  {isAutoSaving && (
+                    <Badge variant="secondary" className="text-xs">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                      Saving...
+                    </Badge>
+                  )}
+                </div>
                 <Textarea
                   id="situation"
                   placeholder="Example: 'I was waiting for a response to an important email I sent 3 days ago...'"
@@ -358,7 +578,15 @@ export function ThoughtRecord() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="automatic-thought">Automatic Thought</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="automatic-thought">Automatic Thought</Label>
+                  {isAutoSaving && (
+                    <Badge variant="secondary" className="text-xs">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                      Saving...
+                    </Badge>
+                  )}
+                </div>
                 <Textarea
                   id="automatic-thought"
                   placeholder="What exactly went through your mind? Write it as you thought it, even if it seems irrational..."
@@ -372,7 +600,15 @@ export function ThoughtRecord() {
 
               {/* Cognitive Distortions */}
               <div>
-                <Label>Thinking Patterns (Cognitive Distortions)</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Thinking Patterns (Cognitive Distortions)</Label>
+                  {isAutoSaving && selectedDistortions.length > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                      Saving...
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground mb-3">
                   Select any thinking patterns that apply to your automatic thought
                 </p>
@@ -475,7 +711,15 @@ export function ThoughtRecord() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="evidence-for">Evidence FOR the thought</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="evidence-for">Evidence FOR the thought</Label>
+                    {isAutoSaving && currentRecord.evidenceFor && (
+                      <Badge variant="secondary" className="text-xs">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                        Saving...
+                      </Badge>
+                    )}
+                  </div>
                   <Textarea
                     id="evidence-for"
                     placeholder="What facts support this thought? What actually happened that makes this thought seem true?"
@@ -488,7 +732,15 @@ export function ThoughtRecord() {
                 </div>
 
                 <div>
-                  <Label htmlFor="evidence-against">Evidence AGAINST the thought</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="evidence-against">Evidence AGAINST the thought</Label>
+                    {isAutoSaving && currentRecord.evidenceAgainst && (
+                      <Badge variant="secondary" className="text-xs">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                        Saving...
+                      </Badge>
+                    )}
+                  </div>
                   <Textarea
                     id="evidence-against"
                     placeholder="What facts contradict this thought? What evidence suggests this thought might not be completely true?"
@@ -531,7 +783,15 @@ export function ThoughtRecord() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="balanced-thought">Balanced/Alternative Thought</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="balanced-thought">Balanced/Alternative Thought</Label>
+                  {isAutoSaving && currentRecord.balancedThought && (
+                    <Badge variant="secondary" className="text-xs">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                      Saving...
+                    </Badge>
+                  )}
+                </div>
                 <Textarea
                   id="balanced-thought"
                   placeholder="Based on the evidence, what's a more balanced way to think about this situation? What would you tell a friend?"
@@ -545,7 +805,15 @@ export function ThoughtRecord() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="new-emotion">How do you feel now?</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="new-emotion">How do you feel now?</Label>
+                    {isAutoSaving && currentRecord.newEmotion && (
+                      <Badge variant="secondary" className="text-xs">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                        Saving...
+                      </Badge>
+                    )}
+                  </div>
                   <Input
                     id="new-emotion"
                     placeholder="What's your primary emotion after this balanced thinking?"
@@ -557,7 +825,15 @@ export function ThoughtRecord() {
                 </div>
 
                 <div>
-                  <Label>New Emotion Intensity (1-10)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>New Emotion Intensity (1-10)</Label>
+                    {isAutoSaving && currentRecord.newIntensity !== undefined && currentRecord.newIntensity !== null && (
+                      <Badge variant="secondary" className="text-xs">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                        Saving...
+                      </Badge>
+                    )}
+                  </div>
                   <div className="mt-3 space-y-4">
                     <div className="flex items-center gap-4">
                       <span className="text-sm w-8">1</span>
@@ -627,7 +903,15 @@ export function ThoughtRecord() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="action-plan">Action Steps</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="action-plan">Action Steps</Label>
+                  {isAutoSaving && currentRecord.actionPlan && (
+                    <Badge variant="secondary" className="text-xs">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                      Saving...
+                    </Badge>
+                  )}
+                </div>
                 <Textarea
                   id="action-plan"
                   placeholder="What can you do differently? What steps will you take? How will you handle similar situations in the future?"
@@ -681,16 +965,29 @@ export function ThoughtRecord() {
         <TabsContent value="history" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5" />
-                Saved Thought Records
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Review your previous thought records to track patterns and progress
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5" />
+                    Saved Thought Records
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Review your previous thought records to track patterns and progress
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={resetForm}
+                  className="gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  New Record
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              {savedRecords.length === 0 ? (
+              {savedThoughtRecords.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Brain className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
                   <p>No saved thought records yet.</p>
@@ -698,33 +995,45 @@ export function ThoughtRecord() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {savedRecords.map((record) => (
+                  {savedThoughtRecords.map((record) => (
                     <Card key={record.id} className="border-l-4 border-l-blue-400">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-3">
                           <h4 className="font-medium">
-                            {record.emotion} → {record.newEmotion}
+                            {record.emotion} → {record.newEmotion || "Not completed"}
                           </h4>
                           <div className="flex items-center gap-2">
                             <Badge 
                               variant="outline" 
-                              className={record.newIntensity < record.intensity ? "border-green-500 text-green-700" : ""}
+                              className={record.newIntensity && record.newIntensity < record.intensity ? "border-green-500 text-green-700" : ""}
                             >
-                              {record.intensity} → {record.newIntensity}
+                              {record.intensity} → {record.newIntensity || "N/A"}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
-                              {record.date.toLocaleDateString()}
+                              {new Date(record.createdAt || record.date).toLocaleDateString()}
                             </span>
                           </div>
                         </div>
                         
                         <div className="space-y-2 text-sm">
-                          <div><strong>Situation:</strong> {record.situation.substring(0, 100)}...</div>
-                          <div><strong>Automatic Thought:</strong> {record.automaticThought.substring(0, 100)}...</div>
-                          <div><strong>Balanced Thought:</strong> {record.balancedThought.substring(0, 100)}...</div>
+                          <div><strong>Situation:</strong> {(record.situation || '').substring(0, 100)}...</div>
+                          <div><strong>Automatic Thought:</strong> {(record.automaticThought || '').substring(0, 100)}...</div>
+                          <div><strong>Balanced Thought:</strong> {(record.balancedThought || '').substring(0, 100)}...</div>
                           {record.actionPlan && (
                             <div><strong>Action Plan:</strong> {record.actionPlan.substring(0, 100)}...</div>
                           )}
+                        </div>
+
+                        <div className="flex justify-end mt-4">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => loadRecord(record)}
+                            className="gap-2"
+                          >
+                            <Brain className="w-4 h-4" />
+                            Load into Form
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

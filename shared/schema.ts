@@ -71,12 +71,32 @@ export const progressReports = pgTable("progress_reports", {
   generatedAt: timestamp("generated_at").defaultNow(),
 });
 
+export const thoughtRecords = pgTable("thought_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  situation: text("situation").notNull(),
+  emotion: text("emotion").notNull(),
+  intensity: integer("intensity").notNull(), // 1-10 scale
+  physicalSensations: text("physical_sensations"),
+  automaticThought: text("automatic_thought"),
+  evidenceFor: text("evidence_for"),
+  evidenceAgainst: text("evidence_against"),
+  balancedThought: text("balanced_thought"),
+  newEmotion: text("new_emotion"),
+  newIntensity: integer("new_intensity"), // 1-10 scale
+  actionPlan: text("action_plan"),
+  selectedDistortions: jsonb("selected_distortions"), // Array of cognitive distortion names
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertOnboardingResponseSchema = createInsertSchema(onboardingResponses).omit({ id: true, completedAt: true });
 export const insertWeeklyAssessmentSchema = createInsertSchema(weeklyAssessments).omit({ id: true, completedAt: true });
 export const insertAnxietyModuleSchema = createInsertSchema(anxietyModules).omit({ id: true, completedAt: true, lastAccessedAt: true });
 export const insertModuleActivitySchema = createInsertSchema(moduleActivities).omit({ id: true, completedAt: true });
 export const insertProgressReportSchema = createInsertSchema(progressReports).omit({ id: true, generatedAt: true });
+export const insertThoughtRecordSchema = createInsertSchema(thoughtRecords).omit({ id: true, createdAt: true, updatedAt: true });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -90,3 +110,5 @@ export type ModuleActivity = typeof moduleActivities.$inferSelect;
 export type InsertModuleActivity = z.infer<typeof insertModuleActivitySchema>;
 export type ProgressReport = typeof progressReports.$inferSelect;
 export type InsertProgressReport = z.infer<typeof insertProgressReportSchema>;
+export type ThoughtRecord = typeof thoughtRecords.$inferSelect;
+export type InsertThoughtRecord = z.infer<typeof insertThoughtRecordSchema>;
