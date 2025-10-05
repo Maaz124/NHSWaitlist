@@ -179,7 +179,7 @@ export class PostgresStorage implements IStorage {
         title: "Relapse Prevention",
         description: "Create your personal toolkit for maintaining progress and preparing for NHS transition.",
         estimatedMinutes: 30,
-        activitiesTotal: 3,
+        activitiesTotal: 4,
         activitiesCompleted: 0,
         minutesCompleted: 0,
         isLocked: false,
