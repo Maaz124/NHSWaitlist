@@ -118,6 +118,24 @@ CREATE TABLE IF NOT EXISTS mood_entries (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Create anxiety_guides table
+CREATE TABLE IF NOT EXISTS anxiety_guides (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    completed_sections JSONB,
+    personal_notes JSONB,
+    symptom_checklist JSONB,
+    coping_tools_rating JSONB,
+    worksheet_entries JSONB,
+    quiz_answers JSONB,
+    action_plan_data JSONB,
+    symptom_tracking_worksheet JSONB,
+    personal_management_plan JSONB,
+    progress_data JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Create health_check table (if not exists)
 CREATE TABLE IF NOT EXISTS health_check (
     id SERIAL PRIMARY KEY,

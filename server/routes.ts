@@ -497,6 +497,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Anxiety Guide API
+  app.get("/api/anxiety-guide/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const anxietyGuide = await storage.getAnxietyGuide(userId);
+      res.json(anxietyGuide);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/anxiety-guide", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const { completedSections, personalNotes, symptomChecklist, copingToolsRating, worksheetEntries, quizAnswers, progressData } = req.body;
+      
+      const anxietyGuide = await storage.createAnxietyGuide({
+        userId,
+        completedSections,
+        personalNotes,
+        symptomChecklist,
+        copingToolsRating,
+        worksheetEntries,
+        quizAnswers,
+        progressData
+      });
+
+      res.json(anxietyGuide);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/anxiety-guide/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const updates = req.body;
+      
+      const anxietyGuide = await storage.updateAnxietyGuide(userId, updates);
+      res.json(anxietyGuide);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

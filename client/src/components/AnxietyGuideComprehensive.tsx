@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,10 @@ import {
   PenTool,
   Star
 } from "lucide-react";
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { apiRequest } from "@/lib/queryClient";
+import { useUser } from "@/contexts/UserContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface QuizAnswer {
   id: string;
@@ -46,6 +50,144 @@ export function AnxietyGuideComprehensive() {
   const [worksheetEntries, setWorksheetEntries] = useState<WorksheetEntry[]>([]);
   const [personalNotes, setPersonalNotes] = useState<Record<string, string>>({});
   const [copingToolsRating, setCopingToolsRating] = useState<Record<string, number>>({});
+  const [symptomChecklist, setSymptomChecklist] = useState<Record<string, boolean>>({});
+  const [actionPlanData, setActionPlanData] = useState<{
+    selectedGoals: Record<string, boolean>;
+    additionalNotes: string;
+  }>({
+    selectedGoals: {},
+    additionalNotes: ""
+  });
+  const [symptomTrackingWorksheet, setSymptomTrackingWorksheet] = useState<{
+    mostCommonSymptoms: string;
+    commonTriggers: string;
+  }>({
+    mostCommonSymptoms: "",
+    commonTriggers: ""
+  });
+  const [personalManagementPlan, setPersonalManagementPlan] = useState<{
+    immediateStrategies: string;
+    longTermGoals: string;
+    warningSigns: string;
+  }>({
+    immediateStrategies: "",
+    longTermGoals: "",
+    warningSigns: ""
+  });
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+
+  const { user } = useUser();
+  const { toast } = useToast();
+
+  // Fetch existing anxiety guide data
+  const { data: existingGuide, refetch } = useQuery({
+    queryKey: ['/api/anxiety-guide', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const response = await apiRequest('GET', `/api/anxiety-guide/${user.id}`);
+      return response.json();
+    },
+    enabled: !!user?.id,
+  });
+
+  // Update anxiety guide data
+  const updateGuideMutation = useMutation({
+    mutationFn: async (data: any) => {
+      if (!user?.id) throw new Error('User not authenticated');
+      const response = await apiRequest('PATCH', `/api/anxiety-guide/${user.id}`, data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      console.log('✅ Anxiety guide saved successfully:', data);
+      setIsAutoSaving(false);
+      // Don't automatically refetch to prevent loops
+    },
+    onError: (error: any) => {
+      console.error('❌ Failed to save anxiety guide data:', error);
+      setIsAutoSaving(false);
+      toast({
+        title: "Save Failed",
+        description: "Failed to save your progress. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Load existing data when component mounts or data is fetched
+  useEffect(() => {
+    if (existingGuide) {
+      console.log('📥 Loading existing guide data:', existingGuide);
+      setCompletedSections(existingGuide.completedSections || []);
+      setPersonalNotes(existingGuide.personalNotes || {});
+      setQuizAnswers(existingGuide.quizAnswers || {});
+      setWorksheetEntries(existingGuide.worksheetEntries || []);
+      setCopingToolsRating(existingGuide.copingToolsRating || {});
+      setSymptomChecklist(existingGuide.symptomChecklist || {});
+      setActionPlanData(existingGuide.actionPlanData || {
+        selectedGoals: {},
+        additionalNotes: ""
+      });
+      setSymptomTrackingWorksheet(existingGuide.symptomTrackingWorksheet || {
+        mostCommonSymptoms: "",
+        commonTriggers: ""
+      });
+      setPersonalManagementPlan(existingGuide.personalManagementPlan || {
+        immediateStrategies: "",
+        longTermGoals: "",
+        warningSigns: ""
+      });
+      console.log('📥 Loaded data into state:', {
+        actionPlanData: existingGuide.actionPlanData,
+        symptomTrackingWorksheet: existingGuide.symptomTrackingWorksheet,
+        personalManagementPlan: existingGuide.personalManagementPlan
+      });
+    }
+  }, [existingGuide]);
+
+  // Auto-save function
+  const autoSave = () => {
+    if (!user?.id || isAutoSaving || updateGuideMutation.isPending) return;
+    
+    console.log('🔄 Auto-save triggered with data:', {
+      actionPlanData,
+      symptomTrackingWorksheet,
+      personalManagementPlan,
+      personalNotes
+    });
+    
+    setIsAutoSaving(true);
+    
+    const dataToSave = {
+      completedSections,
+      personalNotes,
+      quizAnswers,
+      worksheetEntries,
+      copingToolsRating,
+      symptomChecklist,
+      actionPlanData,
+      symptomTrackingWorksheet,
+      personalManagementPlan,
+      progressData: {
+        lastAccessed: new Date().toISOString(),
+        currentSection,
+        totalSections: 4
+      }
+    };
+
+    console.log('💾 Saving data:', dataToSave);
+    updateGuideMutation.mutate(dataToSave);
+  };
+
+  // Auto-save when data changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (user?.id && !isAutoSaving && !updateGuideMutation.isPending && (completedSections.length > 0 || Object.keys(personalNotes).length > 0 || Object.keys(symptomChecklist).length > 0 || Object.keys(actionPlanData.selectedGoals).length > 0 || actionPlanData.additionalNotes.trim().length > 0 || symptomTrackingWorksheet.mostCommonSymptoms.trim().length > 0 || symptomTrackingWorksheet.commonTriggers.trim().length > 0 || personalManagementPlan.immediateStrategies.trim().length > 0 || personalManagementPlan.longTermGoals.trim().length > 0 || personalManagementPlan.warningSigns.trim().length > 0)) {
+        autoSave();
+      }
+    }, 2000); // Increased debounce to 2 seconds to reduce frequency
+
+    return () => clearTimeout(timeoutId);
+  }, [completedSections, personalNotes, quizAnswers, worksheetEntries, copingToolsRating, symptomChecklist, actionPlanData, symptomTrackingWorksheet, personalManagementPlan, user?.id, isAutoSaving, updateGuideMutation.isPending]);
 
   const sections = [
     {
@@ -193,7 +335,16 @@ export function AnxietyGuideComprehensive() {
                   'Sleep disturbances'
                 ].map((symptom, index) => (
                   <div key={index} className="flex items-center space-x-2">
-                    <Checkbox id={`physical-${index}`} />
+                    <Checkbox 
+                      id={`physical-${index}`}
+                      checked={symptomChecklist[`physical-${index}`] || false}
+                      onCheckedChange={(checked) => 
+                        setSymptomChecklist(prev => ({
+                          ...prev,
+                          [`physical-${index}`]: checked as boolean
+                        }))
+                      }
+                    />
                     <Label htmlFor={`physical-${index}`} className="text-sm text-red-700">{symptom}</Label>
                   </div>
                 ))}
@@ -219,7 +370,16 @@ export function AnxietyGuideComprehensive() {
                   'Guilt or self-blame'
                 ].map((symptom, index) => (
                   <div key={index} className="flex items-center space-x-2">
-                    <Checkbox id={`emotional-${index}`} />
+                    <Checkbox 
+                      id={`emotional-${index}`}
+                      checked={symptomChecklist[`emotional-${index}`] || false}
+                      onCheckedChange={(checked) => 
+                        setSymptomChecklist(prev => ({
+                          ...prev,
+                          [`emotional-${index}`]: checked as boolean
+                        }))
+                      }
+                    />
                     <Label htmlFor={`emotional-${index}`} className="text-sm text-purple-700">{symptom}</Label>
                   </div>
                 ))}
@@ -245,7 +405,16 @@ export function AnxietyGuideComprehensive() {
                   'Increased phone/internet use'
                 ].map((symptom, index) => (
                   <div key={index} className="flex items-center space-x-2">
-                    <Checkbox id={`behavioral-${index}`} />
+                    <Checkbox 
+                      id={`behavioral-${index}`}
+                      checked={symptomChecklist[`behavioral-${index}`] || false}
+                      onCheckedChange={(checked) => 
+                        setSymptomChecklist(prev => ({
+                          ...prev,
+                          [`behavioral-${index}`]: checked as boolean
+                        }))
+                      }
+                    />
                     <Label htmlFor={`behavioral-${index}`} className="text-sm text-blue-700">{symptom}</Label>
                   </div>
                 ))}
@@ -271,6 +440,11 @@ export function AnxietyGuideComprehensive() {
                     id="most-common"
                     placeholder="List your 3-5 most frequent physical symptoms..."
                     className="mt-1"
+                    value={symptomTrackingWorksheet.mostCommonSymptoms}
+                    onChange={(e) => setSymptomTrackingWorksheet(prev => ({
+                      ...prev,
+                      mostCommonSymptoms: e.target.value
+                    }))}
                   />
                 </div>
                 <div>
@@ -279,6 +453,11 @@ export function AnxietyGuideComprehensive() {
                     id="triggers"
                     placeholder="Situations, thoughts, or events that typically trigger your anxiety..."
                     className="mt-1"
+                    value={symptomTrackingWorksheet.commonTriggers}
+                    onChange={(e) => setSymptomTrackingWorksheet(prev => ({
+                      ...prev,
+                      commonTriggers: e.target.value
+                    }))}
                   />
                 </div>
               </div>
@@ -476,6 +655,11 @@ export function AnxietyGuideComprehensive() {
                     <Textarea 
                       placeholder="Based on your ratings above, list your top 3 immediate coping techniques..."
                       className="mt-1 min-h-[80px]"
+                      value={personalManagementPlan.immediateStrategies}
+                      onChange={(e) => setPersonalManagementPlan(prev => ({
+                        ...prev,
+                        immediateStrategies: e.target.value
+                      }))}
                     />
                   </div>
                   <div>
@@ -483,6 +667,11 @@ export function AnxietyGuideComprehensive() {
                     <Textarea 
                       placeholder="What lifestyle changes will you commit to? Set 2-3 realistic goals..."
                       className="mt-1 min-h-[80px]"
+                      value={personalManagementPlan.longTermGoals}
+                      onChange={(e) => setPersonalManagementPlan(prev => ({
+                        ...prev,
+                        longTermGoals: e.target.value
+                      }))}
                     />
                   </div>
                 </div>
@@ -491,6 +680,11 @@ export function AnxietyGuideComprehensive() {
                   <Textarea 
                     placeholder="List physical, emotional, or behavioral signs that indicate your anxiety is increasing..."
                     className="mt-1"
+                    value={personalManagementPlan.warningSigns}
+                    onChange={(e) => setPersonalManagementPlan(prev => ({
+                      ...prev,
+                      warningSigns: e.target.value
+                    }))}
                   />
                 </div>
               </CardContent>
@@ -632,7 +826,19 @@ export function AnxietyGuideComprehensive() {
                       'Limit caffeine after 2 PM'
                     ].map((goal, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Checkbox id={`goal-${index}`} />
+                        <Checkbox 
+                          id={`goal-${index}`}
+                          checked={actionPlanData.selectedGoals[`goal-${index}`] || false}
+                          onCheckedChange={(checked) => 
+                            setActionPlanData(prev => ({
+                              ...prev,
+                              selectedGoals: {
+                                ...prev.selectedGoals,
+                                [`goal-${index}`]: checked as boolean
+                              }
+                            }))
+                          }
+                        />
                         <Label htmlFor={`goal-${index}`} className="text-green-700 text-sm">{goal}</Label>
                       </div>
                     ))}
@@ -662,6 +868,11 @@ export function AnxietyGuideComprehensive() {
                 <Textarea 
                   placeholder="What specific steps will you take this week? How will you remember to practice these techniques?"
                   className="mt-2"
+                  value={actionPlanData.additionalNotes}
+                  onChange={(e) => setActionPlanData(prev => ({
+                    ...prev,
+                    additionalNotes: e.target.value
+                  }))}
                 />
               </div>
             </CardContent>
@@ -673,7 +884,16 @@ export function AnxietyGuideComprehensive() {
 
   const markSectionComplete = (sectionId: number) => {
     if (!completedSections.includes(sectionId)) {
-      setCompletedSections([...completedSections, sectionId]);
+      const newCompletedSections = [...completedSections, sectionId];
+      setCompletedSections(newCompletedSections);
+      
+      // Show completion toast if this was the last section
+      if (newCompletedSections.length === sections.length) {
+        toast({
+          title: "🎉 Congratulations!",
+          description: "You've completed the Understanding Anxiety guide!",
+        });
+      }
     }
   };
 
@@ -708,7 +928,17 @@ export function AnxietyGuideComprehensive() {
             <Badge variant="outline">{completedSections.length}/{sections.length} sections completed</Badge>
           </div>
           <Progress value={progressPercentage} className="mb-2" />
-          <p className="text-sm text-muted-foreground">{progressPercentage}% complete • Estimated time: 25-30 minutes</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {progressPercentage}% complete • {completedSections.length}/{sections.length} sections completed
+              {progressPercentage === 100 && " • 🎉 Guide completed!"}
+            </p>
+            {(updateGuideMutation.isPending || isAutoSaving) && (
+              <span className="text-xs text-blue-600 flex items-center gap-1">
+                <span className="animate-spin">💾</span> Saving...
+              </span>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -768,11 +998,26 @@ export function AnxietyGuideComprehensive() {
               </Button>
               
               <Button
-                onClick={() => setCurrentSection(Math.min(sections.length - 1, currentSection + 1))}
-                disabled={currentSection === sections.length - 1}
+                onClick={() => {
+                  if (currentSection < sections.length - 1) {
+                    setCurrentSection(currentSection + 1);
+                  } else {
+                    // On last section, mark as complete and show completion
+                    markSectionComplete(currentSection);
+                  }
+                }}
               >
-                Next Section
-                <ArrowRight className="w-4 h-4 ml-2" />
+                {currentSection === sections.length - 1 ? (
+                  <>
+                    Complete Guide
+                    <CheckCircle className="w-4 h-4 ml-2" />
+                  </>
+                ) : (
+                  <>
+                    Next Section
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </Button>
             </div>
           </div>

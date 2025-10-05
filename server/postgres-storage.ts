@@ -278,4 +278,36 @@ export class PostgresStorage implements IStorage {
   async deleteMoodEntry(id: string): Promise<void> {
     await db.delete(schema.moodEntries).where(eq(schema.moodEntries.id, id));
   }
+
+  // Anxiety Guide methods
+  async createAnxietyGuide(insertGuide: any): Promise<any> {
+    const result = await db.insert(schema.anxietyGuides).values(insertGuide).returning();
+    return result[0];
+  }
+
+  async getAnxietyGuide(userId: string): Promise<any | null> {
+    const result = await db.select().from(schema.anxietyGuides)
+      .where(eq(schema.anxietyGuides.userId, userId))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async updateAnxietyGuide(userId: string, updates: any): Promise<any> {
+    // Check if guide exists
+    const existing = await this.getAnxietyGuide(userId);
+    if (existing) {
+      // Update existing guide
+      const result = await db.update(schema.anxietyGuides)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(schema.anxietyGuides.id, existing.id))
+        .returning();
+      return result[0];
+    } else {
+      // Create new guide
+      const result = await db.insert(schema.anxietyGuides)
+        .values({ userId, ...updates })
+        .returning();
+      return result[0];
+    }
+  }
 }
