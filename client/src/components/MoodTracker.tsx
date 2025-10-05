@@ -12,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { apiRequest } from "@/lib/queryClient";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
+import { generateMoodEntriesReport } from "@/lib/pdf-generator";
 import { 
   Smile,
   Frown,
@@ -468,27 +469,38 @@ export function MoodTracker() {
   };
 
   const exportData = () => {
-    const exportData = {
-      entries,
-      exportDate: new Date().toISOString(),
-      summary: {
-        totalEntries: entries.length,
-        dateRange: entries.length > 0 ? {
-          start: entries[entries.length - 1].date,
-          end: entries[0].date
-        } : null,
-        averages: getAverageForPeriod(30)
-      }
-    };
+    if (!user || entries.length === 0) {
+      toast({
+        title: "No Data to Export",
+        description: "You need to have mood entries to export a report.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `mood-tracker-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      const reportData = {
+        user,
+        entries,
+        generatedAt: new Date()
+      };
+
+      const doc = generateMoodEntriesReport(reportData);
+      const fileName = `mood-tracker-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+      toast({
+        title: "Report Generated",
+        description: "Your mood tracker report has been downloaded as a PDF.",
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to generate PDF report. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -1062,7 +1074,7 @@ export function MoodTracker() {
                 {entries.length > 0 && (
                   <Button onClick={exportData} variant="outline" className="gap-2">
                     <Download className="w-4 h-4" />
-                    Export Data
+                    Export PDF Report
                   </Button>
                 )}
               </div>
