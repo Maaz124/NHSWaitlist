@@ -542,6 +542,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sleep Assessment API
+  app.get("/api/sleep-assessment/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const sleepAssessment = await storage.getSleepAssessment(userId);
+      res.json(sleepAssessment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/sleep-assessment", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const assessmentData = req.body;
+      
+      const sleepAssessment = await storage.createSleepAssessment({
+        userId,
+        ...assessmentData
+      });
+
+      res.json(sleepAssessment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/sleep-assessment/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const updates = req.body;
+      
+      const sleepAssessment = await storage.updateSleepAssessment(userId, updates);
+      res.json(sleepAssessment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Lifestyle Assessment API
+  app.get("/api/lifestyle-assessment/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const lifestyleAssessment = await storage.getLifestyleAssessment(userId);
+      res.json(lifestyleAssessment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/lifestyle-assessment", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const assessmentData = req.body;
+      
+      const lifestyleAssessment = await storage.createLifestyleAssessment({
+        userId,
+        ...assessmentData
+      });
+
+      res.json(lifestyleAssessment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/lifestyle-assessment/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const updates = req.body;
+      
+      const lifestyleAssessment = await storage.updateLifestyleAssessment(userId, updates);
+      res.json(lifestyleAssessment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

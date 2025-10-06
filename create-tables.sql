@@ -136,6 +136,50 @@ CREATE TABLE IF NOT EXISTS anxiety_guides (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Create sleep_assessments table
+CREATE TABLE IF NOT EXISTS sleep_assessments (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    bed_time VARCHAR,
+    wake_time VARCHAR,
+    sleep_latency INTEGER,
+    night_wakes INTEGER,
+    sleep_quality INTEGER,
+    daytime_energy INTEGER,
+    anxiety_level INTEGER,
+    sleep_environment JSONB,
+    pre_sleep_routine JSONB,
+    hindrances JSONB,
+    personal_plan JSONB,
+    additional_notes TEXT,
+    completed_sections JSONB,
+    progress_data JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create lifestyle_assessments table
+CREATE TABLE IF NOT EXISTS lifestyle_assessments (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    exercise_frequency INTEGER,
+    exercise_types JSONB,
+    diet_quality INTEGER,
+    social_connections INTEGER,
+    stress_management JSONB,
+    sleep_quality INTEGER,
+    screen_time INTEGER,
+    outdoor_time INTEGER,
+    hobbies JSONB,
+    barriers JSONB,
+    personal_goals JSONB,
+    personal_notes JSONB,
+    completed_sections JSONB,
+    progress_data JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Create health_check table (if not exists)
 CREATE TABLE IF NOT EXISTS health_check (
     id SERIAL PRIMARY KEY,

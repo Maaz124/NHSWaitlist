@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,9 @@ import {
   Clock,
   BookOpen
 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useUser } from "@/contexts/UserContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface LifestyleAssessment {
   exerciseFrequency: number;
@@ -37,6 +41,10 @@ interface LifestyleAssessment {
   outdoorTime: number;
   hobbies: string[];
   barriers: string[];
+  eatingHabits: string[];
+  nutritionChallenges: string[];
+  socialSupport: string[];
+  socialChallenges: string[];
 }
 
 export function LifestyleGuideComprehensive() {
@@ -52,10 +60,248 @@ export function LifestyleGuideComprehensive() {
     screenTime: 6,
     outdoorTime: 1,
     hobbies: [],
-    barriers: []
+    barriers: [],
+    eatingHabits: [],
+    nutritionChallenges: [],
+    socialSupport: [],
+    socialChallenges: []
   });
   const [personalGoals, setPersonalGoals] = useState<string[]>([]);
   const [personalNotes, setPersonalNotes] = useState<Record<string, string>>({});
+
+  const { user } = useUser();
+  const { toast } = useToast();
+
+  // Fetch existing lifestyle assessment data
+  const { data: existingAssessment, refetch } = useQuery({
+    queryKey: [`/api/lifestyle-assessment/${user?.id}`],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      console.log('🔍 Fetching lifestyle assessment for user:', user.id);
+      const response = await apiRequest('GET', `/api/lifestyle-assessment/${user.id}`);
+      const data = await response.json();
+      console.log('📥 Raw API response:', JSON.stringify(data, null, 2));
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Update lifestyle assessment data
+  const updateAssessmentMutation = useMutation({
+    mutationFn: async (dataToSave: any) => {
+      if (!user?.id) throw new Error('User not authenticated');
+      
+      console.log('💾 Saving lifestyle assessment data:', dataToSave);
+      const response = await apiRequest('PATCH', `/api/lifestyle-assessment/${user.id}`, dataToSave);
+      
+      // Handle empty response
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const text = await response.text();
+      if (text.trim()) {
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          console.log('⚠️ Non-JSON response:', text);
+          return { success: true };
+        }
+      }
+      return { success: true };
+    },
+    onSuccess: () => {
+      console.log('✅ Lifestyle assessment saved successfully');
+      toast({
+        title: "Saved Successfully",
+        description: "Your lifestyle assessment has been saved.",
+      });
+    },
+    onError: (error) => {
+      console.error('❌ Failed to save lifestyle assessment:', error);
+      toast({
+        title: "Save Failed",
+        description: "Failed to save your progress. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Load existing data when component mounts or data is fetched
+  useEffect(() => {
+    if (existingAssessment) {
+      console.log('📥 Loading existing lifestyle assessment data:', existingAssessment);
+      console.log('📥 completedSections from DB:', existingAssessment.completedSections);
+      console.log('📥 personalGoals from DB:', existingAssessment.personalGoals);
+      console.log('📥 personalGoals length from DB:', existingAssessment.personalGoals?.length);
+      console.log('🆔 Cache bust timestamp:', new Date().toISOString());
+      console.log('🚀 NEW CODE VERSION LOADED - Check this timestamp!');
+      
+      setCompletedSections(existingAssessment.completedSections || []);
+      setAssessment(existingAssessment.assessment || {
+        exerciseFrequency: 2,
+        exerciseTypes: [],
+        dietQuality: 5,
+        socialConnections: 5,
+        stressManagement: [],
+        sleepQuality: 5,
+        screenTime: 6,
+        outdoorTime: 1,
+        hobbies: [],
+        barriers: [],
+        eatingHabits: [],
+        nutritionChallenges: [],
+        socialSupport: [],
+        socialChallenges: []
+      });
+      setPersonalGoals(existingAssessment.personalGoals || []);
+      setPersonalNotes(existingAssessment.personalNotes || {});
+      
+      console.log('📥 Loaded data into state:', JSON.stringify({
+        completedSections: existingAssessment.completedSections,
+        personalGoals: existingAssessment.personalGoals,
+        personalGoalsLength: existingAssessment.personalGoals?.length,
+        assessment: existingAssessment.assessment,
+        personalNotes: existingAssessment.personalNotes
+      }, null, 2));
+    }
+  }, [existingAssessment]);
+
+  // Manual save function - only called when user clicks Next or Complete
+  const manualSave = () => {
+    if (!user?.id || updateAssessmentMutation.isPending) {
+      console.log('⏸️ Save skipped - user not authenticated or mutation pending');
+      return;
+    }
+    
+    const dataToSave = {
+      assessment,
+      personalGoals,
+      personalNotes,
+      completedSections,
+      progressData: {
+        lastAccessed: new Date().toISOString(),
+        currentSection,
+        totalSections: 4
+      }
+    };
+
+    console.log('💾 Manual save triggered:', dataToSave);
+    console.log('💾 assessment being saved:', assessment);
+    console.log('💾 assessment.exerciseFrequency:', assessment.exerciseFrequency);
+    console.log('💾 assessment.dietQuality:', assessment.dietQuality);
+    console.log('💾 assessment.eatingHabits:', assessment.eatingHabits);
+    console.log('💾 assessment.eatingHabits length:', assessment.eatingHabits?.length);
+    console.log('💾 assessment.nutritionChallenges:', assessment.nutritionChallenges);
+    console.log('💾 assessment.nutritionChallenges length:', assessment.nutritionChallenges?.length);
+    console.log('💾 assessment.socialSupport:', assessment.socialSupport);
+    console.log('💾 assessment.socialSupport length:', assessment.socialSupport?.length);
+    console.log('💾 assessment.socialChallenges:', assessment.socialChallenges);
+    console.log('💾 assessment.socialChallenges length:', assessment.socialChallenges?.length);
+    console.log('💾 personalGoals being saved:', personalGoals);
+    console.log('💾 personalNotes being saved:', personalNotes);
+    console.log('💾 personalNotes[section0]:', personalNotes['section0']);
+    console.log('💾 Full dataToSave structure:', JSON.stringify(dataToSave, null, 2));
+    updateAssessmentMutation.mutate(dataToSave);
+  };
+
+  const markSectionComplete = (sectionId: number) => {
+    if (!completedSections.includes(sectionId)) {
+      const newCompletedSections = [...completedSections, sectionId];
+      setCompletedSections(newCompletedSections);
+      console.log('✅ Section marked complete:', sectionId);
+    }
+  };
+
+  const markAllSectionsComplete = () => {
+    setCompletedSections([0, 1, 2, 3]);
+    console.log('🎉 All sections marked complete!');
+    toast({
+      title: "🎉 Congratulations!",
+      description: "You've completed the Lifestyle & Mental Health guide!",
+    });
+  };
+
+  // Calculate progress based on actual content completion
+  const calculateProgress = () => {
+    console.log('🔄 Progress calculation - completedSections:', completedSections);
+    console.log('🔄 Progress calculation - completedSections.length:', completedSections.length);
+    console.log('🔄 Progress calculation - personalGoals.length:', personalGoals.length);
+    
+    if (completedSections.length === 4) {
+      console.log('✅ All 4 sections completed - returning 100%');
+      return 100;
+    }
+
+    let completedContent = 0;
+    let totalContent = 4;
+
+    if (completedSections.includes(0)) {
+      completedContent += 1;
+      console.log('✅ Section 0 completed');
+    }
+    
+    const section1Content = (assessment.exerciseFrequency > 0) || 
+          (assessment.exerciseTypes && assessment.exerciseTypes.length > 0) || 
+          (assessment.dietQuality > 0) || 
+          (assessment.socialConnections > 0) || 
+          (assessment.stressManagement && assessment.stressManagement.length > 0) ||
+          (assessment.sleepQuality > 0) || 
+          (assessment.screenTime > 0) || 
+          (assessment.outdoorTime > 0) ||
+          (assessment.hobbies && assessment.hobbies.length > 0) ||
+          (assessment.barriers && assessment.barriers.length > 0) ||
+          (assessment.eatingHabits && assessment.eatingHabits.length > 0) ||
+          (assessment.nutritionChallenges && assessment.nutritionChallenges.length > 0) ||
+          (assessment.socialSupport && assessment.socialSupport.length > 0) ||
+          (assessment.socialChallenges && assessment.socialChallenges.length > 0);
+    
+    if (section1Content) {
+      completedContent += 1;
+      console.log('✅ Section 1 content completed');
+    }
+    
+    if (completedSections.includes(2)) {
+      completedContent += 1;
+      console.log('✅ Section 2 completed');
+    }
+    
+    const section3Content = completedSections.includes(3) || personalGoals.length > 0;
+    if (section3Content) {
+      completedContent += 1;
+      console.log('✅ Section 3 content completed');
+    }
+
+    const progress = Math.round((completedContent / totalContent) * 100);
+    console.log('📊 Progress calculation result:', completedContent, '/', totalContent, '=', progress + '%');
+    return progress;
+  };
+
+  const progressPercentage = useMemo(() => {
+    return calculateProgress();
+  }, [completedSections, personalGoals, assessment]);
+
+  const completedSectionsCount = useMemo(() => {
+    let count = 0;
+    if (completedSections.includes(0)) count++;
+    if ((assessment.exerciseFrequency > 0) || 
+        (assessment.exerciseTypes && assessment.exerciseTypes.length > 0) || 
+        (assessment.dietQuality > 0) || 
+        (assessment.socialConnections > 0) || 
+        (assessment.stressManagement && assessment.stressManagement.length > 0) ||
+        (assessment.sleepQuality > 0) || 
+        (assessment.screenTime > 0) || 
+        (assessment.outdoorTime > 0) ||
+        (assessment.hobbies && assessment.hobbies.length > 0) ||
+        (assessment.barriers && assessment.barriers.length > 0) ||
+        (assessment.eatingHabits && assessment.eatingHabits.length > 0) ||
+        (assessment.nutritionChallenges && assessment.nutritionChallenges.length > 0) ||
+        (assessment.socialSupport && assessment.socialSupport.length > 0) ||
+        (assessment.socialChallenges && assessment.socialChallenges.length > 0)) count++;
+    if (completedSections.includes(2)) count++;
+    if (completedSections.includes(3) || personalGoals.length > 0) count++;
+    return count;
+  }, [completedSections, personalGoals, assessment]);
 
   const sections = [
     {
@@ -259,7 +505,7 @@ export function LifestyleGuideComprehensive() {
                 <Label className="font-semibold text-blue-800">How many days per week do you engage in physical activity (20+ minutes)?</Label>
                 <div className="mt-2">
                   <Slider
-                    value={[assessment.exerciseFrequency]}
+                    value={[assessment.exerciseFrequency || 2]}
                     onValueChange={(value) => setAssessment(prev => ({...prev, exerciseFrequency: value[0]}))}
                     max={7}
                     min={0}
@@ -284,17 +530,17 @@ export function LifestyleGuideComprehensive() {
                     <div key={index} className="flex items-center space-x-2">
                       <Checkbox 
                         id={`activity-${index}`}
-                        checked={assessment.exerciseTypes.includes(activity)}
+                        checked={assessment.exerciseTypes && assessment.exerciseTypes.includes(activity)}
                         onCheckedChange={(checked) => {
                           if (checked) {
                             setAssessment(prev => ({
                               ...prev, 
-                              exerciseTypes: [...prev.exerciseTypes, activity]
+                              exerciseTypes: [...(prev.exerciseTypes || []), activity]
                             }));
                           } else {
                             setAssessment(prev => ({
                               ...prev,
-                              exerciseTypes: prev.exerciseTypes.filter(a => a !== activity)
+                              exerciseTypes: (prev.exerciseTypes || []).filter(a => a !== activity)
                             }));
                           }
                         }}
@@ -319,7 +565,7 @@ export function LifestyleGuideComprehensive() {
                 <Label className="font-semibold text-orange-800">Overall diet quality (1 = very poor, 10 = excellent)</Label>
                 <div className="mt-2">
                   <Slider
-                    value={[assessment.dietQuality]}
+                    value={[assessment.dietQuality || 5]}
                     onValueChange={(value) => setAssessment(prev => ({...prev, dietQuality: value[0]}))}
                     max={10}
                     min={1}
@@ -347,7 +593,33 @@ export function LifestyleGuideComprehensive() {
                       'I limit alcohol consumption'
                     ].map((habit, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Checkbox id={`eating-${index}`} />
+                        <Checkbox 
+                          id={`eating-${index}`}
+                          checked={assessment.eatingHabits && assessment.eatingHabits.includes(habit)}
+                          onCheckedChange={(checked) => {
+                            console.log('🍎 Eating habit checkbox changed:', habit, checked);
+                            console.log('🍎 Current eatingHabits before update:', assessment.eatingHabits);
+                            if (checked) {
+                              setAssessment(prev => {
+                                const newHabits = [...(prev.eatingHabits || []), habit];
+                                console.log('🍎 New eatingHabits after adding:', newHabits);
+                                return {
+                                  ...prev, 
+                                  eatingHabits: newHabits
+                                };
+                              });
+                            } else {
+                              setAssessment(prev => {
+                                const newHabits = (prev.eatingHabits || []).filter(h => h !== habit);
+                                console.log('🍎 New eatingHabits after removing:', newHabits);
+                                return {
+                                  ...prev,
+                                  eatingHabits: newHabits
+                                };
+                              });
+                            }
+                          }}
+                        />
                         <Label htmlFor={`eating-${index}`} className="text-orange-700 text-sm">{habit}</Label>
                       </div>
                     ))}
@@ -365,7 +637,23 @@ export function LifestyleGuideComprehensive() {
                       'Using food to cope with emotions'
                     ].map((challenge, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Checkbox id={`challenge-${index}`} />
+                        <Checkbox 
+                          id={`challenge-${index}`}
+                          checked={assessment.nutritionChallenges && assessment.nutritionChallenges.includes(challenge)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setAssessment(prev => ({
+                                ...prev, 
+                                nutritionChallenges: [...(prev.nutritionChallenges || []), challenge]
+                              }));
+                            } else {
+                              setAssessment(prev => ({
+                                ...prev,
+                                nutritionChallenges: (prev.nutritionChallenges || []).filter(c => c !== challenge)
+                              }));
+                            }
+                          }}
+                        />
                         <Label htmlFor={`challenge-${index}`} className="text-orange-700 text-sm">{challenge}</Label>
                       </div>
                     ))}
@@ -387,7 +675,7 @@ export function LifestyleGuideComprehensive() {
                 <Label className="font-semibold text-purple-800">Quality of social connections (1 = very isolated, 10 = very connected)</Label>
                 <div className="mt-2">
                   <Slider
-                    value={[assessment.socialConnections]}
+                    value={[assessment.socialConnections || 5]}
                     onValueChange={(value) => setAssessment(prev => ({...prev, socialConnections: value[0]}))}
                     max={10}
                     min={1}
@@ -415,7 +703,33 @@ export function LifestyleGuideComprehensive() {
                       'Online communities or support groups'
                     ].map((support, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Checkbox id={`support-${index}`} />
+                        <Checkbox 
+                          id={`support-${index}`}
+                          checked={assessment.socialSupport && assessment.socialSupport.includes(support)}
+                          onCheckedChange={(checked) => {
+                            console.log('👥 Social support checkbox changed:', support, checked);
+                            console.log('👥 Current socialSupport before update:', assessment.socialSupport);
+                            if (checked) {
+                              setAssessment(prev => {
+                                const newSupport = [...(prev.socialSupport || []), support];
+                                console.log('👥 New socialSupport after adding:', newSupport);
+                                return {
+                                  ...prev, 
+                                  socialSupport: newSupport
+                                };
+                              });
+                            } else {
+                              setAssessment(prev => {
+                                const newSupport = (prev.socialSupport || []).filter(s => s !== support);
+                                console.log('👥 New socialSupport after removing:', newSupport);
+                                return {
+                                  ...prev,
+                                  socialSupport: newSupport
+                                };
+                              });
+                            }
+                          }}
+                        />
                         <Label htmlFor={`support-${index}`} className="text-purple-700 text-sm">{support}</Label>
                       </div>
                     ))}
@@ -433,7 +747,23 @@ export function LifestyleGuideComprehensive() {
                       'Feel like a burden to others'
                     ].map((barrier, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Checkbox id={`social-barrier-${index}`} />
+                        <Checkbox 
+                          id={`social-barrier-${index}`}
+                          checked={assessment.socialChallenges && assessment.socialChallenges.includes(barrier)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setAssessment(prev => ({
+                                ...prev, 
+                                socialChallenges: [...(prev.socialChallenges || []), barrier]
+                              }));
+                            } else {
+                              setAssessment(prev => ({
+                                ...prev,
+                                socialChallenges: (prev.socialChallenges || []).filter(b => b !== barrier)
+                              }));
+                            }
+                          }}
+                        />
                         <Label htmlFor={`social-barrier-${index}`} className="text-purple-700 text-sm">{barrier}</Label>
                       </div>
                     ))}
@@ -456,7 +786,7 @@ export function LifestyleGuideComprehensive() {
                   <Label className="font-semibold text-green-800">Hours spent on screens daily (excluding work)</Label>
                   <div className="mt-2">
                     <Slider
-                      value={[assessment.screenTime]}
+                      value={[assessment.screenTime || 6]}
                       onValueChange={(value) => setAssessment(prev => ({...prev, screenTime: value[0]}))}
                       max={12}
                       min={1}
@@ -474,7 +804,7 @@ export function LifestyleGuideComprehensive() {
                   <Label className="font-semibold text-green-800">Hours spent outdoors daily</Label>
                   <div className="mt-2">
                     <Slider
-                      value={[assessment.outdoorTime]}
+                      value={[assessment.outdoorTime || 1]}
                       onValueChange={(value) => setAssessment(prev => ({...prev, outdoorTime: value[0]}))}
                       max={8}
                       min={0}
@@ -501,17 +831,17 @@ export function LifestyleGuideComprehensive() {
                     <div key={index} className="flex items-center space-x-2">
                       <Checkbox 
                         id={`hobby-${index}`}
-                        checked={assessment.hobbies.includes(hobby)}
+                        checked={assessment.hobbies && assessment.hobbies.includes(hobby)}
                         onCheckedChange={(checked) => {
                           if (checked) {
                             setAssessment(prev => ({
                               ...prev, 
-                              hobbies: [...prev.hobbies, hobby]
+                              hobbies: [...(prev.hobbies || []), hobby]
                             }));
                           } else {
                             setAssessment(prev => ({
                               ...prev,
-                              hobbies: prev.hobbies.filter(h => h !== hobby)
+                              hobbies: (prev.hobbies || []).filter(h => h !== hobby)
                             }));
                           }
                         }}
@@ -1143,14 +1473,6 @@ export function LifestyleGuideComprehensive() {
     }
   ];
 
-  const markSectionComplete = (sectionId: number) => {
-    if (!completedSections.includes(sectionId)) {
-      setCompletedSections([...completedSections, sectionId]);
-    }
-  };
-
-  const progressPercentage = Math.round((completedSections.length / sections.length) * 100);
-
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
@@ -1223,7 +1545,11 @@ export function LifestyleGuideComprehensive() {
             <div className="flex gap-3">
               <Button
                 variant="outline"
-                onClick={() => markSectionComplete(currentSection)}
+                onClick={() => {
+                  // Save data when marking section complete
+                  manualSave();
+                  markSectionComplete(currentSection);
+                }}
                 disabled={completedSections.includes(currentSection)}
               >
                 {completedSections.includes(currentSection) ? (
@@ -1240,8 +1566,17 @@ export function LifestyleGuideComprehensive() {
               </Button>
               
               <Button
-                onClick={() => setCurrentSection(Math.min(sections.length - 1, currentSection + 1))}
-                disabled={currentSection === sections.length - 1}
+                onClick={() => {
+                  // Save data before moving to next section
+                  manualSave();
+                  
+                  if (currentSection < sections.length - 1) {
+                    setCurrentSection(currentSection + 1);
+                  } else {
+                    // On last section, mark all sections as complete
+                    markAllSectionsComplete();
+                  }
+                }}
               >
                 Next Section
                 <ArrowRight className="w-4 h-4 ml-2" />

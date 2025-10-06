@@ -126,10 +126,59 @@ export const anxietyGuides = pgTable("anxiety_guides", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const sleepAssessments = pgTable("sleep_assessments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  bedTime: varchar("bed_time"), // Time format
+  wakeTime: varchar("wake_time"), // Time format
+  sleepLatency: integer("sleep_latency"), // Minutes
+  nightWakes: integer("night_wakes"),
+  sleepQuality: integer("sleep_quality"), // 1-10 scale
+  daytimeEnergy: integer("daytime_energy"), // 1-10 scale
+  anxietyLevel: integer("anxiety_level"), // 1-10 scale
+  sleepEnvironment: jsonb("sleep_environment"), // Array of selected items
+  preSleepRoutine: jsonb("pre_sleep_routine"), // Array of selected items
+  hindrances: jsonb("hindrances"), // Array of selected items
+  personalPlan: jsonb("personal_plan"), // Array of action plan items
+  personalNotes: jsonb("personal_notes"), // Object with section notes
+  additionalNotes: text("additional_notes"),
+  completedSections: jsonb("completed_sections"), // Array of completed section IDs
+  progressData: jsonb("progress_data"), // Overall progress tracking
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const lifestyleAssessments = pgTable("lifestyle_assessments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  exerciseFrequency: integer("exercise_frequency"), // 0-7 days per week
+  exerciseTypes: jsonb("exercise_types"), // Array of activity types
+  dietQuality: integer("diet_quality"), // 1-10 scale
+  socialConnections: integer("social_connections"), // 1-10 scale
+  stressManagement: jsonb("stress_management"), // Array of techniques
+  sleepQuality: integer("sleep_quality"), // 1-10 scale
+  screenTime: integer("screen_time"), // Hours per day
+  outdoorTime: integer("outdoor_time"), // Hours per day
+  hobbies: jsonb("hobbies"), // Array of hobbies
+  barriers: jsonb("barriers"), // Array of barriers
+  eatingHabits: jsonb("eating_habits"), // Array of eating habits
+  nutritionChallenges: jsonb("nutrition_challenges"), // Array of nutrition challenges
+  socialSupport: jsonb("social_support"), // Array of social support types
+  socialChallenges: jsonb("social_challenges"), // Array of social challenges
+  personalGoals: jsonb("personal_goals"), // Array of user goals
+  personalNotes: jsonb("personal_notes"), // Object with section notes
+  completedSections: jsonb("completed_sections"), // Array of completed section IDs
+  progressData: jsonb("progress_data"), // Overall progress tracking
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertOnboardingResponseSchema = createInsertSchema(onboardingResponses).omit({ id: true, completedAt: true });
 export const insertWeeklyAssessmentSchema = createInsertSchema(weeklyAssessments).omit({ id: true, completedAt: true });
 export const insertAnxietyModuleSchema = createInsertSchema(anxietyModules).omit({ id: true, completedAt: true, lastAccessedAt: true });
+export const insertLifestyleAssessmentSchema = createInsertSchema(lifestyleAssessments).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSleepAssessmentSchema = createInsertSchema(sleepAssessments).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertModuleActivitySchema = createInsertSchema(moduleActivities).omit({ id: true, completedAt: true });
 export const insertProgressReportSchema = createInsertSchema(progressReports).omit({ id: true, generatedAt: true });
 export const insertThoughtRecordSchema = createInsertSchema(thoughtRecords).omit({ id: true, createdAt: true, updatedAt: true });
@@ -154,3 +203,7 @@ export type MoodEntry = typeof moodEntries.$inferSelect;
 export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;
 export type AnxietyGuide = typeof anxietyGuides.$inferSelect;
 export type InsertAnxietyGuide = z.infer<typeof insertAnxietyGuideSchema>;
+export type SleepAssessment = typeof sleepAssessments.$inferSelect;
+export type InsertSleepAssessment = z.infer<typeof insertSleepAssessmentSchema>;
+export type LifestyleAssessment = typeof lifestyleAssessments.$inferSelect;
+export type InsertLifestyleAssessment = z.infer<typeof insertLifestyleAssessmentSchema>;

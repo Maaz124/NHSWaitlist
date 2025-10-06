@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,9 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { apiRequest } from "@/lib/queryClient";
+import { useUser } from "@/contexts/UserContext";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Moon, 
   Clock, 
@@ -35,7 +39,7 @@ interface SleepAssessment {
   daytimeEnergy: number;
   anxietyLevel: number;
   sleepEnvironment: string[];
-  preSleeproutine: string[];
+  preSleepRoutine: string[];
   hindrances: string[];
 }
 
@@ -61,11 +65,231 @@ export function SleepGuideComprehensive() {
     daytimeEnergy: 5,
     anxietyLevel: 5,
     sleepEnvironment: [],
-    preSleeproutine: [],
+    preSleepRoutine: [],
     hindrances: []
   });
   const [personalPlan, setPersonalPlan] = useState<string[]>([]);
   const [personalNotes, setPersonalNotes] = useState<Record<string, string>>({});
+  const [additionalNotes, setAdditionalNotes] = useState<string>("");
+
+  const { user } = useUser();
+  const { toast } = useToast();
+
+  // Fetch existing sleep assessment data
+  const { data: existingAssessment, refetch } = useQuery({
+    queryKey: [`/api/sleep-assessment/${user?.id}`],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      console.log('🔍 Fetching sleep assessment for user:', user.id);
+      const response = await apiRequest('GET', `/api/sleep-assessment/${user.id}`);
+      const data = await response.json();
+      console.log('📥 Raw API response:', JSON.stringify(data, null, 2));
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Update sleep assessment data
+  const updateAssessmentMutation = useMutation({
+    mutationFn: async (data: any) => {
+      if (!user?.id) throw new Error('User not authenticated');
+      const response = await apiRequest('PATCH', `/api/sleep-assessment/${user.id}`, data);
+      
+      // Check if response is ok and has content
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      // Check if response has content before trying to parse JSON
+      const text = await response.text();
+      if (!text.trim()) {
+        // Empty response is ok for successful updates
+        return { success: true };
+      }
+      
+      try {
+        return JSON.parse(text);
+      } catch (error) {
+        console.error('Failed to parse JSON response:', text);
+        throw new Error('Invalid JSON response from server');
+      }
+    },
+    onSuccess: (data) => {
+      console.log('✅ Sleep assessment saved successfully:', JSON.stringify(data, null, 2));
+      toast({
+        title: "Saved Successfully",
+        description: "Your sleep assessment has been saved.",
+      });
+    },
+    onError: (error: any) => {
+      console.error('❌ Failed to save sleep assessment:', error);
+      toast({
+        title: "Save Failed",
+        description: "Failed to save your progress. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Load existing data when component mounts or data is fetched
+  useEffect(() => {
+    if (existingAssessment) {
+      console.log('📥 Loading existing sleep assessment data:', existingAssessment);
+      console.log('📥 completedSections from DB:', existingAssessment.completedSections);
+      console.log('📥 personalPlan from DB:', existingAssessment.personalPlan);
+      console.log('📥 personalPlan length from DB:', existingAssessment.personalPlan?.length);
+      console.log('🆔 Cache bust timestamp:', new Date().toISOString());
+      console.log('🚀 NEW CODE VERSION LOADED - Check this timestamp!');
+      
+      setCompletedSections(existingAssessment.completedSections || []);
+      setSleepAssessment(existingAssessment.sleepAssessment || {
+        bedTime: '',
+        wakeTime: '',
+        sleepLatency: 30,
+        nightWakes: 1,
+        sleepQuality: 5,
+        daytimeEnergy: 5,
+        anxietyLevel: 5,
+        sleepEnvironment: [],
+        preSleepRoutine: [],
+        hindrances: []
+      });
+      setPersonalPlan(existingAssessment.personalPlan || []);
+      setPersonalNotes(existingAssessment.personalNotes || {});
+      setAdditionalNotes(existingAssessment.additionalNotes || "");
+      
+      console.log('📥 Loaded data into state:', JSON.stringify({
+        completedSections: existingAssessment.completedSections,
+        personalPlan: existingAssessment.personalPlan,
+        personalPlanLength: existingAssessment.personalPlan?.length,
+        sleepAssessment: existingAssessment.sleepAssessment,
+        personalNotes: existingAssessment.personalNotes,
+        additionalNotes: existingAssessment.additionalNotes
+      }, null, 2));
+    }
+  }, [existingAssessment]);
+
+  // Manual save function - only called when user clicks Next or Complete
+  const manualSave = () => {
+    if (!user?.id || updateAssessmentMutation.isPending) {
+      console.log('⏸️ Save skipped - user not authenticated or mutation pending');
+      return;
+    }
+    
+    const dataToSave = {
+      sleepAssessment,
+      personalPlan,
+      personalNotes,
+      additionalNotes,
+      completedSections,
+      progressData: {
+        lastAccessed: new Date().toISOString(),
+        currentSection,
+        totalSections: 4
+      }
+    };
+
+    console.log('💾 Manual save triggered:', dataToSave);
+    console.log('💾 sleepAssessment being saved:', sleepAssessment);
+    console.log('💾 sleepAssessment.bedTime:', sleepAssessment.bedTime);
+    console.log('💾 sleepAssessment.sleepQuality:', sleepAssessment.sleepQuality);
+    console.log('💾 personalNotes being saved:', personalNotes);
+    console.log('💾 personalNotes[section0]:', personalNotes['section0']);
+    console.log('💾 personalNotes[section3]:', personalNotes['section3']);
+    console.log('💾 Full dataToSave structure:', JSON.stringify(dataToSave, null, 2));
+    updateAssessmentMutation.mutate(dataToSave);
+  };
+
+  const markSectionComplete = (sectionId: number) => {
+    if (!completedSections.includes(sectionId)) {
+      const newCompletedSections = [...completedSections, sectionId];
+      setCompletedSections(newCompletedSections);
+    }
+  };
+
+  const markAllSectionsComplete = () => {
+    const allSections = [0, 1, 2, 3];
+    setCompletedSections(allSections);
+    toast({
+      title: "🎉 Congratulations!",
+      description: "You've completed the Sleep & Anxiety guide!",
+    });
+  };
+
+  // Calculate progress based on actual content completion
+  const calculateProgress = () => {
+    console.log('🔄 Progress calculation - completedSections:', completedSections);
+    console.log('🔄 Progress calculation - completedSections.length:', completedSections.length);
+    console.log('🔄 Progress calculation - personalPlan.length:', personalPlan.length);
+    
+    if (completedSections.length === 4) {
+      console.log('✅ All 4 sections completed - returning 100%');
+      return 100;
+    }
+
+    let completedContent = 0;
+    let totalContent = 4;
+
+    if (completedSections.includes(0)) {
+      completedContent += 1;
+      console.log('✅ Section 0 completed');
+    }
+    
+    const section1Content = (sleepAssessment.bedTime && sleepAssessment.bedTime.trim().length > 0) || 
+          (sleepAssessment.wakeTime && sleepAssessment.wakeTime.trim().length > 0) || 
+          (sleepAssessment.sleepEnvironment && sleepAssessment.sleepEnvironment.length > 0) || 
+          (sleepAssessment.preSleepRoutine && sleepAssessment.preSleepRoutine.length > 0) || 
+          (sleepAssessment.hindrances && sleepAssessment.hindrances.length > 0) || 
+          (additionalNotes && additionalNotes.trim().length > 0);
+    
+    if (section1Content) {
+      completedContent += 1;
+      console.log('✅ Section 1 content completed');
+    }
+    
+    if (completedSections.includes(2)) {
+      completedContent += 1;
+      console.log('✅ Section 2 completed');
+    }
+    
+    const section3Content = completedSections.includes(3) || personalPlan.length > 0;
+    if (section3Content) {
+      completedContent += 1;
+      console.log('✅ Section 3 content completed');
+    }
+
+    const progress = Math.round((completedContent / totalContent) * 100);
+    console.log('📊 Progress calculation result:', completedContent, '/', totalContent, '=', progress + '%');
+    return progress;
+  };
+
+  const progressPercentage = useMemo(() => {
+    return calculateProgress();
+  }, [completedSections, personalPlan, sleepAssessment, additionalNotes]);
+
+  // Debug progress calculation when state changes
+  useEffect(() => {
+    console.log('🔄 State changed - recalculating progress...');
+    console.log('🔄 Current completedSections:', completedSections);
+    console.log('🔄 Current personalPlan:', personalPlan);
+    console.log('🔄 Current personalPlan.length:', personalPlan.length);
+    const currentProgress = calculateProgress();
+    console.log('🔄 Current progress percentage:', currentProgress + '%');
+  }, [completedSections, personalPlan, sleepAssessment, additionalNotes]);
+
+  const completedSectionsCount = useMemo(() => {
+    let count = 0;
+    if (completedSections.includes(0)) count++;
+    if ((sleepAssessment.bedTime && sleepAssessment.bedTime.trim().length > 0) || 
+        (sleepAssessment.wakeTime && sleepAssessment.wakeTime.trim().length > 0) || 
+        (sleepAssessment.sleepEnvironment && sleepAssessment.sleepEnvironment.length > 0) || 
+        (sleepAssessment.preSleepRoutine && sleepAssessment.preSleepRoutine.length > 0) || 
+        (sleepAssessment.hindrances && sleepAssessment.hindrances.length > 0) || 
+        (additionalNotes && additionalNotes.trim().length > 0)) count++;
+    if (completedSections.includes(2)) count++;
+    if (completedSections.includes(3) || personalPlan.length > 0) count++;
+    return count;
+  }, [completedSections, personalPlan, sleepAssessment, additionalNotes]);
 
   const sections = [
     {
@@ -223,8 +447,11 @@ export function SleepGuideComprehensive() {
                   <Label className="font-semibold text-blue-800">Usual Bedtime:</Label>
                   <Input
                     type="time"
-                    value={sleepAssessment.bedTime}
-                    onChange={(e) => setSleepAssessment(prev => ({...prev, bedTime: e.target.value}))}
+                    value={sleepAssessment.bedTime || ''}
+                    onChange={(e) => {
+                      console.log('🛏️ Bedtime changed:', e.target.value);
+                      setSleepAssessment(prev => ({...prev, bedTime: e.target.value}));
+                    }}
                     className="mt-1"
                   />
                 </div>
@@ -232,8 +459,11 @@ export function SleepGuideComprehensive() {
                   <Label className="font-semibold text-blue-800">Usual Wake Time:</Label>
                   <Input
                     type="time"
-                    value={sleepAssessment.wakeTime}
-                    onChange={(e) => setSleepAssessment(prev => ({...prev, wakeTime: e.target.value}))}
+                    value={sleepAssessment.wakeTime || ''}
+                    onChange={(e) => {
+                      console.log('☀️ Wake time changed:', e.target.value);
+                      setSleepAssessment(prev => ({...prev, wakeTime: e.target.value}));
+                    }}
                     className="mt-1"
                   />
                 </div>
@@ -245,7 +475,7 @@ export function SleepGuideComprehensive() {
                   <Label className="font-semibold text-blue-800">How long does it usually take you to fall asleep? (minutes)</Label>
                   <div className="mt-2">
                     <Slider
-                      value={[sleepAssessment.sleepLatency]}
+                      value={[sleepAssessment.sleepLatency || 30]}
                       onValueChange={(value) => setSleepAssessment(prev => ({...prev, sleepLatency: value[0]}))}
                       max={120}
                       min={5}
@@ -264,7 +494,7 @@ export function SleepGuideComprehensive() {
                   <Label className="font-semibold text-blue-800">How many times do you typically wake up during the night?</Label>
                   <div className="mt-2">
                     <Slider
-                      value={[sleepAssessment.nightWakes]}
+                      value={[sleepAssessment.nightWakes || 1]}
                       onValueChange={(value) => setSleepAssessment(prev => ({...prev, nightWakes: value[0]}))}
                       max={6}
                       min={0}
@@ -283,8 +513,11 @@ export function SleepGuideComprehensive() {
                   <Label className="font-semibold text-blue-800">Overall sleep quality (1 = very poor, 10 = excellent)</Label>
                   <div className="mt-2">
                     <Slider
-                      value={[sleepAssessment.sleepQuality]}
-                      onValueChange={(value) => setSleepAssessment(prev => ({...prev, sleepQuality: value[0]}))}
+                      value={[sleepAssessment.sleepQuality || 5]}
+                      onValueChange={(value) => {
+                        console.log('😴 Sleep quality changed:', value[0]);
+                        setSleepAssessment(prev => ({...prev, sleepQuality: value[0]}));
+                      }}
                       max={10}
                       min={1}
                       step={1}
@@ -302,7 +535,7 @@ export function SleepGuideComprehensive() {
                   <Label className="font-semibold text-blue-800">Daytime energy levels (1 = exhausted, 10 = highly energetic)</Label>
                   <div className="mt-2">
                     <Slider
-                      value={[sleepAssessment.daytimeEnergy]}
+                      value={[sleepAssessment.daytimeEnergy || 5]}
                       onValueChange={(value) => setSleepAssessment(prev => ({...prev, daytimeEnergy: value[0]}))}
                       max={10}
                       min={1}
@@ -321,7 +554,7 @@ export function SleepGuideComprehensive() {
                   <Label className="font-semibold text-blue-800">Anxiety levels before bedtime (1 = calm, 10 = very anxious)</Label>
                   <div className="mt-2">
                     <Slider
-                      value={[sleepAssessment.anxietyLevel]}
+                      value={[sleepAssessment.anxietyLevel || 5]}
                       onValueChange={(value) => setSleepAssessment(prev => ({...prev, anxietyLevel: value[0]}))}
                       max={10}
                       min={1}
@@ -364,17 +597,17 @@ export function SleepGuideComprehensive() {
                     <div key={index} className="flex items-center space-x-2">
                       <Checkbox 
                         id={`env-${index}`}
-                        checked={sleepAssessment.sleepEnvironment.includes(item)}
+                        checked={sleepAssessment.sleepEnvironment && sleepAssessment.sleepEnvironment.includes(item)}
                         onCheckedChange={(checked) => {
                           if (checked) {
                             setSleepAssessment(prev => ({
                               ...prev, 
-                              sleepEnvironment: [...prev.sleepEnvironment, item]
+                              sleepEnvironment: [...(prev.sleepEnvironment || []), item]
                             }));
                           } else {
                             setSleepAssessment(prev => ({
                               ...prev,
-                              sleepEnvironment: prev.sleepEnvironment.filter(i => i !== item)
+                              sleepEnvironment: (prev.sleepEnvironment || []).filter(i => i !== item)
                             }));
                           }
                         }}
@@ -401,17 +634,17 @@ export function SleepGuideComprehensive() {
                     <div key={index} className="flex items-center space-x-2">
                       <Checkbox 
                         id={`routine-${index}`}
-                        checked={sleepAssessment.preSleeproutine.includes(item)}
+                        checked={sleepAssessment.preSleepRoutine && sleepAssessment.preSleepRoutine.includes(item)}
                         onCheckedChange={(checked) => {
                           if (checked) {
                             setSleepAssessment(prev => ({
                               ...prev, 
-                              preSleeproutine: [...prev.preSleeproutine, item]
+                              preSleepRoutine: [...(prev.preSleepRoutine || []), item]
                             }));
                           } else {
                             setSleepAssessment(prev => ({
                               ...prev,
-                              preSleeproutine: prev.preSleeproutine.filter(i => i !== item)
+                              preSleepRoutine: (prev.preSleepRoutine || []).filter(i => i !== item)
                             }));
                           }
                         }}
@@ -440,17 +673,17 @@ export function SleepGuideComprehensive() {
                     <div key={index} className="flex items-center space-x-2">
                       <Checkbox 
                         id={`hindrance-${index}`}
-                        checked={sleepAssessment.hindrances.includes(item)}
+                        checked={sleepAssessment.hindrances && sleepAssessment.hindrances.includes(item)}
                         onCheckedChange={(checked) => {
                           if (checked) {
                             setSleepAssessment(prev => ({
                               ...prev, 
-                              hindrances: [...prev.hindrances, item]
+                              hindrances: [...(prev.hindrances || []), item]
                             }));
                           } else {
                             setSleepAssessment(prev => ({
                               ...prev,
-                              hindrances: prev.hindrances.filter(i => i !== item)
+                              hindrances: (prev.hindrances || []).filter(i => i !== item)
                             }));
                           }
                         }}
@@ -721,10 +954,10 @@ export function SleepGuideComprehensive() {
                 <div className="p-4 bg-white rounded border">
                   <h4 className="font-semibold text-blue-800 mb-2">Positive Sleep Habits You Already Have:</h4>
                   <ul className="text-blue-700 text-sm space-y-1">
-                    {sleepAssessment.sleepEnvironment.slice(0, 3).map((habit, index) => (
+                    {(sleepAssessment.sleepEnvironment || []).slice(0, 3).map((habit, index) => (
                       <li key={index}>✓ {habit}</li>
                     ))}
-                    {sleepAssessment.preSleeproutine.slice(0, 2).map((habit, index) => (
+                    {(sleepAssessment.preSleepRoutine || []).slice(0, 2).map((habit, index) => (
                       <li key={index}>✓ {habit}</li>
                     ))}
                   </ul>
@@ -732,7 +965,7 @@ export function SleepGuideComprehensive() {
                 <div className="p-4 bg-white rounded border">
                   <h4 className="font-semibold text-blue-800 mb-2">Priority Areas for Improvement:</h4>
                   <ul className="text-blue-700 text-sm space-y-1">
-                    {sleepAssessment.hindrances.slice(0, 4).map((issue, index) => (
+                    {(sleepAssessment.hindrances || []).slice(0, 4).map((issue, index) => (
                       <li key={index}>• {issue}</li>
                     ))}
                   </ul>
@@ -761,7 +994,17 @@ export function SleepGuideComprehensive() {
                       'If awake >20 minutes, get up and do quiet activity'
                     ].map((goal, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Checkbox id={`week1-${index}`} />
+                        <Checkbox 
+                          id={`week1-${index}`}
+                          checked={personalPlan.includes(goal)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setPersonalPlan(prev => [...prev, goal]);
+                            } else {
+                              setPersonalPlan(prev => prev.filter(item => item !== goal));
+                            }
+                          }}
+                        />
                         <Label htmlFor={`week1-${index}`} className="text-green-700 text-sm">{goal}</Label>
                       </div>
                     ))}
@@ -777,7 +1020,17 @@ export function SleepGuideComprehensive() {
                       'Challenge catastrophic sleep thoughts'
                     ].map((goal, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Checkbox id={`anxiety1-${index}`} />
+                        <Checkbox 
+                          id={`anxiety1-${index}`}
+                          checked={personalPlan.includes(goal)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setPersonalPlan(prev => [...prev, goal]);
+                            } else {
+                              setPersonalPlan(prev => prev.filter(item => item !== goal));
+                            }
+                          }}
+                        />
                         <Label htmlFor={`anxiety1-${index}`} className="text-green-700 text-sm">{goal}</Label>
                       </div>
                     ))}
@@ -807,7 +1060,17 @@ export function SleepGuideComprehensive() {
                       'Add white noise or earplugs if needed'
                     ].map((goal, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Checkbox id={`week3-${index}`} />
+                        <Checkbox 
+                          id={`week3-${index}`}
+                          checked={personalPlan.includes(goal)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setPersonalPlan(prev => [...prev, goal]);
+                            } else {
+                              setPersonalPlan(prev => prev.filter(item => item !== goal));
+                            }
+                          }}
+                        />
                         <Label htmlFor={`week3-${index}`} className="text-purple-700 text-sm">{goal}</Label>
                       </div>
                     ))}
@@ -823,7 +1086,17 @@ export function SleepGuideComprehensive() {
                       'Try guided sleep meditations'
                     ].map((goal, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Checkbox id={`advanced-${index}`} />
+                        <Checkbox 
+                          id={`advanced-${index}`}
+                          checked={personalPlan.includes(goal)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setPersonalPlan(prev => [...prev, goal]);
+                            } else {
+                              setPersonalPlan(prev => prev.filter(item => item !== goal));
+                            }
+                          }}
+                        />
                         <Label htmlFor={`advanced-${index}`} className="text-purple-700 text-sm">{goal}</Label>
                       </div>
                     ))}
@@ -906,7 +1179,10 @@ export function SleepGuideComprehensive() {
             <Textarea
               placeholder="Write your commitment to improving your sleep. What are your specific goals for the next 2 weeks? How will you remind yourself to practice these techniques?"
               value={personalNotes['section3'] || ''}
-              onChange={(e) => setPersonalNotes(prev => ({...prev, section3: e.target.value}))}
+              onChange={(e) => {
+                console.log('📝 Personal Sleep Action Plan text changed:', e.target.value);
+                setPersonalNotes(prev => ({...prev, section3: e.target.value}));
+              }}
               className="min-h-[100px]"
             />
           </div>
@@ -914,14 +1190,6 @@ export function SleepGuideComprehensive() {
       )
     }
   ];
-
-  const markSectionComplete = (sectionId: number) => {
-    if (!completedSections.includes(sectionId)) {
-      setCompletedSections([...completedSections, sectionId]);
-    }
-  };
-
-  const progressPercentage = Math.round((completedSections.length / sections.length) * 100);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -949,10 +1217,44 @@ export function SleepGuideComprehensive() {
               <Target className="w-5 h-5" />
               Learning Progress
             </h3>
-            <Badge variant="outline">{completedSections.length}/{sections.length} sections completed</Badge>
+            <Badge variant="outline">{completedSectionsCount}/{sections.length} sections completed</Badge>
           </div>
           <Progress value={progressPercentage} className="mb-2" />
-          <p className="text-sm text-muted-foreground">{progressPercentage}% complete • Estimated time: 20-25 minutes</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {progressPercentage}% complete • {completedSectionsCount}/{sections.length} sections completed
+              {progressPercentage === 100 && " • 🎉 Guide completed!"}
+            </p>
+              {updateAssessmentMutation.isPending && (
+              <span className="text-xs text-blue-600 flex items-center gap-1">
+                <span className="animate-spin">💾</span> Saving...
+              </span>
+            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                console.log('🔍 Current state before test:', {
+                  sleepAssessment,
+                  personalPlan,
+                  personalNotes,
+                  additionalNotes
+                });
+                setSleepAssessment(prev => ({
+                  ...prev,
+                  bedTime: "22:00",
+                  wakeTime: "07:00",
+                  sleepQuality: 7,
+                  sleepLatency: 20,
+                  daytimeEnergy: 6
+                }));
+                console.log('🧪 Test data set');
+              }}
+              className="ml-2"
+            >
+              Test Data
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -995,7 +1297,11 @@ export function SleepGuideComprehensive() {
             <div className="flex gap-3">
               <Button
                 variant="outline"
-                onClick={() => markSectionComplete(currentSection)}
+                onClick={() => {
+                  // Save data when marking section complete
+                  manualSave();
+                  markSectionComplete(currentSection);
+                }}
                 disabled={completedSections.includes(currentSection)}
               >
                 {completedSections.includes(currentSection) ? (
@@ -1012,11 +1318,29 @@ export function SleepGuideComprehensive() {
               </Button>
               
               <Button
-                onClick={() => setCurrentSection(Math.min(sections.length - 1, currentSection + 1))}
-                disabled={currentSection === sections.length - 1}
+                onClick={() => {
+                  // Save data before moving to next section
+                  manualSave();
+                  
+                  if (currentSection < sections.length - 1) {
+                    setCurrentSection(currentSection + 1);
+                  } else {
+                    // On last section, mark all sections as complete
+                    markAllSectionsComplete();
+                  }
+                }}
               >
-                Next Section
-                <ArrowRight className="w-4 h-4 ml-2" />
+                {currentSection === sections.length - 1 ? (
+                  <>
+                    Complete Guide
+                    <CheckCircle className="w-4 h-4 ml-2" />
+                  </>
+                ) : (
+                  <>
+                    Next Section
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </Button>
             </div>
           </div>

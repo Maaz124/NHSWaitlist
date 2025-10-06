@@ -897,7 +897,73 @@ export function AnxietyGuideComprehensive() {
     }
   };
 
-  const progressPercentage = Math.round((completedSections.length / sections.length) * 100);
+  const markAllSectionsComplete = () => {
+    const allSections = [0, 1, 2, 3]; // All section IDs
+    setCompletedSections(allSections);
+    toast({
+      title: "🎉 Congratulations!",
+      description: "You've completed the Understanding Anxiety guide!",
+    });
+  };
+
+  // Calculate progress based on actual content completion
+  const calculateProgress = () => {
+    // If all 4 sections are explicitly marked as completed, return 100%
+    if (completedSections.length === 4) {
+      return 100;
+    }
+
+    let completedContent = 0;
+    let totalContent = 4; // We have 4 sections
+
+    // Section 0: Understanding Anxiety (reading only - counts as complete if accessed)
+    if (completedSections.includes(0)) {
+      completedContent += 1;
+    }
+
+    // Section 1: Recognizing Symptoms & Coping Tools
+    // Complete if symptom checklist is filled OR personal notes for section1 exist OR symptom tracking worksheet is filled
+    if (Object.keys(symptomChecklist).length > 0 || 
+        (personalNotes['section1'] && personalNotes['section1'].trim().length > 0) ||
+        symptomTrackingWorksheet.mostCommonSymptoms.trim().length > 0 ||
+        symptomTrackingWorksheet.commonTriggers.trim().length > 0) {
+      completedContent += 1;
+    }
+
+    // Section 2: Coping Strategies & Techniques  
+    // Complete if personal management plan is filled OR personal notes for section2 exist
+    if (personalManagementPlan.immediateStrategies.trim().length > 0 ||
+        personalManagementPlan.longTermGoals.trim().length > 0 ||
+        personalManagementPlan.warningSigns.trim().length > 0 ||
+        (personalNotes['section2'] && personalNotes['section2'].trim().length > 0)) {
+      completedContent += 1;
+    }
+
+    // Section 3: Knowledge Check & Action Plan
+    // Complete if action plan data is filled OR section is marked complete
+    if (completedSections.includes(3) || 
+        Object.keys(actionPlanData.selectedGoals).length > 0 || 
+        actionPlanData.additionalNotes.trim().length > 0) {
+      completedContent += 1;
+    }
+
+    const percentage = Math.round((completedContent / totalContent) * 100);
+    console.log('📊 Progress calculation:', {
+      completedContent,
+      totalContent,
+      percentage,
+      completedSectionsLength: completedSections.length,
+      sections: {
+        section0: completedSections.includes(0),
+        section1: Object.keys(symptomChecklist).length > 0 || (personalNotes['section1'] && personalNotes['section1'].trim().length > 0) || symptomTrackingWorksheet.mostCommonSymptoms.trim().length > 0 || symptomTrackingWorksheet.commonTriggers.trim().length > 0,
+        section2: personalManagementPlan.immediateStrategies.trim().length > 0 || personalManagementPlan.longTermGoals.trim().length > 0 || personalManagementPlan.warningSigns.trim().length > 0 || (personalNotes['section2'] && personalNotes['section2'].trim().length > 0),
+        section3: completedSections.includes(3) || Object.keys(actionPlanData.selectedGoals).length > 0 || actionPlanData.additionalNotes.trim().length > 0
+      }
+    });
+    return percentage;
+  };
+
+  const progressPercentage = calculateProgress();
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -1002,8 +1068,8 @@ export function AnxietyGuideComprehensive() {
                   if (currentSection < sections.length - 1) {
                     setCurrentSection(currentSection + 1);
                   } else {
-                    // On last section, mark as complete and show completion
-                    markSectionComplete(currentSection);
+                    // On last section, mark all sections as complete
+                    markAllSectionsComplete();
                   }
                 }}
               >
