@@ -257,6 +257,52 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO nhs_user;
 INSERT INTO health_check (status) VALUES ('tables_created') ON CONFLICT DO NOTHING;
 
 -- =====================================================
+-- ANXIETY MODULES INFORMATION
+-- =====================================================
+
+-- IMPORTANT: Anxiety modules are created automatically per-user when they sign up
+-- The initializeAnxietyModules() function in the server code creates these modules:
+
+-- Week 1: "Understanding Anxiety" (45 minutes, 4 activities)
+--   - anxiety-intro: Understanding Anxiety Introduction (8 min)
+--   - symptoms-check: Your Anxiety Symptoms (12 min)
+--   - trigger-identification: Identifying Your Triggers (15 min)
+--   - anxiety-diary: Anxiety Tracking Exercise (10 min)
+
+-- Week 2: "Breathing & Relaxation" (38 minutes, 5 activities)
+--   - breathing-intro: Introduction to Breathing Techniques (10 min)
+--   - box-breathing: Box Breathing Exercise (8 min)
+--   - progressive-relaxation: Progressive Muscle Relaxation (12 min)
+--   - grounding-techniques: Grounding Techniques (6 min)
+--   - breathing-practice: Breathing Practice Session (12 min)
+
+-- Week 3: "Cognitive Strategies" (40 minutes, 3 activities)
+--   - cognitive-intro: Introduction to Cognitive Techniques (10 min)
+--   - thought-records: Thought Record Exercise (15 min)
+--   - evidence-examination: Evidence Examination (15 min)
+
+-- Week 4: "Mindfulness & Grounding" (35 minutes, 4 activities)
+--   - mindfulness-intro: Introduction to Mindfulness (8 min)
+--   - mindful-breathing: Mindful Breathing (10 min)
+--   - body-scan: Body Scan Exercise (12 min)
+--   - mindful-observation: Mindful Observation (10 min)
+
+-- Week 5: "Behavioral Activation" (42 minutes, 4 activities)
+--   - behavioral-intro: Introduction to Behavioral Techniques (10 min)
+--   - activity-scheduling: Activity Scheduling (12 min)
+--   - exposure-hierarchy: Exposure Hierarchy (15 min)
+--   - behavioral-experiments: Behavioral Experiments (12 min)
+
+-- Week 6: "Relapse Prevention" (35 minutes, 3 activities)
+--   - relapse-intro: Introduction to Relapse Prevention (10 min)
+--   - warning-signs: Identifying Warning Signs (15 min)
+--   - maintenance-plan: Creating a Maintenance Plan (10 min)
+
+-- The detailed content for each activity (including "Identifying Your Triggers")
+-- is stored in the frontend code (client/src/pages/module-detail.tsx)
+-- and gets loaded dynamically when users access each module.
+
+-- =====================================================
 -- VERIFICATION
 -- =====================================================
 
