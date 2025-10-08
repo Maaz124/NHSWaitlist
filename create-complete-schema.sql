@@ -1,6 +1,6 @@
 -- NHS Waitlist Application - Complete Database Schema
--- This script creates ALL tables and columns currently in use
--- Generated from live database inspection
+-- Generated from codebase analysis on 2025-10-08T15:51:16.772Z
+-- This script creates ALL tables and columns referenced in the codebase
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS weekly_assessments (
 -- MOOD TRACKING TABLE
 -- =====================================================
 
--- Create mood_entries table (with calendar integration and PDF export)
+-- Create mood_entries table
 CREATE TABLE IF NOT EXISTS mood_entries (
     id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id VARCHAR REFERENCES users(id) NOT NULL,
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS module_activities (
 -- COMPREHENSIVE MODULE DATA TABLES
 -- =====================================================
 
--- Create anxiety_guides table (Understanding Anxiety module)
+-- Create anxiety_guides table
 CREATE TABLE IF NOT EXISTS anxiety_guides (
     id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id VARCHAR REFERENCES users(id) NOT NULL,
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS anxiety_guides (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create sleep_assessments table (Sleep and Anxiety module)
+-- Create sleep_assessments table
 CREATE TABLE IF NOT EXISTS sleep_assessments (
     id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id VARCHAR REFERENCES users(id) NOT NULL,
@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS sleep_assessments (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create lifestyle_assessments table (Lifestyle & Wellbeing module)
+-- Create lifestyle_assessments table
 CREATE TABLE IF NOT EXISTS lifestyle_assessments (
     id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id VARCHAR REFERENCES users(id) NOT NULL,
@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS lifestyle_assessments (
 -- THERAPEUTIC TOOLS TABLES
 -- =====================================================
 
--- Create thought_records table (Cognitive Behavioral Therapy)
+-- Create thought_records table
 CREATE TABLE IF NOT EXISTS thought_records (
     id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id VARCHAR REFERENCES users(id) NOT NULL,
@@ -218,7 +218,7 @@ CREATE TABLE IF NOT EXISTS progress_reports (
 -- SYSTEM HEALTH TABLE
 -- =====================================================
 
--- Create health_check table (system monitoring)
+-- Create health_check table
 CREATE TABLE IF NOT EXISTS health_check (
     id SERIAL PRIMARY KEY,
     status VARCHAR(50) DEFAULT 'healthy',
@@ -255,52 +255,6 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO nhs_user;
 
 -- Insert initial health check record
 INSERT INTO health_check (status) VALUES ('tables_created') ON CONFLICT DO NOTHING;
-
--- =====================================================
--- ANXIETY MODULES INFORMATION
--- =====================================================
-
--- IMPORTANT: Anxiety modules are created automatically per-user when they sign up
--- The initializeAnxietyModules() function in the server code creates these modules:
-
--- Week 1: "Understanding Anxiety" (45 minutes, 4 activities)
---   - anxiety-intro: Understanding Anxiety Introduction (8 min)
---   - symptoms-check: Your Anxiety Symptoms (12 min)
---   - trigger-identification: Identifying Your Triggers (15 min)
---   - anxiety-diary: Anxiety Tracking Exercise (10 min)
-
--- Week 2: "Breathing & Relaxation" (38 minutes, 5 activities)
---   - breathing-intro: Introduction to Breathing Techniques (10 min)
---   - box-breathing: Box Breathing Exercise (8 min)
---   - progressive-relaxation: Progressive Muscle Relaxation (12 min)
---   - grounding-techniques: Grounding Techniques (6 min)
---   - breathing-practice: Breathing Practice Session (12 min)
-
--- Week 3: "Cognitive Strategies" (40 minutes, 3 activities)
---   - cognitive-intro: Introduction to Cognitive Techniques (10 min)
---   - thought-records: Thought Record Exercise (15 min)
---   - evidence-examination: Evidence Examination (15 min)
-
--- Week 4: "Mindfulness & Grounding" (35 minutes, 4 activities)
---   - mindfulness-intro: Introduction to Mindfulness (8 min)
---   - mindful-breathing: Mindful Breathing (10 min)
---   - body-scan: Body Scan Exercise (12 min)
---   - mindful-observation: Mindful Observation (10 min)
-
--- Week 5: "Behavioral Activation" (42 minutes, 4 activities)
---   - behavioral-intro: Introduction to Behavioral Techniques (10 min)
---   - activity-scheduling: Activity Scheduling (12 min)
---   - exposure-hierarchy: Exposure Hierarchy (15 min)
---   - behavioral-experiments: Behavioral Experiments (12 min)
-
--- Week 6: "Relapse Prevention" (35 minutes, 3 activities)
---   - relapse-intro: Introduction to Relapse Prevention (10 min)
---   - warning-signs: Identifying Warning Signs (15 min)
---   - maintenance-plan: Creating a Maintenance Plan (10 min)
-
--- The detailed content for each activity (including "Identifying Your Triggers")
--- is stored in the frontend code (client/src/pages/module-detail.tsx)
--- and gets loaded dynamically when users access each module.
 
 -- =====================================================
 -- VERIFICATION
