@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, date } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, date, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -151,14 +151,14 @@ export const sleepAssessments = pgTable("sleep_assessments", {
 export const lifestyleAssessments = pgTable("lifestyle_assessments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  exerciseFrequency: integer("exercise_frequency"), // 0-7 days per week
+  exerciseFrequency: decimal("exercise_frequency", { precision: 3, scale: 1 }), // 0-7 days per week
   exerciseTypes: jsonb("exercise_types"), // Array of activity types
-  dietQuality: integer("diet_quality"), // 1-10 scale
-  socialConnections: integer("social_connections"), // 1-10 scale
+  dietQuality: decimal("diet_quality", { precision: 3, scale: 1 }), // 1-10 scale
+  socialConnections: decimal("social_connections", { precision: 3, scale: 1 }), // 1-10 scale
   stressManagement: jsonb("stress_management"), // Array of techniques
-  sleepQuality: integer("sleep_quality"), // 1-10 scale
-  screenTime: integer("screen_time"), // Hours per day
-  outdoorTime: integer("outdoor_time"), // Hours per day
+  sleepQuality: decimal("sleep_quality", { precision: 3, scale: 1 }), // 1-10 scale
+  screenTime: decimal("screen_time", { precision: 4, scale: 1 }), // Hours per day
+  outdoorTime: decimal("outdoor_time", { precision: 3, scale: 1 }), // Hours per day
   hobbies: jsonb("hobbies"), // Array of hobbies
   barriers: jsonb("barriers"), // Array of barriers
   eatingHabits: jsonb("eating_habits"), // Array of eating habits
