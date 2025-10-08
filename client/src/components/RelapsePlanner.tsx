@@ -65,9 +65,10 @@ interface RelapsePlannerProps {
   initialData?: any;
   onDataChange?: (data: any) => void;
   onSave?: (data: any) => void;
+  onGetCurrentData?: (getData: () => any) => void;
 }
 
-export function RelapsePlanner({ initialData, onDataChange, onSave }: RelapsePlannerProps = {}) {
+export function RelapsePlanner({ initialData, onDataChange, onSave, onGetCurrentData }: RelapsePlannerProps = {}) {
   const [highRiskSituations, setHighRiskSituations] = useState<HighRiskSituation[]>([
     {
       category: "Life Transitions",
@@ -183,6 +184,7 @@ export function RelapsePlanner({ initialData, onDataChange, onSave }: RelapsePla
       if (initialData.warningSigns) setWarningSigns(initialData.warningSigns);
       if (initialData.actionPlans) setActionPlans(initialData.actionPlans);
       if (initialData.supportContacts) setSupportContacts(initialData.supportContacts);
+      if (initialData.professionalContacts) setProfessionalContacts(initialData.professionalContacts);
       if (initialData.longTermGoals) setLongTermGoals(initialData.longTermGoals);
       if (initialData.resilienceHabits) setResilienceHabits(initialData.resilienceHabits);
       if (initialData.personalizedPlan) setPersonalizedPlan(initialData.personalizedPlan);
@@ -197,13 +199,30 @@ export function RelapsePlanner({ initialData, onDataChange, onSave }: RelapsePla
         warningSigns,
         actionPlans,
         supportContacts,
+        professionalContacts,
         longTermGoals,
         resilienceHabits,
         personalizedPlan
       };
       onDataChange(allData);
     }
-  }, [highRiskSituations, warningSigns, actionPlans, supportContacts, longTermGoals, resilienceHabits, personalizedPlan, onDataChange]);
+  }, [highRiskSituations, warningSigns, actionPlans, supportContacts, professionalContacts, longTermGoals, resilienceHabits, personalizedPlan, onDataChange]);
+
+  // Expose current data to parent component
+  useEffect(() => {
+    if (onGetCurrentData) {
+      onGetCurrentData(() => ({
+        highRiskSituations,
+        warningSigns,
+        actionPlans,
+        supportContacts,
+        professionalContacts,
+        longTermGoals,
+        resilienceHabits,
+        personalizedPlan
+      }));
+    }
+  }, [highRiskSituations, warningSigns, actionPlans, supportContacts, professionalContacts, longTermGoals, resilienceHabits, personalizedPlan, onGetCurrentData]);
 
   const warningSignOptions = {
     yellow: [

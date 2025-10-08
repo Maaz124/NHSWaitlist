@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -78,7 +78,14 @@ interface NhsReadiness {
   confidence: string;
 }
 
-export function NhsPrepGuide() {
+interface NhsPrepGuideProps {
+  initialData?: any;
+  onDataChange?: (data: any) => void;
+  onSave?: (data: any) => void;
+  onGetCurrentData?: (getData: () => any) => void;
+}
+
+export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentData }: NhsPrepGuideProps = {}) {
   const [documentPrep, setDocumentPrep] = useState<DocumentPrep>({
     gpReferral: false,
     medicationList: "",
@@ -137,6 +144,50 @@ export function NhsPrepGuide() {
     supportPerson: "",
     questions: [] as string[]
   });
+
+  // Load initial data when component mounts or initialData changes
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.documentPrep) setDocumentPrep(initialData.documentPrep);
+      if (initialData.programSummary) setProgramSummary(initialData.programSummary);
+      if (initialData.assessmentPrep) setAssessmentPrep(initialData.assessmentPrep);
+      if (initialData.treatmentKnowledge) setTreatmentKnowledge(initialData.treatmentKnowledge);
+      if (initialData.ongoingPrep) setOngoingPrep(initialData.ongoingPrep);
+      if (initialData.nhsReadiness) setNhsReadiness(initialData.nhsReadiness);
+      if (initialData.advocacyPrep) setAdvocacyPrep(initialData.advocacyPrep);
+    }
+  }, [initialData]);
+
+  // Auto-save when data changes
+  useEffect(() => {
+    if (onDataChange) {
+      const allData = {
+        documentPrep,
+        programSummary,
+        assessmentPrep,
+        treatmentKnowledge,
+        ongoingPrep,
+        nhsReadiness,
+        advocacyPrep
+      };
+      onDataChange(allData);
+    }
+  }, [documentPrep, programSummary, assessmentPrep, treatmentKnowledge, ongoingPrep, nhsReadiness, advocacyPrep, onDataChange]);
+
+  // Expose current data to parent component
+  useEffect(() => {
+    if (onGetCurrentData) {
+      onGetCurrentData(() => ({
+        documentPrep,
+        programSummary,
+        assessmentPrep,
+        treatmentKnowledge,
+        ongoingPrep,
+        nhsReadiness,
+        advocacyPrep
+      }));
+    }
+  }, [documentPrep, programSummary, assessmentPrep, treatmentKnowledge, ongoingPrep, nhsReadiness, advocacyPrep, onGetCurrentData]);
 
   const suggestedQuestions = {
     treatmentOptions: [

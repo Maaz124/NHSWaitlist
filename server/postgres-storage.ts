@@ -110,13 +110,16 @@ export class PostgresStorage implements IStorage {
   }
 
   async updateAnxietyModule(id: string, updates: Partial<AnxietyModule>): Promise<AnxietyModule> {
+    console.log('🔧 updateAnxietyModule called with:', { id, updates });
     const processedUpdates = safeParseDates(updates, ['completedAt', 'lastAccessedAt']);
+    console.log('🔧 processedUpdates:', processedUpdates);
     
     const result = await db.update(schema.anxietyModules)
       .set({ ...processedUpdates, lastAccessedAt: new Date() })
       .where(eq(schema.anxietyModules.id, id))
       .returning();
     if (result.length === 0) throw new Error("Module not found");
+    console.log('✅ updateAnxietyModule result:', result[0]);
     return result[0];
   }
 

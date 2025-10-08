@@ -81,9 +81,10 @@ interface ToolkitBuilderProps {
   initialData?: ToolkitSection;
   onDataChange?: (data: ToolkitSection) => void;
   onSave?: (data: ToolkitSection) => void;
+  onGetCurrentData?: (getData: () => ToolkitSection) => void;
 }
 
-export function ToolkitBuilder({ initialData, onDataChange, onSave }: ToolkitBuilderProps = {}) {
+export function ToolkitBuilder({ initialData, onDataChange, onSave, onGetCurrentData }: ToolkitBuilderProps = {}) {
   const [toolkit, setToolkit] = useState<ToolkitSection>({
     emergency_techniques: {
       breathing: [],
@@ -145,9 +146,17 @@ export function ToolkitBuilder({ initialData, onDataChange, onSave }: ToolkitBui
   // Auto-save when data changes
   useEffect(() => {
     if (onDataChange) {
+      console.log('🔧 Toolkit Builder data changed:', toolkit);
       onDataChange(toolkit);
     }
   }, [toolkit, onDataChange]);
+
+  // Expose current data getter to parent component
+  useEffect(() => {
+    if (onGetCurrentData) {
+      onGetCurrentData(() => toolkit);
+    }
+  }, [toolkit, onGetCurrentData]);
 
   const emergencyTechniques = {
     breathing: [
@@ -455,6 +464,24 @@ export function ToolkitBuilder({ initialData, onDataChange, onSave }: ToolkitBui
           </div>
         </CardContent>
       </Card>
+
+      {/* Manual Save Button */}
+      <div className="flex justify-center">
+        <Button 
+          onClick={() => {
+            console.log('🔘 Manual save button clicked');
+            if (onSave) {
+              onSave(toolkit);
+            }
+            if (onDataChange) {
+              onDataChange(toolkit);
+            }
+          }}
+          className="bg-purple-600 hover:bg-purple-700"
+        >
+          💾 Save Toolkit Data
+        </Button>
+      </div>
 
       {/* Section 1: Emergency Techniques */}
       <Card>

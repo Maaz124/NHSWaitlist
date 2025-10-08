@@ -48,50 +48,53 @@ export function Header({ user }: HeaderProps) {
           <div className="flex items-center space-x-4">
             <CrisisButton />
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
-                  data-testid="button-user-menu"
-                >
-                  <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium">{initials}</span>
-                  </div>
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <div className="px-2 py-2 text-sm">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center mr-2">
-                      <User className="w-4 h-4" />
+            {/* Only show user profile dropdown if user is logged in */}
+            {activeUser && activeUser.email && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+                    data-testid="button-user-menu"
+                  >
+                    <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium">{initials}</span>
                     </div>
-                    <div>
-                      <div className="font-medium">{activeUser ? `${activeUser.firstName} ${activeUser.lastName}` : "Profile"}</div>
-                      <div className="text-muted-foreground text-xs">{activeUser?.email || ""}</div>
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <div className="px-2 py-2 text-sm">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center mr-2">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-medium">{`${activeUser.firstName} ${activeUser.lastName}`}</div>
+                        <div className="text-muted-foreground text-xs">{activeUser.email}</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <DropdownMenuItem
-                  onClick={() => setLocation("/settings")}
-                  data-testid="button-profile-settings"
-                >
-                  Profile Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={async () => {
-                    try {
-                      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-                    } catch {}
-                    window.location.href = "/login";
-                  }}
-                  data-testid="button-logout"
-                >
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuItem
+                    onClick={() => setLocation("/settings")}
+                    data-testid="button-profile-settings"
+                  >
+                    Profile Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      try {
+                        await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+                      } catch {}
+                      window.location.href = "/login";
+                    }}
+                    data-testid="button-logout"
+                  >
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>
