@@ -234,18 +234,7 @@ export default function CheckIns() {
                 <h2 className="text-2xl font-semibold text-foreground mb-2">Weekly Check-ins</h2>
                 <p className="text-muted-foreground">Regular assessments to monitor your wellbeing and ensure your safety</p>
               </div>
-              <div className="flex gap-2">
-                {assessments.length > 0 && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowHistory(true)}
-                    data-testid="button-view-history"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    View History
-                  </Button>
-                )}
-              </div>
+              
             </div>
           </div>
 
@@ -311,7 +300,7 @@ export default function CheckIns() {
                             </div>
                             <div>
                               <p className="font-medium text-card-foreground">
-                                Week {assessment.weekNumber} Assessment
+                                Weekly Assessment {assessment.weekNumber}
                               </p>
                               <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                                 <span>
@@ -481,7 +470,7 @@ export default function CheckIns() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">
-                    Week {selectedAssessment.weekNumber} Assessment
+                    Weekly Assessment {selectedAssessment.weekNumber}
                   </h2>
                   <p className="text-sm text-muted-foreground">Completed on {new Date(selectedAssessment.completedAt).toLocaleDateString()}</p>
                 </div>
@@ -510,8 +499,8 @@ export default function CheckIns() {
                     <div className="text-sm text-muted-foreground">Risk Score / 15</div>
                   </div>
                   <div className="text-center p-4 bg-background/50 rounded-lg">
-                    <div className="text-2xl font-bold text-foreground">Week {selectedAssessment.weekNumber}</div>
-                    <div className="text-sm text-muted-foreground">Assessment Week</div>
+                    <div className="text-2xl font-bold text-foreground">Assessment {selectedAssessment.weekNumber}</div>
+                    <div className="text-sm text-muted-foreground">Weekly Assessment</div>
                   </div>
                 </div>
               </div>
