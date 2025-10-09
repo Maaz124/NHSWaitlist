@@ -64,9 +64,10 @@ interface ValuesWorksheetProps {
   initialData?: ValuesData;
   onDataChange?: (data: ValuesData) => void;
   onSave?: (data: ValuesData) => void;
+  onGetCurrentData?: (getData: () => ValuesData) => void;
 }
 
-export function ValuesWorksheet({ initialData, onDataChange, onSave }: ValuesWorksheetProps = {}) {
+export function ValuesWorksheet({ initialData, onDataChange, onSave, onGetCurrentData }: ValuesWorksheetProps = {}) {
   const [currentStep, setCurrentStep] = useState(1);
   const [valuesData, setValuesData] = useState<ValuesData>(initialData || {
     lifeAreas: defaultLifeAreas,
@@ -105,6 +106,13 @@ export function ValuesWorksheet({ initialData, onDataChange, onSave }: ValuesWor
       onDataChange(valuesData);
     }
   }, [valuesData, onDataChange]);
+
+  // Expose current data to parent component
+  useEffect(() => {
+    if (onGetCurrentData) {
+      onGetCurrentData(() => valuesData);
+    }
+  }, [valuesData, onGetCurrentData]);
 
   const updateLifeArea = (index: number, field: keyof LifeArea, value: any) => {
     setValuesData(prev => ({

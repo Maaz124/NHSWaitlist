@@ -14,7 +14,7 @@ interface HeaderProps {
 }
 
 export function Header({ user }: HeaderProps) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [sessionUser, setSessionUser] = useState<typeof user | null>(null);
   useEffect(() => {
     (async () => {
@@ -48,8 +48,8 @@ export function Header({ user }: HeaderProps) {
           <div className="flex items-center space-x-4">
             <CrisisButton />
             
-            {/* Only show user profile dropdown if user is logged in */}
-            {activeUser && activeUser.email && (
+            {/* Only show user profile dropdown if user is logged in and not on login/signup page */}
+            {activeUser && activeUser.email && location !== "/login" && location !== "/signup" && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 

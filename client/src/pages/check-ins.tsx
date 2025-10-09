@@ -13,8 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, ArrowLeft, ArrowRight, Eye } from "lucide-react";
+import { Check, ArrowLeft, ArrowRight, Eye, Clock } from "lucide-react";
 import { calculateRiskScore, determineRiskLevel, getRiskColor } from "@/lib/risk-calculator";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Footer } from "@/components/ui/footer";
@@ -91,6 +90,18 @@ export default function CheckIns() {
   const [showHistory, setShowHistory] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null);
   const [showAssessmentDetail, setShowAssessmentDetail] = useState(false);
+  
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (showAssessmentDetail) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow || "";
+      };
+    }
+  }, [showAssessmentDetail]);
+
 
   const { data: assessmentsData, isLoading } = useQuery({
     queryKey: ["/api/assessments", user?.id],
@@ -176,110 +187,34 @@ export default function CheckIns() {
   }
 
   const assessments = (assessmentsData as any)?.assessments || [];
-  const hasCompletedThisWeek = assessments.some((a: any) => {
+  
+  // Find the most recent assessment
+  const mostRecentAssessment = assessments.length > 0 
+    ? assessments.reduce((latest: any, current: any) => 
+        new Date(current.completedAt) > new Date(latest.completedAt) ? current : latest
+      )
+    : null;
+  
+  // Check if user has completed an assessment this week
+  const hasCompletedThisWeek = mostRecentAssessment ? (() => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    return new Date(a.completedAt) > oneWeekAgo;
-  });
+    return new Date(mostRecentAssessment.completedAt) > oneWeekAgo;
+  })() : false;
+  
+  // Calculate next available date (7 days from last assessment)
+  const nextAvailableDate = mostRecentAssessment 
+    ? new Date(new Date(mostRecentAssessment.completedAt).getTime() + 7 * 24 * 60 * 60 * 1000)
+    : new Date();
+  
+  // Check if next assessment is available
+  const canTakeAssessment = !hasCompletedThisWeek || new Date() >= nextAvailableDate;
+  
+  // Calculate days until next assessment
+  const daysUntilNext = canTakeAssessment ? 0 : Math.ceil((nextAvailableDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
 
-  if (showHistory || hasCompletedThisWeek) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <CrisisBanner />
-        <TabNavigation />
-        
-        <main className="flex-1 bg-background">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-foreground mb-2">Weekly Check-ins</h2>
-              <p className="text-muted-foreground">Regular assessments to monitor your wellbeing and ensure your safety</p>
-            </div>
-
-            {hasCompletedThisWeek && (
-              <Card className="mb-8">
-                <CardContent className="p-6">
-                  <div className="text-center">
-                    <Check className="w-12 h-12 text-accent mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-card-foreground mb-2">
-                      This week's assessment completed
-                    </h3>
-                    <p className="text-muted-foreground mb-4">
-                      Thank you for completing your weekly check-in. Your next assessment will be due in 7 days.
-                    </p>
-                    <Button 
-                      variant="outline"
-                      onClick={() => setShowHistory(false)}
-                      data-testid="button-take-new-assessment"
-                    >
-                      Take Another Assessment
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Assessment History */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold text-card-foreground mb-6">Assessment History</h3>
-                
-                <div className="space-y-4">
-                  {assessments.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No assessments completed yet.</p>
-                      <Button 
-                        className="mt-4"
-                        onClick={() => setShowHistory(false)}
-                        data-testid="button-start-first-assessment"
-                      >
-                        Take Your First Assessment
-                      </Button>
-                    </div>
-                  ) : (
-                    assessments.map((assessment: any, index: number) => (
-                      <div key={assessment.id} className="flex items-center justify-between p-4 bg-secondary rounded-md">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
-                            <Check className="w-5 h-5 text-accent-foreground" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-card-foreground">
-                              Week {assessment.weekNumber} Assessment
-                            </p>
-                            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                              <span>
-                                Completed {new Date(assessment.completedAt).toLocaleDateString()}
-                              </span>
-                              <Badge variant={getRiskColor(assessment.riskLevel) as any}>
-                                Risk: {assessment.riskLevel}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedAssessment(assessment);
-                            setShowAssessmentDetail(true);
-                          }}
-                          data-testid={`button-view-assessment-${assessment.weekNumber}`}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View Details
-                        </Button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  // Determine if we should show history view
+  const showHistoryView = showHistory || hasCompletedThisWeek;
 
   const currentQ = questions[currentQuestion];
   const progress = ((currentQuestion + 1) / questions.length) * 100;
@@ -299,26 +234,154 @@ export default function CheckIns() {
                 <h2 className="text-2xl font-semibold text-foreground mb-2">Weekly Check-ins</h2>
                 <p className="text-muted-foreground">Regular assessments to monitor your wellbeing and ensure your safety</p>
               </div>
-              {assessments.length > 0 && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowHistory(true)}
-                  data-testid="button-view-history"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  View History
-                </Button>
-              )}
+              <div className="flex gap-2">
+                {assessments.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowHistory(true)}
+                    data-testid="button-view-history"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    View History
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Current Check-in Form */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-card-foreground">This Week's Assessment</h3>
-                <Badge className="bg-primary/10 text-primary">Due Today</Badge>
-              </div>
+          {/* History View */}
+          {showHistoryView ? (
+            <>
+              {hasCompletedThisWeek && !canTakeAssessment && (
+                <Card className="mb-8">
+                  <CardContent className="p-6">
+                    <div className="text-center">
+                      <Check className="w-12 h-12 text-accent mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-card-foreground mb-2">
+                        This week's assessment completed
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        Thank you for completing your weekly check-in. 
+                        {daysUntilNext > 0 ? (
+                          <> Your next assessment will be available in {daysUntilNext} day{daysUntilNext !== 1 ? 's' : ''}.</>
+                        ) : (
+                          <> Your next assessment is now available!</>
+                        )}
+                      </p>
+                      {canTakeAssessment ? (
+                        <Button 
+                          variant="outline"
+                          onClick={() => setShowHistory(false)}
+                          data-testid="button-take-new-assessment"
+                        >
+                          Take Another Assessment
+                        </Button>
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          Next assessment available: {nextAvailableDate.toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Assessment History */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold text-card-foreground mb-6">Assessment History</h3>
+                  <div className="space-y-4">
+                    {assessments.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>No assessments completed yet.</p>
+                        <Button 
+                          className="mt-4"
+                          onClick={() => setShowHistory(false)}
+                          data-testid="button-start-first-assessment"
+                        >
+                          Take Your First Assessment
+                        </Button>
+                      </div>
+                    ) : (
+                      assessments.map((assessment: any, index: number) => (
+                        <div key={assessment.id} className="flex items-center justify-between p-4 bg-secondary rounded-md">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                              <Check className="w-5 h-5 text-accent-foreground" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-card-foreground">
+                                Week {assessment.weekNumber} Assessment
+                              </p>
+                              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                                <span>
+                                  Completed {new Date(assessment.completedAt).toLocaleDateString()}
+                                </span>
+                                <Badge variant={getRiskColor(assessment.riskLevel) as any}>
+                                  Risk: {assessment.riskLevel}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              
+                              // Set the selected assessment and show modal
+                              setSelectedAssessment(assessment);
+                              setShowAssessmentDetail(true);
+                            }}
+                            data-testid={`button-view-assessment-${assessment.weekNumber}`}
+                            type="button"
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View Details
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <>
+              {/* Show weekly restriction message if user completed this week */}
+              {hasCompletedThisWeek && !canTakeAssessment && (
+                <Card className="mb-6">
+                  <CardContent className="p-6">
+                    <div className="text-center">
+                      <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-card-foreground mb-2">
+                        Weekly Assessment Completed
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        You've already completed your weekly assessment. 
+                        {daysUntilNext > 0 ? (
+                          <> Your next assessment will be available in {daysUntilNext} day{daysUntilNext !== 1 ? 's' : ''}.</>
+                        ) : (
+                          <> Your next assessment is now available!</>
+                        )}
+                      </p>
+                      <div className="text-sm text-muted-foreground">
+                        Next assessment available: {nextAvailableDate.toLocaleDateString()}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Current Check-in Form - only show if user can take assessment */}
+              {canTakeAssessment && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-card-foreground">This Week's Assessment</h3>
+                  <Badge className="bg-primary/10 text-primary">Due Today</Badge>
+                </div>
 
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
@@ -392,54 +455,84 @@ export default function CheckIns() {
               </div>
             </CardContent>
           </Card>
+              )}
+            </>
+          )}
         </div>
       </main>
       <Footer />
 
-      {/* Assessment Details Dialog */}
-      <Dialog open={showAssessmentDetail} onOpenChange={setShowAssessmentDetail}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
-              Week {selectedAssessment?.weekNumber} Assessment Details
-            </DialogTitle>
-          </DialogHeader>
-          {selectedAssessment ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-muted-foreground">Completed:</span>
-                  <p>{new Date(selectedAssessment.completedAt).toLocaleDateString()}</p>
+      {/* Assessment Details Modal */}
+      {showAssessmentDetail && selectedAssessment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop with blur */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm" 
+            onClick={() => setShowAssessmentDetail(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative bg-card border border-border rounded-xl shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Check className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <span className="font-medium text-muted-foreground">Risk Level:</span>
-                  <p>
-                    <Badge variant={getRiskColor(selectedAssessment.riskLevel) as any}>
-                      {selectedAssessment.riskLevel}
-                    </Badge>
-                  </p>
-                </div>
-                <div>
-                  <span className="font-medium text-muted-foreground">Risk Score:</span>
-                  <p>{selectedAssessment.riskScore}/15</p>
-                </div>
-                <div>
-                  <span className="font-medium text-muted-foreground">Week Number:</span>
-                  <p>Week {selectedAssessment.weekNumber}</p>
+                  <h2 className="text-2xl font-bold text-foreground">
+                    Week {selectedAssessment.weekNumber} Assessment
+                  </h2>
+                  <p className="text-sm text-muted-foreground">Completed on {new Date(selectedAssessment.completedAt).toLocaleDateString()}</p>
                 </div>
               </div>
-              
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-3 text-card-foreground">Response Summary</h4>
-                <div className="space-y-2 text-sm">
+              <button
+                onClick={() => setShowAssessmentDetail(false)}
+                className="text-muted-foreground hover:text-foreground text-2xl font-bold transition-colors w-8 h-8 flex items-center justify-center rounded-md hover:bg-secondary"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-8">
+              {/* Assessment Overview */}
+              <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-6 rounded-xl border">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-card-foreground">Assessment Overview</h3>
+                  <Badge variant={getRiskColor(selectedAssessment.riskLevel) as any} className="text-sm px-3 py-1">
+                    {selectedAssessment.riskLevel} Risk
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-background/50 rounded-lg">
+                    <div className="text-2xl font-bold text-foreground">{selectedAssessment.riskScore}</div>
+                    <div className="text-sm text-muted-foreground">Risk Score / 15</div>
+                  </div>
+                  <div className="text-center p-4 bg-background/50 rounded-lg">
+                    <div className="text-2xl font-bold text-foreground">Week {selectedAssessment.weekNumber}</div>
+                    <div className="text-sm text-muted-foreground">Assessment Week</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Your Responses */}
+              <div>
+                <h3 className="text-lg font-semibold text-card-foreground mb-4 flex items-center gap-2">
+                  <div className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-accent" />
+                  </div>
+                  Your Responses
+                </h3>
+                <div className="space-y-4">
                   {selectedAssessment.responses && Object.entries(selectedAssessment.responses).map(([key, value]: [string, any]) => {
                     const questionMap: Record<string, string> = {
-                      anxietyFrequency: "Anxiety frequency",
-                      worryFrequency: "Worry frequency", 
-                      depressionFrequency: "Depression frequency",
-                      anhedoniaFrequency: "Loss of interest frequency",
-                      sleepQuality: "Sleep quality",
-                      functioningLevel: "Daily functioning level"
+                      anxietyFrequency: "How often have you felt nervous, anxious, or on edge?",
+                      worryFrequency: "How often have you been unable to stop or control worrying?", 
+                      depressionFrequency: "How often have you felt down, depressed, or hopeless?",
+                      anhedoniaFrequency: "How often have you had little interest or pleasure in doing things?",
+                      sleepQuality: "How would you rate your overall sleep quality?",
+                      functioningLevel: "How much have these problems affected your daily functioning?"
                     };
                     
                     const valueMap: Record<string, string> = {
@@ -458,22 +551,50 @@ export default function CheckIns() {
                     };
                     
                     return (
-                      <div key={key} className="flex justify-between">
-                        <span className="text-muted-foreground">{questionMap[key]}:</span>
-                        <span className="font-medium">{valueMap[value] || value}</span>
+                      <div key={key} className="bg-secondary/30 p-4 rounded-lg border border-border/50">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-card-foreground mb-1">
+                              {questionMap[key] || key}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Your response: <span className="font-medium text-foreground">{valueMap[value] || value}</span>
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <Badge variant="secondary" className="text-xs">
+                              {valueMap[value] || value}
+                            </Badge>
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="p-4 text-center text-muted-foreground">
-              No assessment data available
+
+            {/* Footer */}
+            <div className="flex justify-between items-center p-6 border-t border-border bg-secondary/20">
+              <div className="text-sm text-muted-foreground">
+                Assessment completed on {new Date(selectedAssessment.completedAt).toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </div>
+              <Button
+                onClick={() => setShowAssessmentDetail(false)}
+                variant="outline"
+                className="min-w-[100px]"
+              >
+                Close
+              </Button>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

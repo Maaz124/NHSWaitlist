@@ -11,8 +11,6 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const user = { firstName: "", lastName: "", email: "" } as any;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -109,7 +107,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} />
+      <Header user={null} />
       <main className="flex-1 bg-background">
         <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Card>

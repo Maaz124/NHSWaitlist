@@ -81,6 +81,7 @@ export default function ModuleDetail() {
   const [toolkitDataGetter, setToolkitDataGetter] = useState<(() => any) | null>(null);
   const [relapseDataGetter, setRelapseDataGetter] = useState<(() => any) | null>(null);
   const [nhsDataGetter, setNhsDataGetter] = useState<(() => any) | null>(null);
+  const [valuesDataGetter, setValuesDataGetter] = useState<(() => any) | null>(null);
 
   // Timer effect
   useEffect(() => {
@@ -2084,6 +2085,31 @@ You're ready for this next phase of your mental health journey. Trust in the pro
         };
       }
     }
+
+    // Special handling for values-assessment: ensure any current values data is saved
+    if (activityId === 'values-assessment' && newCompletionStatus) {
+      console.log('🎯 Marking values-assessment as complete - ensuring data is saved');
+      
+      // Get the current values data from the component if available
+      let valuesData = module.userProgress?.['values-assessment']?.worksheetData;
+      
+      // If we have a data getter from the component, use the most current data
+      if (valuesDataGetter) {
+        const currentValuesData = valuesDataGetter();
+        console.log('💾 Getting current values data from component:', currentValuesData);
+        valuesData = currentValuesData;
+      }
+      
+      // If we have values data, ensure it's saved before completion
+      if (valuesData) {
+        console.log('💾 Values data found, ensuring it\'s saved before completion');
+        updatedUserProgress['values-assessment'] = {
+          ...updatedUserProgress['values-assessment'],
+          worksheetData: valuesData,
+          lastUpdated: new Date().toISOString()
+        };
+      }
+    }
     
     // Count completed activities and minutes using the updated progress
     const completedActivities = moduleContent.activities.filter((a: any) => {
@@ -2396,6 +2422,10 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                           <div className="mt-6">
                             <ValuesWorksheet 
                               initialData={module?.userProgress?.['values-assessment']?.worksheetData}
+                              onGetCurrentData={(getData) => {
+                                console.log('📋 Values Worksheet data getter registered');
+                                setValuesDataGetter(() => getData);
+                              }}
                               onDataChange={(data) => {
                                 // Auto-save worksheet data when it changes
                                 console.log('💾 Values Worksheet onDataChange called with:', data);
