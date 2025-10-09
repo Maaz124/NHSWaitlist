@@ -34,19 +34,37 @@ export default function Resources() {
 
   const handleExportReport = async () => {
     try {
+      console.log("Starting report generation for user:", user?.id);
+      
       const response = await fetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user?.id }),
       });
       
-      if (!response.ok) throw new Error("Failed to generate report");
+      console.log("Report API response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", errorText);
+        throw new Error(`Server error: ${response.status} - ${errorText}`);
+      }
       
       const { report } = await response.json();
+      console.log("Report data received:", report);
+      
+      if (!report || !report.reportData) {
+        throw new Error("Invalid report data received from server");
+      }
+      
+      console.log("Generating PDF...");
       const doc = generateProgressReport(report.reportData);
       doc.save("waitlist-companion-progress-report.pdf");
+      console.log("PDF generated and saved successfully");
+      
     } catch (error) {
-      alert("Error generating report. Please try again.");
+      console.error("Report generation error:", error);
+      alert(`Error generating report: ${error.message}. Please try again.`);
     }
   };
 

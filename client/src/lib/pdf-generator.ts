@@ -6,12 +6,23 @@ interface ReportData {
   onboarding: OnboardingResponse;
   assessments: WeeklyAssessment[];
   modules: AnxietyModule[];
-  generatedAt: Date;
+  generatedAt: Date | string;
 }
 
 export function generateProgressReport(data: ReportData): jsPDF {
-  const doc = new jsPDF();
-  let yPos = 20;
+  try {
+    console.log("PDF Generator: Starting report generation with data:", data);
+    
+    // Validate required data
+    if (!data.user) {
+      throw new Error("User data is required for report generation");
+    }
+    if (!data.onboarding) {
+      throw new Error("Onboarding data is required for report generation");
+    }
+    
+    const doc = new jsPDF();
+    let yPos = 20;
   
   // Header
   doc.setFontSize(20);
@@ -40,7 +51,7 @@ export function generateProgressReport(data: ReportData): jsPDF {
     doc.text(`NHS Number: ${data.user.nhsNumber}`, 20, yPos);
     yPos += 6;
   }
-  doc.text(`Report Generated: ${data.generatedAt.toLocaleDateString('en-GB')}`, 20, yPos);
+  doc.text(`Report Generated: ${new Date(data.generatedAt).toLocaleDateString('en-GB')}`, 20, yPos);
   yPos += 15;
   
   // Baseline Assessment
@@ -55,7 +66,7 @@ export function generateProgressReport(data: ReportData): jsPDF {
   yPos += 6;
   doc.text(`Baseline Anxiety Level: ${data.onboarding.baselineAnxietyLevel}`, 20, yPos);
   yPos += 6;
-  doc.text(`Completed: ${data.onboarding.completedAt?.toLocaleDateString('en-GB')}`, 20, yPos);
+  doc.text(`Completed: ${data.onboarding.completedAt ? new Date(data.onboarding.completedAt).toLocaleDateString('en-GB') : 'Not completed'}`, 20, yPos);
   yPos += 15;
   
   // Weekly Assessments
@@ -75,7 +86,7 @@ export function generateProgressReport(data: ReportData): jsPDF {
       doc.setFont('helvetica', 'normal');
       doc.text(`Week ${assessment.weekNumber}: Risk Score ${assessment.riskScore}/15 (${assessment.riskLevel})`, 20, yPos);
       yPos += 6;
-      doc.text(`Completed: ${assessment.completedAt?.toLocaleDateString('en-GB')}`, 25, yPos);
+      doc.text(`Completed: ${assessment.completedAt ? new Date(assessment.completedAt).toLocaleDateString('en-GB') : 'Not completed'}`, 25, yPos);
       yPos += 8;
     });
     yPos += 10;
@@ -150,7 +161,13 @@ export function generateProgressReport(data: ReportData): jsPDF {
   yPos += 6;
   doc.text('• Recommend continuity of cognitive-behavioral approaches', 20, yPos);
   
+  console.log("PDF Generator: Report generation completed successfully");
   return doc;
+  
+  } catch (error) {
+    console.error("PDF Generator: Error generating report:", error);
+    throw new Error(`PDF generation failed: ${error.message}`);
+  }
 }
 
 interface MoodEntriesReportData {
@@ -356,4 +373,425 @@ export function generateMoodEntriesReport(data: MoodEntriesReportData): jsPDF {
   doc.text(`Page ${pageCount}`, 160, 285);
   
   return doc;
+}
+
+interface NhsPrepData {
+  documentPrep: any;
+  programSummary: any;
+  assessmentPrep: any;
+  treatmentKnowledge: any;
+  ongoingPrep: any;
+  nhsReadiness: any;
+  advocacyPrep: any;
+  overallReadiness: number;
+  completeness: number;
+  createdDate: string;
+  version: string;
+}
+
+export function generateNhsPrepReport(data: NhsPrepData): jsPDF {
+  try {
+    console.log("NHS Prep PDF Generator: Starting report generation with data:", data);
+    
+    const doc = new jsPDF();
+    let yPos = 20;
+    
+    // Helper function to add new page if needed
+    const checkPageBreak = (requiredSpace: number = 20) => {
+      if (yPos + requiredSpace > 280) {
+        doc.addPage();
+        yPos = 20;
+      }
+    };
+
+    // Header
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NHS Mental Health Services Preparation Guide', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Complete Transition Preparation Document', 20, yPos);
+    yPos += 15;
+    
+    // Overview Stats
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Preparation Overview', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Overall Preparation Complete: ${data.completeness}%`, 20, yPos);
+    yPos += 6;
+    doc.text(`NHS Readiness Score: ${data.overallReadiness}%`, 20, yPos);
+    yPos += 6;
+    doc.text(`Skills & Strategies Collected: ${data.programSummary.helpfulTechniques?.length || 0 + data.assessmentPrep.copingStrategies?.length || 0}`, 20, yPos);
+    yPos += 6;
+    doc.text(`Report Generated: ${new Date(data.createdDate).toLocaleDateString('en-GB')}`, 20, yPos);
+    yPos += 15;
+
+    // Document Preparation
+    checkPageBreak(40);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Document Preparation Checklist', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    if (data.documentPrep.gpReferral) doc.text('✓ GP referral letter ready', 25, yPos);
+    else doc.text('☐ GP referral letter needed', 25, yPos);
+    yPos += 6;
+    
+    if (data.documentPrep.medicationList) doc.text('✓ Current medication list prepared', 25, yPos);
+    else doc.text('☐ Current medication list needed', 25, yPos);
+    yPos += 6;
+    
+    if (data.documentPrep.programSummary) doc.text('✓ 6-week program summary completed', 25, yPos);
+    else doc.text('☐ 6-week program summary needed', 25, yPos);
+    yPos += 6;
+    
+    if (data.documentPrep.personalToolkit) doc.text('✓ Personal anxiety toolkit documented', 25, yPos);
+    else doc.text('☐ Personal anxiety toolkit needed', 25, yPos);
+    yPos += 6;
+    
+    if (data.documentPrep.previousRecords) doc.text('✓ Previous mental health records gathered', 25, yPos);
+    else doc.text('☐ Previous mental health records needed', 25, yPos);
+    yPos += 6;
+    
+    if (data.documentPrep.questionsList?.length > 0) doc.text(`✓ ${data.documentPrep.questionsList.length} questions prepared for assessment`, 25, yPos);
+    else doc.text('☐ Questions for assessment needed', 25, yPos);
+    yPos += 15;
+
+    // Program Summary
+    checkPageBreak(30);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('6-Week Program Summary', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    if (data.programSummary.helpfulTechniques?.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Most Helpful Techniques:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      data.programSummary.helpfulTechniques.forEach((technique: string) => {
+        doc.text(`• ${technique}`, 25, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+    }
+    
+    if (data.programSummary.successfulSituations?.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Successfully Managed Situations:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      data.programSummary.successfulSituations.forEach((situation: string) => {
+        doc.text(`• ${situation}`, 25, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+    }
+    
+    if (data.programSummary.supportNeeded?.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Areas Still Needing Support:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      data.programSummary.supportNeeded.forEach((area: string) => {
+        doc.text(`• ${area}`, 25, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+    }
+    
+    if (data.programSummary.currentFunctioning) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Current Functioning Level:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const functioningLines = doc.splitTextToSize(data.programSummary.currentFunctioning, 170);
+      doc.text(functioningLines, 25, yPos);
+      yPos += functioningLines.length * 4 + 5;
+    }
+    
+    if (data.programSummary.treatmentGoals?.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Treatment Goals:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      data.programSummary.treatmentGoals.forEach((goal: string) => {
+        doc.text(`• ${goal}`, 25, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+    }
+    yPos += 10;
+
+    // Assessment Preparation
+    checkPageBreak(30);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Assessment Preparation', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    if (data.assessmentPrep.symptoms?.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Current Symptoms:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      data.assessmentPrep.symptoms.forEach((symptom: string) => {
+        doc.text(`• ${symptom}`, 25, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+    }
+    
+    if (data.assessmentPrep.triggers?.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Identified Triggers:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      data.assessmentPrep.triggers.forEach((trigger: string) => {
+        doc.text(`• ${trigger}`, 25, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+    }
+    
+    if (data.assessmentPrep.copingStrategies?.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Effective Coping Strategies:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      data.assessmentPrep.copingStrategies.forEach((strategy: string) => {
+        doc.text(`• ${strategy}`, 25, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+    }
+    
+    if (data.assessmentPrep.progressMade) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Progress Made:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const progressLines = doc.splitTextToSize(data.assessmentPrep.progressMade, 170);
+      doc.text(progressLines, 25, yPos);
+      yPos += progressLines.length * 4 + 5;
+    }
+    
+    if (data.assessmentPrep.challenges) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Current Challenges:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const challengesLines = doc.splitTextToSize(data.assessmentPrep.challenges, 170);
+      doc.text(challengesLines, 25, yPos);
+      yPos += challengesLines.length * 4 + 5;
+    }
+    
+    if (data.assessmentPrep.values) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Personal Values:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const valuesLines = doc.splitTextToSize(data.assessmentPrep.values, 170);
+      doc.text(valuesLines, 25, yPos);
+      yPos += valuesLines.length * 4 + 5;
+    }
+    
+    if (data.assessmentPrep.supportSystems) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Support Systems:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const supportLines = doc.splitTextToSize(data.assessmentPrep.supportSystems, 170);
+      doc.text(supportLines, 25, yPos);
+      yPos += supportLines.length * 4 + 5;
+    }
+    yPos += 10;
+
+    // NHS Readiness Scores
+    checkPageBreak(30);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NHS Transition Readiness Assessment', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Independent Tool Usage: ${data.nhsReadiness.independentTools}/10`, 20, yPos);
+    yPos += 6;
+    doc.text(`Handling Setbacks: ${data.nhsReadiness.handleSetbacks}/10`, 20, yPos);
+    yPos += 6;
+    doc.text(`Maintaining Progress: ${data.nhsReadiness.maintainProgress}/10`, 20, yPos);
+    yPos += 6;
+    doc.text(`Transition Readiness: ${data.nhsReadiness.transitionReadiness}/10`, 20, yPos);
+    yPos += 6;
+    doc.text(`Continuing Journey: ${data.nhsReadiness.continueJourney}/10`, 20, yPos);
+    yPos += 6;
+    
+    if (data.nhsReadiness.confidence) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Confidence Notes:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const confidenceLines = doc.splitTextToSize(data.nhsReadiness.confidence, 170);
+      doc.text(confidenceLines, 25, yPos);
+      yPos += confidenceLines.length * 4 + 5;
+    }
+    yPos += 10;
+
+    // Treatment Knowledge
+    checkPageBreak(20);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Treatment Knowledge & Preferences', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    if (data.treatmentKnowledge.cbtUnderstanding) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('CBT Understanding:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const cbtLines = doc.splitTextToSize(data.treatmentKnowledge.cbtUnderstanding, 170);
+      doc.text(cbtLines, 25, yPos);
+      yPos += cbtLines.length * 4 + 5;
+    }
+    
+    if (data.treatmentKnowledge.otherTherapies?.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Interest in Other Therapies:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      data.treatmentKnowledge.otherTherapies.forEach((therapy: string) => {
+        doc.text(`• ${therapy}`, 25, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+    }
+    
+    if (data.treatmentKnowledge.medicationQuestions?.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Medication Questions:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      data.treatmentKnowledge.medicationQuestions.forEach((question: string) => {
+        doc.text(`• ${question}`, 25, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+    }
+    
+    if (data.treatmentKnowledge.groupTherapyInterest) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Group Therapy Interest:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const groupLines = doc.splitTextToSize(data.treatmentKnowledge.groupTherapyInterest, 170);
+      doc.text(groupLines, 25, yPos);
+      yPos += groupLines.length * 4 + 5;
+    }
+    
+    if (data.treatmentKnowledge.treatmentPreferences) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Treatment Preferences:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const prefLines = doc.splitTextToSize(data.treatmentKnowledge.treatmentPreferences, 170);
+      doc.text(prefLines, 25, yPos);
+      yPos += prefLines.length * 4 + 5;
+    }
+    yPos += 10;
+
+    // Advocacy Preparation
+    checkPageBreak(20);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Advocacy & Self-Advocacy Preparation', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    if (data.advocacyPrep.treatmentPreferences) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Treatment Preferences:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const prefLines = doc.splitTextToSize(data.advocacyPrep.treatmentPreferences, 170);
+      doc.text(prefLines, 25, yPos);
+      yPos += prefLines.length * 4 + 5;
+    }
+    
+    if (data.advocacyPrep.previousExperiences) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Previous Mental Health Experiences:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const expLines = doc.splitTextToSize(data.advocacyPrep.previousExperiences, 170);
+      doc.text(expLines, 25, yPos);
+      yPos += expLines.length * 4 + 5;
+    }
+    
+    if (data.advocacyPrep.concerns) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Concerns About NHS Services:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const concernLines = doc.splitTextToSize(data.advocacyPrep.concerns, 170);
+      doc.text(concernLines, 25, yPos);
+      yPos += concernLines.length * 4 + 5;
+    }
+    
+    if (data.advocacyPrep.supportPerson) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Support Person for Appointments:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      const supportLines = doc.splitTextToSize(data.advocacyPrep.supportPerson, 170);
+      doc.text(supportLines, 25, yPos);
+      yPos += supportLines.length * 4 + 5;
+    }
+    
+    if (data.advocacyPrep.questions?.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Questions for Assessment:', 20, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      data.advocacyPrep.questions.forEach((question: string) => {
+        doc.text(`• ${question}`, 25, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+    }
+    yPos += 10;
+
+    // Footer
+    checkPageBreak(20);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Generated by Waitlist Companion™ NHS Preparation Guide', 20, 285);
+    doc.text(`Page ${doc.internal.getNumberOfPages()}`, 160, 285);
+    
+    console.log("NHS Prep PDF Generator: Report generation completed successfully");
+    return doc;
+    
+  } catch (error) {
+    console.error("NHS Prep PDF Generator: Error generating report:", error);
+    throw new Error(`NHS Prep PDF generation failed: ${error.message}`);
+  }
 }

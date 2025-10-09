@@ -26,6 +26,7 @@ import {
   Award,
   ArrowRight
 } from "lucide-react";
+import { generateNhsPrepReport } from "@/lib/pdf-generator";
 
 interface DocumentPrep {
   gpReferral: boolean;
@@ -371,28 +372,33 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
   };
 
   const exportNhsPrep = () => {
-    const prepData = {
-      documentPrep,
-      programSummary,
-      assessmentPrep,
-      treatmentKnowledge,
-      ongoingPrep,
-      nhsReadiness,
-      advocacyPrep,
-      overallReadiness: calculateOverallReadiness(),
-      completeness: getCompletenessPercentage(),
-      createdDate: new Date().toISOString(),
-      version: "1.0"
-    };
+    try {
+      console.log("Starting NHS Prep PDF generation...");
+      
+      const prepData = {
+        documentPrep,
+        programSummary,
+        assessmentPrep,
+        treatmentKnowledge,
+        ongoingPrep,
+        nhsReadiness,
+        advocacyPrep,
+        overallReadiness: calculateOverallReadiness(),
+        completeness: getCompletenessPercentage(),
+        createdDate: new Date().toISOString(),
+        version: "1.0"
+      };
 
-    const dataStr = JSON.stringify(prepData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `nhs-transition-preparation-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+      console.log("NHS Prep data prepared:", prepData);
+      
+      const doc = generateNhsPrepReport(prepData);
+      doc.save(`nhs-transition-preparation-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      console.log("NHS Prep PDF generated and saved successfully");
+    } catch (error) {
+      console.error("Error generating NHS Prep PDF:", error);
+      alert(`Error generating PDF: ${error.message}. Please try again.`);
+    }
   };
 
   return (

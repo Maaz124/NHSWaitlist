@@ -320,14 +320,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/reports", requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId;
+      console.log(`[POST /api/reports] Generating report for userId: ${userId}`);
       
       const user = await storage.getUser(userId);
+      console.log(`[POST /api/reports] User found:`, user ? `${user.firstName} ${user.lastName}` : 'null');
+      
       const onboarding = await storage.getOnboardingResponse(userId);
+      console.log(`[POST /api/reports] Onboarding found:`, onboarding ? 'yes' : 'no');
+      
       const assessments = await storage.getWeeklyAssessments(userId);
+      console.log(`[POST /api/reports] Assessments found:`, assessments.length);
+      
       const modules = await storage.getAnxietyModules(userId);
+      console.log(`[POST /api/reports] Modules found:`, modules.length);
 
-      if (!user || !onboarding) {
-        return res.status(404).json({ error: "User data not found" });
+      if (!user) {
+        console.error(`[POST /api/reports] User not found for userId: ${userId}`);
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (!onboarding) {
+        console.error(`[POST /api/reports] Onboarding data not found for userId: ${userId}`);
+        return res.status(404).json({ error: "Onboarding data not found. Please complete onboarding first." });
       }
 
       const reportData = {
@@ -338,13 +352,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         generatedAt: new Date(),
       };
 
+      console.log(`[POST /api/reports] Creating progress report...`);
       const report = await storage.createProgressReport({
         userId,
         reportData,
       });
 
+      console.log(`[POST /api/reports] Report created successfully with id: ${report.id}`);
       res.json({ report });
     } catch (error: any) {
+      console.error(`[POST /api/reports] Error:`, error);
       res.status(500).json({ error: error.message });
     }
   });
