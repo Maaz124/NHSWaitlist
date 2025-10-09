@@ -341,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!onboarding) {
         console.error(`[POST /api/reports] Onboarding data not found for userId: ${userId}`);
-        return res.status(404).json({ error: "Onboarding data not found. Please complete onboarding first." });
+        return res.status(404).json({ error: "Onboarding data not found. Please complete the initial assessment first." });
       }
 
       const reportData = {

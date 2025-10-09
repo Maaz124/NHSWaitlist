@@ -98,30 +98,39 @@ export function generateProgressReport(data: ReportData): jsPDF {
   doc.text('6-Week Anxiety Support Track Progress', 20, yPos);
   yPos += 10;
   
-  const completedModules = data.modules.filter(m => m.completedAt);
-  const totalMinutes = data.modules.reduce((sum, m) => sum + (m.minutesCompleted || 0), 0);
-  const totalEstimatedMinutes = data.modules.reduce((sum, m) => sum + m.estimatedMinutes, 0);
-  const completionRate = totalEstimatedMinutes > 0 ? Math.round((totalMinutes / totalEstimatedMinutes) * 100) : 0;
-  
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Overall Completion: ${completionRate}% (${totalMinutes}/${totalEstimatedMinutes} minutes)`, 20, yPos);
-  yPos += 6;
-  doc.text(`Modules Completed: ${completedModules.length}/6`, 20, yPos);
-  yPos += 10;
-  
-  data.modules.forEach((module, index) => {
-    if (yPos > 270) {
-      doc.addPage();
-      yPos = 20;
-    }
+  if (data.modules && data.modules.length > 0) {
+    const completedModules = data.modules.filter(m => m.completedAt);
+    const totalMinutes = data.modules.reduce((sum, m) => sum + (m.minutesCompleted || 0), 0);
+    const totalEstimatedMinutes = data.modules.reduce((sum, m) => sum + (m.estimatedMinutes || 0), 0);
+    const completionRate = totalEstimatedMinutes > 0 ? Math.round((totalMinutes / totalEstimatedMinutes) * 100) : 0;
     
-    doc.text(`Week ${module.weekNumber}: ${module.title}`, 20, yPos);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Overall Completion: ${completionRate}% (${totalMinutes}/${totalEstimatedMinutes} minutes)`, 20, yPos);
     yPos += 6;
-    const status = module.completedAt ? 'Completed' : module.isLocked ? 'Locked' : 'In Progress';
-    doc.text(`Status: ${status} | Progress: ${module.minutesCompleted}/${module.estimatedMinutes} min`, 25, yPos);
-    yPos += 8;
-  });
+    doc.text(`Modules Completed: ${completedModules.length}/${data.modules.length}`, 20, yPos);
+    yPos += 10;
+    
+    data.modules.forEach((module, index) => {
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      doc.text(`Week ${module.weekNumber}: ${module.title}`, 20, yPos);
+      yPos += 6;
+      const status = module.completedAt ? 'Completed' : module.isLocked ? 'Locked' : 'In Progress';
+      doc.text(`Status: ${status} | Progress: ${module.minutesCompleted || 0}/${module.estimatedMinutes || 0} min`, 25, yPos);
+      yPos += 8;
+    });
+  } else {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Module Progress: No modules started yet', 20, yPos);
+    yPos += 6;
+    doc.text('Patient has completed initial assessment but not yet started the 6-week program', 20, yPos);
+    yPos += 10;
+  }
   
   // Clinical Recommendations
   if (yPos > 240) {
@@ -138,7 +147,7 @@ export function generateProgressReport(data: ReportData): jsPDF {
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   
-  const latestRisk = data.assessments[0]?.riskLevel || data.onboarding.baselineAnxietyLevel;
+  const latestRisk = data.assessments && data.assessments.length > 0 ? data.assessments[0]?.riskLevel : data.onboarding.baselineAnxietyLevel;
   
   if (latestRisk === "crisis" || latestRisk === "high") {
     doc.text('• URGENT: High risk profile requires immediate clinical assessment', 20, yPos);
@@ -160,6 +169,16 @@ export function generateProgressReport(data: ReportData): jsPDF {
   doc.text('• Patient demonstrates commitment to recovery through app engagement', 20, yPos);
   yPos += 6;
   doc.text('• Recommend continuity of cognitive-behavioral approaches', 20, yPos);
+  
+  if (!data.modules || data.modules.length === 0) {
+    doc.text('• Patient has completed initial assessment - recommend starting 6-week program', 20, yPos);
+    yPos += 6;
+    doc.text('• Consider guided introduction to anxiety management techniques', 20, yPos);
+    yPos += 6;
+  } else if (data.assessments && data.assessments.length === 0) {
+    doc.text('• Patient has started 6-week program - monitor progress with weekly assessments', 20, yPos);
+    yPos += 6;
+  }
   
   console.log("PDF Generator: Report generation completed successfully");
   return doc;
