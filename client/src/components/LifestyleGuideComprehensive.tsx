@@ -1544,28 +1544,6 @@ export function LifestyleGuideComprehensive() {
             
             <div className="flex gap-3">
               <Button
-                variant="outline"
-                onClick={() => {
-                  // Save data when marking section complete
-                  manualSave();
-                  markSectionComplete(currentSection);
-                }}
-                disabled={completedSections.includes(currentSection)}
-              >
-                {completedSections.includes(currentSection) ? (
-                  <>
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Section Complete
-                  </>
-                ) : (
-                  <>
-                    <PenTool className="w-4 h-4 mr-2" />
-                    Mark Complete
-                  </>
-                )}
-              </Button>
-              
-              <Button
                 onClick={() => {
                   // Save data before moving to next section
                   manualSave();
@@ -1578,8 +1556,17 @@ export function LifestyleGuideComprehensive() {
                   }
                 }}
               >
-                Next Section
-                <ArrowRight className="w-4 h-4 ml-2" />
+                {currentSection === sections.length - 1 ? (
+                  <>
+                    Finish
+                    <CheckCircle className="w-4 h-4 ml-2" />
+                  </>
+                ) : (
+                  <>
+                    Next Section
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </Button>
             </div>
           </div>

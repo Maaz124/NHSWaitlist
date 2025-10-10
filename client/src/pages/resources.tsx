@@ -262,37 +262,37 @@ export default function Resources() {
                 <div className="space-y-3">
                   <Button 
                     variant="secondary" 
-                    className="w-full justify-start p-3 h-auto"
+                    className="w-full justify-start p-3 h-auto text-left whitespace-normal"
                     onClick={() => setActiveToolView('anxiety-guide')}
                     data-testid="button-understanding-anxiety"
                   >
-                    <div className="text-left">
-                      <p className="font-medium">Understanding Anxiety</p>
-                      <p className="text-sm text-muted-foreground">NHS-approved interactive guide with quizzes</p>
+                    <div className="w-full min-w-0">
+                      <p className="font-medium text-left break-words">Understanding Anxiety</p>
+                      <p className="text-sm text-muted-foreground text-left break-words overflow-wrap-anywhere">NHS-approved interactive guide with quizzes</p>
                     </div>
                   </Button>
                   
                   <Button 
                     variant="secondary" 
-                    className="w-full justify-start p-3 h-auto"
+                    className="w-full justify-start p-3 h-auto text-left whitespace-normal"
                     onClick={() => setActiveToolView('sleep-anxiety')}
                     data-testid="button-sleep-anxiety"
                   >
-                    <div className="text-left">
-                      <p className="font-medium">Sleep & Anxiety</p>
-                      <p className="text-sm text-muted-foreground">Evidence-based tips with personal assessment</p>
+                    <div className="w-full min-w-0">
+                      <p className="font-medium text-left break-words">Sleep & Anxiety</p>
+                      <p className="text-sm text-muted-foreground text-left break-words overflow-wrap-anywhere">Evidence-based tips with personal assessment</p>
                     </div>
                   </Button>
                   
                   <Button 
                     variant="secondary" 
-                    className="w-full justify-start p-3 h-auto"
+                    className="w-full justify-start p-3 h-auto text-left whitespace-normal"
                     onClick={() => setActiveToolView('lifestyle-guide')}
                     data-testid="button-lifestyle-factors"
                   >
-                    <div className="text-left">
-                      <p className="font-medium">Lifestyle Factors</p>
-                      <p className="text-sm text-muted-foreground">Diet, exercise & wellbeing with action plan</p>
+                    <div className="w-full min-w-0">
+                      <p className="font-medium text-left break-words">Lifestyle Factors</p>
+                      <p className="text-sm text-muted-foreground text-left break-words overflow-wrap-anywhere">Diet, exercise & wellbeing with action plan</p>
                     </div>
                   </Button>
                 </div>

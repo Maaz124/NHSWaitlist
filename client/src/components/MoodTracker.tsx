@@ -60,7 +60,7 @@ export function MoodTracker() {
     emotions: [],
     activities: [],
     thoughts: "",
-    gratitude: [""],
+    gratitude: [],
     challenges: "",
     wins: "",
     notes: ""
@@ -68,15 +68,36 @@ export function MoodTracker() {
   const [isProgrammaticLoad, setIsProgrammaticLoad] = useState(false);
   const [lastSavedHash, setLastSavedHash] = useState<string>("");
 
-  const [newEmotion, setNewEmotion] = useState("");
-  const [newActivity, setNewActivity] = useState("");
   const [activeTab, setActiveTab] = useState("daily");
+
+  // Debug useEffect to track currentEntry changes
+  useEffect(() => {
+    console.log('🔄 Current entry state changed:', {
+      emotions: currentEntry.emotions,
+      activities: currentEntry.activities,
+      gratitude: currentEntry.gratitude
+    });
+  }, [currentEntry.emotions, currentEntry.activities, currentEntry.gratitude]);
 
   // Load mood entries from database
   const { data: entries = [], refetch: refetchEntries } = useQuery({
     queryKey: ["/api/mood-entries", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const response = await fetch(`/api/mood-entries/${user.id}`, { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to fetch mood entries");
+      return response.json();
+    },
     enabled: !!user?.id,
   });
+
+  // Reload entry data when entries array changes (after successful save)
+  useEffect(() => {
+    if (entries.length > 0 && selectedDate) {
+      console.log('📋 Entries array changed, reloading entry for selected date');
+      loadEntryForDate(selectedDate);
+    }
+  }, [entries]);
 
   // Create mood entry mutation
   const createMoodEntryMutation = useMutation({
@@ -101,7 +122,21 @@ export function MoodTracker() {
       return await response.json();
     },
     onSuccess: (data) => {
+      console.log('✅ Create mood entry successful:', data);
+      console.log('✅ Created entry emotions:', data.emotions);
+      console.log('✅ Created entry activities:', data.activities);
+      console.log('✅ Created entry gratitude:', data.gratitude);
+      
       setCurrentEntryId(data.id);
+      
+      // Update the current entry state with the data returned from server
+      setCurrentEntry(prev => ({
+        ...prev,
+        emotions: data.emotions || [],
+        activities: data.activities || [],
+        gratitude: data.gratitude && data.gratitude.length > 0 ? data.gratitude : [""]
+      }));
+      
       setLastSavedHash(JSON.stringify({
         entryDate: selectedDate.toISOString().split('T')[0],
         ...{
@@ -152,7 +187,20 @@ export function MoodTracker() {
       
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ Update mood entry successful:', data);
+      console.log('✅ Updated entry emotions:', data.emotions);
+      console.log('✅ Updated entry activities:', data.activities);
+      console.log('✅ Updated entry gratitude:', data.gratitude);
+      
+      // Update the current entry state with the data returned from server
+      setCurrentEntry(prev => ({
+        ...prev,
+        emotions: data.emotions || [],
+        activities: data.activities || [],
+        gratitude: data.gratitude && data.gratitude.length > 0 ? data.gratitude : [""]
+      }));
+      
       setLastSavedHash(JSON.stringify({
         entryDate: selectedDate.toISOString().split('T')[0],
         ...{
@@ -206,6 +254,7 @@ export function MoodTracker() {
     "Self-Care", "Journaling", "Music", "Gaming", "Travel", "Family Time"
   ];
 
+
   const getMoodIcon = (mood: number) => {
     if (mood >= 8) return <Smile className="w-6 h-6 text-green-600" />;
     if (mood >= 6) return <Meh className="w-6 h-6 text-yellow-600" />;
@@ -228,12 +277,6 @@ export function MoodTracker() {
     }));
   };
 
-  const addCustomEmotion = () => {
-    if (newEmotion.trim()) {
-      toggleEmotion(newEmotion.trim());
-      setNewEmotion("");
-    }
-  };
 
   const toggleActivity = (activity: string) => {
     setCurrentEntry(prev => ({
@@ -244,12 +287,6 @@ export function MoodTracker() {
     }));
   };
 
-  const addCustomActivity = () => {
-    if (newActivity.trim()) {
-      toggleActivity(newActivity.trim());
-      setNewActivity("");
-    }
-  };
 
   const addGratitudeItem = () => {
     setCurrentEntry(prev => ({
@@ -259,10 +296,17 @@ export function MoodTracker() {
   };
 
   const updateGratitudeItem = (index: number, value: string) => {
-    setCurrentEntry(prev => ({
-      ...prev,
-      gratitude: prev.gratitude?.map((item, i) => i === index ? value : item) || []
-    }));
+    console.log('🙏 Updating gratitude item:', { index, value });
+    console.log('🙏 Current gratitude before:', currentEntry.gratitude);
+    
+    setCurrentEntry(prev => {
+      const newGratitude = prev.gratitude?.map((item, i) => i === index ? value : item) || [];
+      console.log('🙏 New gratitude array:', newGratitude);
+      return {
+        ...prev,
+        gratitude: newGratitude
+      };
+    });
   };
 
   const removeGratitudeItem = (index: number) => {
@@ -271,6 +315,7 @@ export function MoodTracker() {
       gratitude: prev.gratitude?.filter((_, i) => i !== index) || []
     }));
   };
+
 
   // Auto-save functionality disabled - only save when user clicks "Save Today's Entry" button
   
@@ -296,6 +341,13 @@ export function MoodTracker() {
       return;
     }
 
+    console.log('💾 Saving mood entry with current state:', {
+      emotions: currentEntry.emotions,
+      activities: currentEntry.activities,
+      gratitude: currentEntry.gratitude,
+      fullCurrentEntry: currentEntry
+    });
+
     const saveData = {
       userId: user.id,
       entryDate: selectedDate.toISOString().split('T')[0], // YYYY-MM-DD format
@@ -311,6 +363,8 @@ export function MoodTracker() {
       wins: currentEntry.wins || "",
       notes: currentEntry.notes || ""
     };
+
+    console.log('💾 Prepared save data:', saveData);
 
     if (currentEntryId) {
       // Update existing entry
@@ -343,6 +397,12 @@ export function MoodTracker() {
     const existing = entries.find(e => e.entryDate === dateString);
     setIsProgrammaticLoad(true);
     if (existing) {
+      console.log('📖 Loading existing entry for date:', dateString);
+      console.log('📖 Existing entry data:', {
+        emotions: existing.emotions,
+        activities: existing.activities,
+        gratitude: existing.gratitude
+      });
       setCurrentEntryId(existing.id);
       setCurrentEntry({
         mood: existing.mood,
@@ -352,7 +412,7 @@ export function MoodTracker() {
         emotions: existing.emotions || [],
         activities: existing.activities || [],
         thoughts: existing.thoughts || "",
-        gratitude: (existing.gratitude && existing.gratitude.length > 0) ? existing.gratitude : [""],
+        gratitude: existing.gratitude || [],
         challenges: existing.challenges || "",
         wins: existing.wins || "",
         notes: existing.notes || ""
@@ -367,7 +427,7 @@ export function MoodTracker() {
         emotions: existing.emotions || [],
         activities: existing.activities || [],
         thoughts: existing.thoughts || "",
-        gratitude: (existing.gratitude || []).map((g: string) => g.trim()).filter(Boolean),
+        gratitude: existing.gratitude || [],
         challenges: existing.challenges || "",
         wins: existing.wins || "",
         notes: existing.notes || ""
@@ -631,18 +691,6 @@ export function MoodTracker() {
                       </Button>
                     ))}
                   </div>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add custom emotion..."
-                      value={newEmotion}
-                      onChange={(e) => setNewEmotion(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && addCustomEmotion()}
-                      data-testid="input-custom-emotion"
-                    />
-                    <Button onClick={addCustomEmotion} size="sm" data-testid="button-add-emotion">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
                 </div>
               </div>
 
@@ -664,18 +712,6 @@ export function MoodTracker() {
                         {activity}
                       </Button>
                     ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add custom activity..."
-                      value={newActivity}
-                      onChange={(e) => setNewActivity(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && addCustomActivity()}
-                      data-testid="input-custom-activity"
-                    />
-                    <Button onClick={addCustomActivity} size="sm" data-testid="button-add-activity">
-                      <Plus className="w-4 h-4" />
-                    </Button>
                   </div>
                 </div>
               </div>
@@ -727,16 +763,16 @@ export function MoodTracker() {
                     </Button>
                   </div>
                   <div className="space-y-2">
-                    {(currentEntry.gratitude || [""]).map((item, index) => (
-                      <div key={index} className="flex gap-2">
-                        <Input
-                          placeholder={`Something you're grateful for #${index + 1}...`}
-                          value={item}
-                          onChange={canEditEntry ? (e) => updateGratitudeItem(index, e.target.value) : undefined}
-                          disabled={!canEditEntry}
-                          data-testid={`input-gratitude-${index}`}
-                        />
-                        {index > 0 && (
+                    {(currentEntry.gratitude && currentEntry.gratitude.length > 0) ? (
+                      currentEntry.gratitude.map((item, index) => (
+                        <div key={index} className="flex gap-2">
+                          <Input
+                            placeholder={`Something you're grateful for #${index + 1}...`}
+                            value={item}
+                            onChange={canEditEntry ? (e) => updateGratitudeItem(index, e.target.value) : undefined}
+                            disabled={!canEditEntry}
+                            data-testid={`input-gratitude-${index}`}
+                          />
                           <Button
                             onClick={canEditEntry ? () => removeGratitudeItem(index) : undefined}
                             size="sm"
@@ -746,9 +782,14 @@ export function MoodTracker() {
                           >
                             ×
                           </Button>
-                        )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground">
+                        <p className="text-sm">No gratitude items added yet</p>
+                        <p className="text-xs mt-1">Click the + button to add your first item</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
 

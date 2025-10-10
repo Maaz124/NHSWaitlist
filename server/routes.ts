@@ -450,6 +450,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.session.userId;
       const { entryDate, mood, energy, anxiety, sleep, emotions, activities, thoughts, gratitude, challenges, wins, notes } = req.body;
       
+      console.log('📥 POST /api/mood-entries received data:', {
+        emotions,
+        activities,
+        gratitude,
+        userId,
+        entryDate
+      });
+      
       const moodEntry = await storage.createMoodEntry({
         userId,
         entryDate,
@@ -466,8 +474,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes
       });
 
+      console.log('📤 POST /api/mood-entries returning:', {
+        emotions: moodEntry.emotions,
+        activities: moodEntry.activities,
+        gratitude: moodEntry.gratitude
+      });
+
       res.json(moodEntry);
     } catch (error: any) {
+      console.error('❌ POST /api/mood-entries error:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -497,9 +512,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const updates = req.body;
       
+      console.log('📥 PATCH /api/mood-entries/:id received data:', {
+        id,
+        emotions: updates.emotions,
+        activities: updates.activities,
+        gratitude: updates.gratitude
+      });
+      
       const moodEntry = await storage.updateMoodEntry(id, updates);
+      
+      console.log('📤 PATCH /api/mood-entries/:id returning:', {
+        emotions: moodEntry.emotions,
+        activities: moodEntry.activities,
+        gratitude: moodEntry.gratitude
+      });
+      
       res.json(moodEntry);
     } catch (error: any) {
+      console.error('❌ PATCH /api/mood-entries/:id error:', error);
       res.status(500).json({ error: error.message });
     }
   });

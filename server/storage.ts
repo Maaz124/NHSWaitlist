@@ -27,6 +27,14 @@ export interface IStorage {
   // Progress reports
   createProgressReport(report: InsertProgressReport): Promise<ProgressReport>;
   getProgressReports(userId: string): Promise<ProgressReport[]>;
+
+  // Mood entries
+  createMoodEntry(entry: any): Promise<any>;
+  getMoodEntries(userId: string): Promise<any[]>;
+  getMoodEntry(id: string): Promise<any | null>;
+  getMoodEntryByDate(userId: string, entryDate: string): Promise<any | null>;
+  updateMoodEntry(id: string, updates: any): Promise<any>;
+  deleteMoodEntry(id: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -35,6 +43,7 @@ export class MemStorage implements IStorage {
   private weeklyAssessments: Map<string, WeeklyAssessment>;
   private anxietyModules: Map<string, AnxietyModule>;
   private progressReports: Map<string, ProgressReport>;
+  private moodEntries: Map<string, any>;
 
   constructor() {
     this.users = new Map();
@@ -42,6 +51,7 @@ export class MemStorage implements IStorage {
     this.weeklyAssessments = new Map();
     this.anxietyModules = new Map();
     this.progressReports = new Map();
+    this.moodEntries = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -223,6 +233,46 @@ export class MemStorage implements IStorage {
     return Array.from(this.progressReports.values())
       .filter(report => report.userId === userId)
       .sort((a, b) => b.generatedAt!.getTime() - a.generatedAt!.getTime());
+  }
+
+  // Mood entries
+  async createMoodEntry(insertEntry: any): Promise<any> {
+    const id = randomUUID();
+    const entry = { 
+      ...insertEntry, 
+      id, 
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.moodEntries.set(id, entry);
+    return entry;
+  }
+
+  async getMoodEntries(userId: string): Promise<any[]> {
+    return Array.from(this.moodEntries.values())
+      .filter(entry => entry.userId === userId)
+      .sort((a, b) => new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime());
+  }
+
+  async getMoodEntry(id: string): Promise<any | null> {
+    return this.moodEntries.get(id) || null;
+  }
+
+  async getMoodEntryByDate(userId: string, entryDate: string): Promise<any | null> {
+    return Array.from(this.moodEntries.values())
+      .find(entry => entry.userId === userId && entry.entryDate === entryDate) || null;
+  }
+
+  async updateMoodEntry(id: string, updates: any): Promise<any> {
+    const entry = this.moodEntries.get(id);
+    if (!entry) throw new Error("Mood entry not found");
+    const updatedEntry = { ...entry, ...updates, updatedAt: new Date() };
+    this.moodEntries.set(id, updatedEntry);
+    return updatedEntry;
+  }
+
+  async deleteMoodEntry(id: string): Promise<void> {
+    this.moodEntries.delete(id);
   }
 }
 

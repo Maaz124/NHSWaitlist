@@ -243,7 +243,17 @@ export class PostgresStorage implements IStorage {
 
   // Mood Entries CRUD operations
   async createMoodEntry(insertEntry: InsertMoodEntry): Promise<MoodEntry> {
+    console.log('💾 Creating mood entry with data:', {
+      emotions: insertEntry.emotions,
+      activities: insertEntry.activities,
+      gratitude: insertEntry.gratitude
+    });
     const result = await db.insert(schema.moodEntries).values(insertEntry).returning();
+    console.log('💾 Created mood entry result:', {
+      emotions: result[0].emotions,
+      activities: result[0].activities,
+      gratitude: result[0].gratitude
+    });
     return result[0];
   }
 
@@ -271,10 +281,21 @@ export class PostgresStorage implements IStorage {
   }
 
   async updateMoodEntry(id: string, updates: Partial<InsertMoodEntry>): Promise<MoodEntry> {
+    console.log('💾 Updating mood entry with data:', {
+      id,
+      emotions: updates.emotions,
+      activities: updates.activities,
+      gratitude: updates.gratitude
+    });
     const result = await db.update(schema.moodEntries)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(schema.moodEntries.id, id))
       .returning();
+    console.log('💾 Updated mood entry result:', {
+      emotions: result[0].emotions,
+      activities: result[0].activities,
+      gratitude: result[0].gratitude
+    });
     return result[0];
   }
 
