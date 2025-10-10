@@ -11,8 +11,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Download, Phone, MessageSquare, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -24,14 +22,6 @@ const profileSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
 });
 
-interface NotificationSettings {
-  weeklyCheckInReminders: boolean;
-  moduleReminders: boolean;
-}
-
-interface PrivacySettings {
-  nhsDataSharing: boolean;
-}
 
 export default function Settings() {
   const [, setLocation] = useLocation();
@@ -58,14 +48,6 @@ export default function Settings() {
 
   const userId = authData?.user?.id;
   
-  const [notifications, setNotifications] = useState<NotificationSettings>({
-    weeklyCheckInReminders: true,
-    moduleReminders: true,
-  });
-  
-  const [privacy, setPrivacy] = useState<PrivacySettings>({
-    nhsDataSharing: true,
-  });
 
   // Use authenticated user data
   const authUser = authData?.user;
@@ -134,29 +116,6 @@ export default function Settings() {
     updateProfileMutation.mutate(data);
   };
 
-  const handleNotificationToggle = (key: keyof NotificationSettings) => {
-    setNotifications(prev => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-    
-    toast({
-      title: "Notification Settings Updated",
-      description: `${key === 'weeklyCheckInReminders' ? 'Weekly check-in reminders' : 'Module reminders'} ${!notifications[key] ? 'enabled' : 'disabled'}.`,
-    });
-  };
-
-  const handlePrivacyToggle = (key: keyof PrivacySettings) => {
-    setPrivacy(prev => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-    
-    toast({
-      title: "Privacy Settings Updated", 
-      description: "Your data sharing preferences have been updated.",
-    });
-  };
 
   const handleDownloadData = () => {
     downloadDataMutation.mutate();
@@ -190,7 +149,7 @@ export default function Settings() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
             <h2 className="text-2xl font-semibold text-foreground mb-2">Settings</h2>
-            <p className="text-muted-foreground">Manage your account, notifications, and privacy preferences</p>
+            <p className="text-muted-foreground">Manage your account and support preferences</p>
           </div>
 
           <div className="space-y-6">
@@ -255,75 +214,6 @@ export default function Settings() {
               </CardContent>
             </Card>
 
-            {/* Notification Settings */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-card-foreground mb-4">Notifications</h3>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-card-foreground">Weekly Check-in Reminders</p>
-                      <p className="text-sm text-muted-foreground">Get reminded when it's time for your weekly assessment</p>
-                    </div>
-                    <Switch
-                      checked={notifications.weeklyCheckInReminders}
-                      onCheckedChange={() => handleNotificationToggle('weeklyCheckInReminders')}
-                      data-testid="switch-checkin-reminders"
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-card-foreground">Module Reminders</p>
-                      <p className="text-sm text-muted-foreground">Gentle nudges to continue your anxiety support track</p>
-                    </div>
-                    <Switch
-                      checked={notifications.moduleReminders}
-                      onCheckedChange={() => handleNotificationToggle('moduleReminders')}
-                      data-testid="switch-module-reminders"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Privacy & Data */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-card-foreground mb-4">Privacy & Data</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-card-foreground mb-2">Data Sharing with NHS</h4>
-                    <p className="text-sm text-muted-foreground mb-3">Allow sharing of progress data when transitioning to NHS services</p>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="nhs-sharing"
-                        checked={privacy.nhsDataSharing}
-                        onCheckedChange={() => handlePrivacyToggle('nhsDataSharing')}
-                        data-testid="checkbox-nhs-sharing"
-                      />
-                      <label htmlFor="nhs-sharing" className="text-sm text-card-foreground">
-                        Enable NHS data sharing
-                      </label>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t border-border">
-                    <Button 
-                      variant="ghost"
-                      onClick={handleDownloadData}
-                      disabled={downloadDataMutation.isPending}
-                      data-testid="button-download-data"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      {downloadDataMutation.isPending ? "Preparing Download..." : "Download My Data"}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Support */}
             <Card>
