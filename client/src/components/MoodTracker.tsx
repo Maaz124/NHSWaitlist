@@ -445,10 +445,13 @@ export function MoodTracker() {
     setTimeout(() => setIsProgrammaticLoad(false), 0);
   };
 
-  // Load entry when selected date changes
+  // Load entry when component mounts or entries change
   useEffect(() => {
-    loadEntryForDate(selectedDate);
-  }, [selectedDate, entries]);
+    // Always use today's date for daily entry
+    const today = new Date();
+    setSelectedDate(today);
+    loadEntryForDate(today);
+  }, [entries]);
 
   const getAverageForPeriod = (days: number) => {
     const cutoff = new Date();
@@ -534,22 +537,9 @@ export function MoodTracker() {
                   <CalendarIcon className="w-5 h-5" />
                   Daily Mood Entry
                 </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">
-                    {selectedDate.toLocaleDateString('en-GB')}
-                  </Badge>
-                  <input
-                    type="date"
-                    value={selectedDate.toISOString().split('T')[0]}
-                    onChange={(e) => {
-                      const newDate = new Date(e.target.value);
-                      setSelectedDate(newDate);
-                      loadEntryForDate(newDate);
-                    }}
-                    className="px-3 py-1 border rounded-md text-sm"
-                    data-testid="date-picker"
-                  />
-                </div>
+                <Badge variant="secondary">
+                  {selectedDate.toLocaleDateString('en-GB')}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-8">
