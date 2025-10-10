@@ -273,9 +273,28 @@ export function MoodTracker() {
   };
 
   // Auto-save functionality disabled - only save when user clicks "Save Today's Entry" button
+  
+  // Check if selected date is today
+  const isToday = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selected = new Date(selectedDate);
+    selected.setHours(0, 0, 0, 0);
+    return selected.getTime() === today.getTime();
+  };
+  
+  const canEditEntry = isToday();
 
   const saveEntry = () => {
     if (!user?.id) return;
+    if (!canEditEntry) {
+      toast({
+        title: "Cannot Edit Past Entries",
+        description: "You can only edit today's mood entry. Past entries are read-only.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const saveData = {
       userId: user.id,
@@ -486,11 +505,12 @@ export function MoodTracker() {
                       <span className="text-sm w-12">Terrible</span>
                       <Slider
                         value={[currentEntry.mood || 5]}
-                        onValueChange={([value]) => setCurrentEntry(prev => ({ ...prev, mood: value }))}
+                        onValueChange={canEditEntry ? ([value]) => setCurrentEntry(prev => ({ ...prev, mood: value })) : undefined}
                         max={10}
                         min={1}
                         step={1}
                         className="flex-1"
+                        disabled={!canEditEntry}
                         data-testid="slider-mood"
                       />
                       <span className="text-sm w-12">Amazing</span>
@@ -514,7 +534,8 @@ export function MoodTracker() {
                       <span className="text-sm w-12">Drained</span>
                       <Slider
                         value={[currentEntry.energy || 5]}
-                        onValueChange={([value]) => setCurrentEntry(prev => ({ ...prev, energy: value }))}
+                        onValueChange={canEditEntry ? ([value]) => setCurrentEntry(prev => ({ ...prev, energy: value })) : undefined}
+                        disabled={!canEditEntry}
                         max={10}
                         min={1}
                         step={1}
@@ -541,7 +562,8 @@ export function MoodTracker() {
                       <span className="text-sm w-8">Calm</span>
                       <Slider
                         value={[currentEntry.anxiety || 3]}
-                        onValueChange={([value]) => setCurrentEntry(prev => ({ ...prev, anxiety: value }))}
+                        onValueChange={canEditEntry ? ([value]) => setCurrentEntry(prev => ({ ...prev, anxiety: value })) : undefined}
+                        disabled={!canEditEntry}
                         max={10}
                         min={1}
                         step={1}
@@ -568,7 +590,8 @@ export function MoodTracker() {
                       <span className="text-sm w-8">Poor</span>
                       <Slider
                         value={[currentEntry.sleep || 7]}
-                        onValueChange={([value]) => setCurrentEntry(prev => ({ ...prev, sleep: value }))}
+                        onValueChange={canEditEntry ? ([value]) => setCurrentEntry(prev => ({ ...prev, sleep: value })) : undefined}
+                        disabled={!canEditEntry}
                         max={10}
                         min={1}
                         step={1}
@@ -596,7 +619,8 @@ export function MoodTracker() {
                         key={emotion.name}
                         variant={currentEntry.emotions?.includes(emotion.name) ? "default" : "outline"}
                         size="sm"
-                        onClick={() => toggleEmotion(emotion.name)}
+                        onClick={canEditEntry ? () => toggleEmotion(emotion.name) : undefined}
+                        disabled={!canEditEntry}
                         className={currentEntry.emotions?.includes(emotion.name) ? 
                           `${emotion.color} ${emotion.textColor} border-0` : 
                           ""
@@ -632,7 +656,8 @@ export function MoodTracker() {
                         key={activity}
                         variant={currentEntry.activities?.includes(activity) ? "default" : "outline"}
                         size="sm"
-                        onClick={() => toggleActivity(activity)}
+                        onClick={canEditEntry ? () => toggleActivity(activity) : undefined}
+                        disabled={!canEditEntry}
                         className="text-xs justify-start"
                         data-testid={`activity-${activity.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
                       >
@@ -663,9 +688,10 @@ export function MoodTracker() {
                     id="thoughts"
                     placeholder="What thoughts went through your mind today? Any patterns or themes?"
                     value={currentEntry.thoughts}
-                    onChange={(e) => setCurrentEntry(prev => ({ ...prev, thoughts: e.target.value }))}
+                    onChange={canEditEntry ? (e) => setCurrentEntry(prev => ({ ...prev, thoughts: e.target.value })) : undefined}
                     className="mt-2"
                     rows={4}
+                    disabled={!canEditEntry}
                     data-testid="textarea-thoughts"
                   />
                 </div>
@@ -676,9 +702,10 @@ export function MoodTracker() {
                     id="challenges"
                     placeholder="What was difficult today? How did you handle it?"
                     value={currentEntry.challenges}
-                    onChange={(e) => setCurrentEntry(prev => ({ ...prev, challenges: e.target.value }))}
+                    onChange={canEditEntry ? (e) => setCurrentEntry(prev => ({ ...prev, challenges: e.target.value })) : undefined}
                     className="mt-2"
                     rows={4}
+                    disabled={!canEditEntry}
                     data-testid="textarea-challenges"
                   />
                 </div>
@@ -689,7 +716,13 @@ export function MoodTracker() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <Label className="text-base font-semibold">Gratitude List</Label>
-                    <Button onClick={addGratitudeItem} size="sm" variant="outline" data-testid="button-add-gratitude">
+                    <Button 
+                      onClick={canEditEntry ? addGratitudeItem : undefined} 
+                      size="sm" 
+                      variant="outline" 
+                      disabled={!canEditEntry}
+                      data-testid="button-add-gratitude"
+                    >
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
@@ -699,15 +732,17 @@ export function MoodTracker() {
                         <Input
                           placeholder={`Something you're grateful for #${index + 1}...`}
                           value={item}
-                          onChange={(e) => updateGratitudeItem(index, e.target.value)}
+                          onChange={canEditEntry ? (e) => updateGratitudeItem(index, e.target.value) : undefined}
+                          disabled={!canEditEntry}
                           data-testid={`input-gratitude-${index}`}
                         />
                         {index > 0 && (
                           <Button
-                            onClick={() => removeGratitudeItem(index)}
+                            onClick={canEditEntry ? () => removeGratitudeItem(index) : undefined}
                             size="sm"
                             variant="outline"
                             className="px-2"
+                            disabled={!canEditEntry}
                           >
                             ×
                           </Button>
@@ -723,9 +758,10 @@ export function MoodTracker() {
                     id="wins"
                     placeholder="What went well today? Any accomplishments, big or small?"
                     value={currentEntry.wins}
-                    onChange={(e) => setCurrentEntry(prev => ({ ...prev, wins: e.target.value }))}
+                    onChange={canEditEntry ? (e) => setCurrentEntry(prev => ({ ...prev, wins: e.target.value })) : undefined}
                     className="mt-2"
                     rows={4}
+                    disabled={!canEditEntry}
                     data-testid="textarea-wins"
                   />
                 </div>
@@ -738,18 +774,30 @@ export function MoodTracker() {
                   id="notes"
                   placeholder="Anything else you'd like to remember about today?"
                   value={currentEntry.notes}
-                  onChange={(e) => setCurrentEntry(prev => ({ ...prev, notes: e.target.value }))}
+                  onChange={canEditEntry ? (e) => setCurrentEntry(prev => ({ ...prev, notes: e.target.value })) : undefined}
                   className="mt-2"
                   rows={3}
+                  disabled={!canEditEntry}
                   data-testid="textarea-notes"
                 />
               </div>
 
               {/* Save Button */}
               <div className="flex justify-center pt-4">
-                <Button onClick={saveEntry} className="px-8" data-testid="button-save-entry">
-                  Save Today's Entry
-                </Button>
+                {canEditEntry ? (
+                  <Button onClick={saveEntry} className="px-8" data-testid="button-save-entry">
+                    Save Today's Entry
+                  </Button>
+                ) : (
+                  <div className="text-center">
+                    <Badge variant="secondary" className="text-sm">
+                      📖 Read-Only View
+                    </Badge>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      You can only edit today's mood entry. Past entries are read-only.
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -772,21 +820,11 @@ export function MoodTracker() {
                   selected={selectedDate}
                   onSelect={(date) => {
                     if (date) {
-                      // Only allow selecting today or future dates
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      if (date >= today) {
-                        setSelectedDate(date);
-                        loadEntryForDate(date);
-                        setActiveTab("daily");
-                      }
+                      // Allow selecting any date (past, present, future)
+                      setSelectedDate(date);
+                      loadEntryForDate(date);
+                      setActiveTab("daily");
                     }
-                  }}
-                  disabled={(date) => {
-                    // Disable past dates (before today)
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    return date < today;
                   }}
                   className="rounded-md border"
                   modifiers={{
