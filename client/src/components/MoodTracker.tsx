@@ -71,7 +71,6 @@ export function MoodTracker() {
   const [newEmotion, setNewEmotion] = useState("");
   const [newActivity, setNewActivity] = useState("");
   const [activeTab, setActiveTab] = useState("daily");
-  const [isAutoSaving, setIsAutoSaving] = useState(false);
 
   // Load mood entries from database
   const { data: entries = [], refetch: refetchEntries } = useQuery({
@@ -273,77 +272,7 @@ export function MoodTracker() {
     }));
   };
 
-  // Auto-save functionality
-  useEffect(() => {
-    if (!user?.id) return;
-    if (isProgrammaticLoad) return; // skip while we're loading existing entry into form
-
-    const { mood, energy, anxiety, sleep, emotions, activities, thoughts, gratitude, challenges, wins, notes } = currentEntry;
-
-    // Only auto-save if we have the minimum required fields
-    if (mood !== undefined && energy !== undefined && anxiety !== undefined && sleep !== undefined) {
-      // Build a normalized snapshot for hashing to avoid duplicate saves
-      const snapshot = JSON.stringify({
-        entryDate: selectedDate.toISOString().split('T')[0],
-        mood: mood || 5,
-        energy: energy || 5,
-        anxiety: anxiety || 3,
-        sleep: sleep || 7,
-        emotions: emotions || [],
-        activities: activities || [],
-        thoughts: thoughts || "",
-        gratitude: (gratitude || []).map((g) => g.trim()).filter(Boolean),
-        challenges: challenges || "",
-        wins: wins || "",
-        notes: notes || ""
-      });
-
-      // If nothing changed since last successful save, skip
-      if (snapshot === lastSavedHash) return;
-
-      // If a mutation is ongoing, skip to prevent churn
-      if (createMoodEntryMutation.isPending || updateMoodEntryMutation.isPending) return;
-
-      setIsAutoSaving(true);
-
-      // Clear existing timeout
-      clearTimeout((window as any).moodEntrySaveTimeout);
-
-      (window as any).moodEntrySaveTimeout = setTimeout(() => {
-        const saveData = {
-          userId: user.id,
-          entryDate: selectedDate.toISOString().split('T')[0], // YYYY-MM-DD format
-          mood: mood || 5,
-          energy: energy || 5,
-          anxiety: anxiety || 3,
-          sleep: sleep || 7,
-          emotions: emotions || [],
-          activities: activities || [],
-          thoughts: thoughts || "",
-          gratitude: (gratitude || []).map((g) => g.trim()).filter(Boolean),
-          challenges: challenges || "",
-          wins: wins || "",
-          notes: notes || ""
-        };
-
-        if (currentEntryId) {
-          // Update existing entry
-          updateMoodEntryMutation.mutate({ id: currentEntryId, updates: saveData }, {
-            onSettled: () => setIsAutoSaving(false)
-          });
-        } else {
-          // Create new entry
-          createMoodEntryMutation.mutate(saveData, {
-            onSettled: () => setIsAutoSaving(false)
-          });
-        }
-      }, 600); // 600ms debounce
-    }
-
-    return () => {
-      clearTimeout((window as any).moodEntrySaveTimeout);
-    };
-  }, [currentEntry.mood, currentEntry.energy, currentEntry.anxiety, currentEntry.sleep, currentEntry.emotions, currentEntry.activities, currentEntry.thoughts, currentEntry.gratitude, currentEntry.challenges, currentEntry.wins, currentEntry.notes, user?.id, currentEntryId, selectedDate, lastSavedHash, isProgrammaticLoad, createMoodEntryMutation.isPending, updateMoodEntryMutation.isPending]);
+  // Auto-save functionality disabled - only save when user clicks "Save Today's Entry" button
 
   const saveEntry = () => {
     if (!user?.id) return;
@@ -551,12 +480,6 @@ export function MoodTracker() {
                       <Heart className="w-4 h-4" />
                       Overall Mood (1-10)
                     </Label>
-                    {isAutoSaving && (
-                      <Badge variant="secondary" className="text-xs">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
-                        Saving...
-                      </Badge>
-                    )}
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-4">
@@ -844,57 +767,82 @@ export function MoodTracker() {
             <CardContent>
               <div className="flex justify-center">
                 <Calendar
+                  key={`calendar-${entries.length}`} // Force re-render when entries change
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => {
                     if (date) {
-                      setSelectedDate(date);
-                      loadEntryForDate(date);
-                      setActiveTab("daily");
+                      // Only allow selecting today or future dates
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      if (date >= today) {
+                        setSelectedDate(date);
+                        loadEntryForDate(date);
+                        setActiveTab("daily");
+                      }
                     }
+                  }}
+                  disabled={(date) => {
+                    // Disable past dates (before today)
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return date < today;
                   }}
                   className="rounded-md border"
                   modifiers={{
-                    hasEntry: (date) => entries.some(e => e.entryDate === date.toISOString().split('T')[0]),
+                    hasEntry: (date) => {
+                      const dateStr = date.toISOString().split('T')[0];
+                      return entries.some(e => e.entryDate === dateStr);
+                    },
                     mood1: (date) => {
-                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
-                      return entry ? entry.mood === 1 : false;
+                      const dateStr = date.toISOString().split('T')[0];
+                      const entry = entries.find(e => e.entryDate === dateStr);
+                      return entry && entry.mood === 1;
                     },
                     mood2: (date) => {
-                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
-                      return entry ? entry.mood === 2 : false;
+                      const dateStr = date.toISOString().split('T')[0];
+                      const entry = entries.find(e => e.entryDate === dateStr);
+                      return entry && entry.mood === 2;
                     },
                     mood3: (date) => {
-                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
-                      return entry ? entry.mood === 3 : false;
+                      const dateStr = date.toISOString().split('T')[0];
+                      const entry = entries.find(e => e.entryDate === dateStr);
+                      return entry && entry.mood === 3;
                     },
                     mood4: (date) => {
-                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
-                      return entry ? entry.mood === 4 : false;
+                      const dateStr = date.toISOString().split('T')[0];
+                      const entry = entries.find(e => e.entryDate === dateStr);
+                      return entry && entry.mood === 4;
                     },
                     mood5: (date) => {
-                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
-                      return entry ? entry.mood === 5 : false;
+                      const dateStr = date.toISOString().split('T')[0];
+                      const entry = entries.find(e => e.entryDate === dateStr);
+                      return entry && entry.mood === 5;
                     },
                     mood6: (date) => {
-                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
-                      return entry ? entry.mood === 6 : false;
+                      const dateStr = date.toISOString().split('T')[0];
+                      const entry = entries.find(e => e.entryDate === dateStr);
+                      return entry && entry.mood === 6;
                     },
                     mood7: (date) => {
-                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
-                      return entry ? entry.mood === 7 : false;
+                      const dateStr = date.toISOString().split('T')[0];
+                      const entry = entries.find(e => e.entryDate === dateStr);
+                      return entry && entry.mood === 7;
                     },
                     mood8: (date) => {
-                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
-                      return entry ? entry.mood === 8 : false;
+                      const dateStr = date.toISOString().split('T')[0];
+                      const entry = entries.find(e => e.entryDate === dateStr);
+                      return entry && entry.mood === 8;
                     },
                     mood9: (date) => {
-                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
-                      return entry ? entry.mood === 9 : false;
+                      const dateStr = date.toISOString().split('T')[0];
+                      const entry = entries.find(e => e.entryDate === dateStr);
+                      return entry && entry.mood === 9;
                     },
                     mood10: (date) => {
-                      const entry = entries.find(e => e.entryDate === date.toISOString().split('T')[0]);
-                      return entry ? entry.mood === 10 : false;
+                      const dateStr = date.toISOString().split('T')[0];
+                      const entry = entries.find(e => e.entryDate === dateStr);
+                      return entry && entry.mood === 10;
                     }
                   }}
                   modifiersStyles={{
