@@ -17,6 +17,7 @@ import { ProgressTracker } from "@/components/ProgressTracker";
 import { ToolkitBuilder } from "@/components/ToolkitBuilder";
 import { RelapsePlanner } from "@/components/RelapsePlanner";
 import { NhsPrepGuide } from "@/components/NhsPrepGuide";
+import { WeeklyThoughtRecord } from "@/components/WeeklyThoughtRecord";
 import { 
   ArrowLeft, 
   Clock, 
@@ -2579,6 +2580,15 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                           </div>
                         )}
 
+                        {activity.type === 'worksheet' && activity.id === 'thought-record' && (
+                          <div className="mt-6">
+                            <WeeklyThoughtRecord 
+                              moduleId={module?.id || ''} 
+                              weekNumber={weekNumber} 
+                            />
+                          </div>
+                        )}
+
                         {activity.type === 'reading' && activity.id === 'nhs-transition-prep' && (
                           <div className="mt-6">
                             <NhsPrepGuide 
@@ -2623,7 +2633,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                   onChange={(e) => {
                                     const newReflections = {
                                       ...reflections,
-                                      [`${activity.id}-${idx}`]: e.target.value
+                                    [`${activity.id}-${idx}`]: e.target.value
                                     };
                                     setReflections(newReflections);
                                     

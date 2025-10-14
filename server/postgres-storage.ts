@@ -36,6 +36,8 @@ import {
   type InsertProgressReport,
   type ThoughtRecord,
   type InsertThoughtRecord,
+  type WeeklyThoughtRecord,
+  type InsertWeeklyThoughtRecord,
   type MoodEntry,
   type InsertMoodEntry
 } from "@shared/schema";
@@ -239,6 +241,46 @@ export class PostgresStorage implements IStorage {
 
   async deleteThoughtRecord(id: string): Promise<void> {
     await db.delete(schema.thoughtRecords).where(eq(schema.thoughtRecords.id, id));
+  }
+
+  // Weekly thought records (for weekly modules)
+  async createWeeklyThoughtRecord(insertRecord: InsertWeeklyThoughtRecord): Promise<WeeklyThoughtRecord> {
+    const result = await db.insert(schema.weeklyThoughtRecords).values(insertRecord).returning();
+    return result[0];
+  }
+
+  async getWeeklyThoughtRecords(userId: string, moduleId?: string): Promise<WeeklyThoughtRecord[]> {
+    if (moduleId) {
+      return await db.select().from(schema.weeklyThoughtRecords)
+        .where(and(
+          eq(schema.weeklyThoughtRecords.userId, userId),
+          eq(schema.weeklyThoughtRecords.moduleId, moduleId)
+        ))
+        .orderBy(desc(schema.weeklyThoughtRecords.createdAt));
+    } else {
+      return await db.select().from(schema.weeklyThoughtRecords)
+        .where(eq(schema.weeklyThoughtRecords.userId, userId))
+        .orderBy(desc(schema.weeklyThoughtRecords.createdAt));
+    }
+  }
+
+  async getWeeklyThoughtRecord(id: string): Promise<WeeklyThoughtRecord | null> {
+    const result = await db.select().from(schema.weeklyThoughtRecords)
+      .where(eq(schema.weeklyThoughtRecords.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async updateWeeklyThoughtRecord(id: string, updates: Partial<InsertWeeklyThoughtRecord>): Promise<WeeklyThoughtRecord> {
+    const result = await db.update(schema.weeklyThoughtRecords)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(schema.weeklyThoughtRecords.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteWeeklyThoughtRecord(id: string): Promise<void> {
+    await db.delete(schema.weeklyThoughtRecords).where(eq(schema.weeklyThoughtRecords.id, id));
   }
 
   // Mood Entries CRUD operations

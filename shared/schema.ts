@@ -90,6 +90,27 @@ export const thoughtRecords = pgTable("thought_records", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const weeklyThoughtRecords = pgTable("weekly_thought_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  moduleId: varchar("module_id").references(() => anxietyModules.id).notNull(),
+  weekNumber: integer("week_number").notNull(),
+  situation: text("situation").notNull(),
+  emotion: text("emotion").notNull(),
+  intensity: integer("intensity").notNull(), // 1-10 scale
+  physicalSensations: text("physical_sensations"),
+  automaticThought: text("automatic_thought"),
+  evidenceFor: text("evidence_for"),
+  evidenceAgainst: text("evidence_against"),
+  balancedThought: text("balanced_thought"),
+  newEmotion: text("new_emotion"),
+  newIntensity: integer("new_intensity"), // 1-10 scale
+  actionPlan: text("action_plan"),
+  selectedDistortions: jsonb("selected_distortions"), // Array of cognitive distortion names
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const moodEntries = pgTable("mood_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
@@ -182,6 +203,7 @@ export const insertSleepAssessmentSchema = createInsertSchema(sleepAssessments).
 export const insertModuleActivitySchema = createInsertSchema(moduleActivities).omit({ id: true, completedAt: true });
 export const insertProgressReportSchema = createInsertSchema(progressReports).omit({ id: true, generatedAt: true });
 export const insertThoughtRecordSchema = createInsertSchema(thoughtRecords).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertWeeklyThoughtRecordSchema = createInsertSchema(weeklyThoughtRecords).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertAnxietyGuideSchema = createInsertSchema(anxietyGuides).omit({ id: true, createdAt: true, updatedAt: true });
 
@@ -199,6 +221,8 @@ export type ProgressReport = typeof progressReports.$inferSelect;
 export type InsertProgressReport = z.infer<typeof insertProgressReportSchema>;
 export type ThoughtRecord = typeof thoughtRecords.$inferSelect;
 export type InsertThoughtRecord = z.infer<typeof insertThoughtRecordSchema>;
+export type WeeklyThoughtRecord = typeof weeklyThoughtRecords.$inferSelect;
+export type InsertWeeklyThoughtRecord = z.infer<typeof insertWeeklyThoughtRecordSchema>;
 export type MoodEntry = typeof moodEntries.$inferSelect;
 export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;
 export type AnxietyGuide = typeof anxietyGuides.$inferSelect;

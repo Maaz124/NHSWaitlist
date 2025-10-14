@@ -444,6 +444,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Weekly Thought Records API (for weekly modules)
+  app.post("/api/weekly-thought-records", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const { moduleId, weekNumber, situation, emotion, intensity, physicalSensations, automaticThought, evidenceFor, evidenceAgainst, balancedThought, newEmotion, newIntensity, actionPlan, selectedDistortions } = req.body;
+      
+      console.log('[POST /api/weekly-thought-records] userId:', userId, 'moduleId:', moduleId, 'weekNumber:', weekNumber);
+      
+      const thoughtRecord = await storage.createWeeklyThoughtRecord({
+        userId,
+        moduleId,
+        weekNumber,
+        situation,
+        emotion,
+        intensity,
+        physicalSensations,
+        automaticThought,
+        evidenceFor,
+        evidenceAgainst,
+        balancedThought,
+        newEmotion,
+        newIntensity,
+        actionPlan,
+        selectedDistortions
+      });
+
+      res.json(thoughtRecord);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/weekly-thought-records/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { moduleId } = req.query;
+      const thoughtRecords = await storage.getWeeklyThoughtRecords(userId, moduleId as string);
+      res.json(thoughtRecords);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/weekly-thought-records/single/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const thoughtRecord = await storage.getWeeklyThoughtRecord(id);
+      
+      if (!thoughtRecord) {
+        return res.status(404).json({ error: "Weekly thought record not found" });
+      }
+      
+      res.json(thoughtRecord);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/weekly-thought-records/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const thoughtRecord = await storage.updateWeeklyThoughtRecord(id, updates);
+      res.json(thoughtRecord);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/weekly-thought-records/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteWeeklyThoughtRecord(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Mood Entries API
   app.post("/api/mood-entries", requireAuth, async (req, res) => {
     try {

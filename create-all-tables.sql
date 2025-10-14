@@ -202,6 +202,28 @@ CREATE TABLE IF NOT EXISTS thought_records (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Create weekly_thought_records table (for weekly module thought records)
+CREATE TABLE IF NOT EXISTS weekly_thought_records (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    module_id VARCHAR REFERENCES anxiety_modules(id) NOT NULL,
+    week_number INTEGER NOT NULL,
+    situation TEXT NOT NULL,
+    emotion TEXT NOT NULL,
+    intensity INTEGER NOT NULL,
+    physical_sensations TEXT,
+    automatic_thought TEXT,
+    evidence_for TEXT,
+    evidence_against TEXT,
+    balanced_thought TEXT,
+    new_emotion TEXT,
+    new_intensity INTEGER,
+    action_plan TEXT,
+    selected_distortions JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- =====================================================
 -- REPORTING AND ANALYTICS TABLES
 -- =====================================================
