@@ -618,14 +618,25 @@ export default function AnxietyTrack() {
                                 </Button>
                                     ) : null;
                                   })()}
-                                <Link href={`/anxiety-track/module/${module.weekNumber}`}>
-                                  <Button size="sm" data-testid={`button-enter-module-${module.weekNumber}`}>
-                                      {(() => {
-                                        const actualProgress = getActualProgress(module);
-                                        return actualProgress.activitiesCompleted >= module.activitiesTotal ? "Review Module" : "Enter Module";
-                                      })()}
-                                  </Button>
-                                </Link>
+                                <Button 
+                                  size="sm" 
+                                  data-testid={`button-enter-module-${module.weekNumber}`}
+                                  onClick={() => {
+                                    // If user hasn't paid, redirect to pricing
+                                    if (!(user as any)?.hasPaid) {
+                                      setLocation('/pricing');
+                                      return;
+                                    }
+                                    
+                                    // If user has paid, allow access to module
+                                    setLocation(`/anxiety-track/module/${module.weekNumber}`);
+                                  }}
+                                >
+                                  {(() => {
+                                    const actualProgress = getActualProgress(module);
+                                    return actualProgress.activitiesCompleted >= module.activitiesTotal ? "Review Module" : "Enter Module";
+                                  })()}
+                                </Button>
                               </>
                             )}
                             

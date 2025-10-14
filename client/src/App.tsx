@@ -14,6 +14,7 @@ import Resources from "@/pages/resources";
 import Settings from "@/pages/settings";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
+import Pricing from "@/pages/pricing";
 
 const ModuleDetail = lazy(() => import("@/pages/module-detail"));
 
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
+      <Route path="/pricing" component={Pricing} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -7,6 +7,7 @@ interface User {
   lastName: string;
   email: string;
   nhsNumber?: string;
+  hasPaid?: boolean;
   createdAt: string;
 }
 

@@ -3,6 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertOnboardingResponseSchema, insertWeeklyAssessmentSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
+import Stripe from "stripe";
+
+// Initialize Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2024-06-20",
+});
 
 function requireAuth(req: any, res: any, next: any) {
   if (!req.session || !req.session.userId) {
@@ -746,6 +752,370 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: error.message });
     }
   });
+
+  // Payment Plans API
+  app.get("/api/payment-plans", async (req, res) => {
+    try {
+      const plans = await storage.getPaymentPlans();
+      res.json({ plans });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/payment-plans/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const plan = await storage.getPaymentPlan(id);
+      
+      if (!plan) {
+        return res.status(404).json({ error: "Payment plan not found" });
+      }
+      
+      res.json({ plan });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Stripe Checkout Session
+  app.post("/api/payments/create-checkout-session", requireAuth, async (req, res) => {
+    try {
+      const { planId, successUrl, cancelUrl } = req.body;
+      const userId = req.session.userId;
+      
+      if (!planId || !successUrl || !cancelUrl) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Get the payment plan
+      const plan = await storage.getPaymentPlan(planId);
+      if (!plan) {
+        return res.status(404).json({ error: "Payment plan not found" });
+      }
+
+      // Get user info
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Create or get Stripe customer
+      let customerId: string;
+      const existingSubscriptions = await storage.getUserSubscriptions(userId);
+      const existingSubscription = existingSubscriptions.find(sub => sub.stripeCustomerId);
+      
+      if (existingSubscription?.stripeCustomerId) {
+        customerId = existingSubscription.stripeCustomerId;
+      } else {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          name: `${user.firstName} ${user.lastName}`,
+          metadata: {
+            userId: userId,
+          },
+        });
+        customerId = customer.id;
+      }
+
+      // Create checkout session
+      const sessionParams: Stripe.Checkout.SessionCreateParams = {
+        customer: customerId,
+        payment_method_types: ['card'],
+        mode: plan.intervalType === 'one_time' ? 'payment' : 'subscription',
+        line_items: [
+          {
+            price_data: {
+              currency: plan.currency,
+              product_data: {
+                name: plan.name,
+                description: plan.description,
+              },
+              unit_amount: plan.priceAmount,
+              ...(plan.intervalType !== 'one_time' && {
+                recurring: {
+                  interval: plan.intervalType === 'month' ? 'month' : 'year',
+                  interval_count: plan.intervalCount,
+                },
+              }),
+            },
+            quantity: 1,
+          },
+        ],
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        metadata: {
+          userId: userId,
+          planId: planId,
+        },
+      };
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
+      
+      res.json({ sessionId: session.id, url: session.url });
+    } catch (error: any) {
+      console.error('Stripe checkout error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // User Subscriptions API
+  app.get("/api/subscriptions/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const subscriptions = await storage.getUserSubscriptions(userId);
+      res.json({ subscriptions });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/subscriptions/active/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const subscriptions = await storage.getUserSubscriptions(userId);
+      const activeSubscription = subscriptions.find(sub => sub.status === 'active');
+      res.json({ subscription: activeSubscription });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Payment Transactions API
+  app.get("/api/payments/transactions/:userId", requireAuth, validateUserAccess, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const transactions = await storage.getPaymentTransactions(userId);
+      res.json({ transactions });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Simple payment status update endpoint
+  app.post("/api/payments/update-status", requireAuth, async (req, res) => {
+    try {
+      const currentUserId = req.session.userId;
+      
+      if (!currentUserId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      // Simply mark user as paid using session userId
+      await storage.markUserAsPaid(currentUserId);
+
+      console.log(`✅ Payment status updated for user ${currentUserId}`);
+      res.json({ 
+        success: true, 
+        message: "Payment status updated successfully"
+      });
+    } catch (error: any) {
+      console.error('Payment status update error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Manual payment verification (for testing/admin use)
+  app.post("/api/payments/manual-verify", requireAuth, async (req, res) => {
+    try {
+      const { userId, amount = 14900, description = "Manual payment verification" } = req.body;
+      const currentUserId = req.session.userId;
+      
+      // For now, allow any authenticated user to verify their own payment
+      // In production, you'd want admin-only access
+      const targetUserId = userId || currentUserId;
+      
+      if (targetUserId !== currentUserId) {
+        return res.status(403).json({ error: "Can only verify your own payments" });
+      }
+
+      // Create a manual payment transaction
+      const transaction = await storage.createPaymentTransaction({
+        userId: targetUserId,
+        amount: amount,
+        currency: 'usd',
+        status: 'succeeded',
+        paymentMethod: 'manual',
+        description: description,
+        metadata: { verified_by: currentUserId, verified_at: new Date().toISOString() }
+      });
+
+      // Mark user as paid
+      await storage.markUserAsPaid(targetUserId);
+
+      console.log(`✅ Manual payment verification for user ${targetUserId}:`, transaction);
+      res.json({ 
+        success: true, 
+        message: "Payment verified successfully",
+        transaction 
+      });
+    } catch (error: any) {
+      console.error('Manual payment verification error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Stripe Webhook
+  app.post("/api/webhooks/stripe", async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!sig || !webhookSecret) {
+      return res.status(400).json({ error: "Missing signature or webhook secret" });
+    }
+
+    let event: Stripe.Event;
+
+    try {
+      // Verify webhook signature
+      event = stripe.webhooks.constructEvent(req.rawBody || req.body, sig, webhookSecret);
+    } catch (err: any) {
+      console.error('Webhook signature verification failed:', err.message);
+      return res.status(400).json({ error: "Invalid signature" });
+    }
+
+    try {
+      console.log('Received Stripe webhook:', event.type);
+
+      switch (event.type) {
+        case 'checkout.session.completed':
+          await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+          break;
+
+        case 'customer.subscription.created':
+        case 'customer.subscription.updated':
+          await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+          break;
+
+        case 'customer.subscription.deleted':
+          await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+          break;
+
+        case 'invoice.payment_succeeded':
+          await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+          break;
+
+        case 'invoice.payment_failed':
+          await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+          break;
+
+        default:
+          console.log(`Unhandled event type: ${event.type}`);
+      }
+
+      res.json({ received: true });
+    } catch (error: any) {
+      console.error('Webhook handler error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Webhook handlers
+  async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+    const userId = session.metadata?.userId;
+    const planId = session.metadata?.planId;
+
+    if (!userId || !planId) {
+      console.error('Missing metadata in checkout session:', session.id);
+      return;
+    }
+
+    console.log(`Processing checkout session completion for user ${userId}, plan ${planId}`);
+
+    if (session.mode === 'subscription' && session.subscription) {
+      // Handle subscription
+      const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      await storage.createUserSubscription({
+        userId,
+        planId,
+        stripeSubscriptionId: subscription.id,
+        stripeCustomerId: session.customer as string,
+        status: subscription.status,
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : undefined,
+        trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
+      });
+      // Mark user as paid for subscription
+      await storage.markUserAsPaid(userId);
+    } else if (session.mode === 'payment') {
+      // Handle one-time payment
+      await storage.createPaymentTransaction({
+        userId,
+        stripePaymentIntentId: session.payment_intent as string,
+        amount: session.amount_total || 0,
+        currency: session.currency || 'usd',
+        status: 'succeeded',
+        paymentMethod: 'card',
+        description: session.metadata?.description || 'One-time payment',
+      });
+      // Mark user as paid for one-time payment
+      await storage.markUserAsPaid(userId);
+    }
+  }
+
+  async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+    const existingSubscription = await storage.getUserSubscriptionByStripeId(subscription.id);
+    
+    if (existingSubscription) {
+      await storage.updateUserSubscription(existingSubscription.id, {
+        status: subscription.status,
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      });
+    }
+  }
+
+  async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+    const existingSubscription = await storage.getUserSubscriptionByStripeId(subscription.id);
+    
+    if (existingSubscription) {
+      await storage.updateUserSubscription(existingSubscription.id, {
+        status: 'canceled',
+      });
+    }
+  }
+
+  async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
+    if (invoice.subscription && invoice.payment_intent) {
+      const existingSubscription = await storage.getUserSubscriptionByStripeId(invoice.subscription as string);
+      
+      if (existingSubscription) {
+        await storage.createPaymentTransaction({
+          userId: existingSubscription.userId,
+          subscriptionId: existingSubscription.id,
+          stripePaymentIntentId: invoice.payment_intent as string,
+          stripeInvoiceId: invoice.id,
+          amount: invoice.amount_paid,
+          currency: invoice.currency,
+          status: 'succeeded',
+          paymentMethod: 'card',
+          description: `Subscription payment - ${invoice.description || 'Monthly subscription'}`,
+        });
+      }
+    }
+  }
+
+  async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+    if (invoice.subscription && invoice.payment_intent) {
+      const existingSubscription = await storage.getUserSubscriptionByStripeId(invoice.subscription as string);
+      
+      if (existingSubscription) {
+        await storage.createPaymentTransaction({
+          userId: existingSubscription.userId,
+          subscriptionId: existingSubscription.id,
+          stripePaymentIntentId: invoice.payment_intent as string,
+          stripeInvoiceId: invoice.id,
+          amount: invoice.amount_due,
+          currency: invoice.currency,
+          status: 'failed',
+          paymentMethod: 'card',
+          description: `Failed subscription payment - ${invoice.description || 'Monthly subscription'}`,
+        });
+      }
+    }
+  }
 
   const httpServer = createServer(app);
   return httpServer;

@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     nhs_number TEXT,
+    has_paid BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -220,6 +221,67 @@ CREATE TABLE IF NOT EXISTS weekly_thought_records (
     new_intensity INTEGER,
     action_plan TEXT,
     selected_distortions JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- =====================================================
+-- STRIPE PAYMENT TABLES
+-- =====================================================
+
+-- Create payment_plans table
+CREATE TABLE IF NOT EXISTS payment_plans (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    description TEXT,
+    price_amount INTEGER NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    interval_type VARCHAR(20) NOT NULL, -- 'one_time', 'month', 'year'
+    interval_count INTEGER DEFAULT 1,
+    stripe_price_id VARCHAR,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create user_subscriptions table
+CREATE TABLE IF NOT EXISTS user_subscriptions (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    plan_id VARCHAR REFERENCES payment_plans(id) NOT NULL,
+    stripe_subscription_id VARCHAR UNIQUE,
+    stripe_customer_id VARCHAR NOT NULL,
+    status VARCHAR(20) DEFAULT 'active', -- 'active', 'canceled', 'past_due', etc.
+    current_period_start TIMESTAMP,
+    current_period_end TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create payment_transactions table
+CREATE TABLE IF NOT EXISTS payment_transactions (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    subscription_id VARCHAR REFERENCES user_subscriptions(id),
+    stripe_payment_intent_id VARCHAR UNIQUE,
+    amount INTEGER NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    status VARCHAR(20) NOT NULL, -- 'succeeded', 'failed', 'pending', etc.
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create user_payment_methods table
+CREATE TABLE IF NOT EXISTS user_payment_methods (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    stripe_payment_method_id VARCHAR UNIQUE NOT NULL,
+    type VARCHAR(20) NOT NULL, -- 'card', 'bank_account', etc.
+    card_last_four VARCHAR(4),
+    card_brand VARCHAR(20),
+    card_exp_month INTEGER,
+    card_exp_year INTEGER,
+    is_default BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );

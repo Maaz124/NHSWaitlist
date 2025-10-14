@@ -39,7 +39,15 @@ import {
   type WeeklyThoughtRecord,
   type InsertWeeklyThoughtRecord,
   type MoodEntry,
-  type InsertMoodEntry
+  type InsertMoodEntry,
+  type PaymentPlan,
+  type InsertPaymentPlan,
+  type UserSubscription,
+  type InsertUserSubscription,
+  type PaymentTransaction,
+  type InsertPaymentTransaction,
+  type UserPaymentMethod,
+  type InsertUserPaymentMethod
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -62,6 +70,15 @@ export class PostgresStorage implements IStorage {
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
     const result = await db.update(schema.users).set(updates).where(eq(schema.users.id, id)).returning();
+    if (result.length === 0) throw new Error("User not found");
+    return result[0];
+  }
+
+  async markUserAsPaid(userId: string): Promise<User> {
+    const result = await db.update(schema.users)
+      .set({ hasPaid: true })
+      .where(eq(schema.users.id, userId))
+      .returning();
     if (result.length === 0) throw new Error("User not found");
     return result[0];
   }
@@ -667,5 +684,132 @@ export class PostgresStorage implements IStorage {
         throw error;
       }
     }
+  }
+
+  // Payment Plans
+  async createPaymentPlan(insertPlan: InsertPaymentPlan): Promise<PaymentPlan> {
+    const result = await db.insert(schema.paymentPlans).values(insertPlan).returning();
+    return result[0];
+  }
+
+  async getPaymentPlans(): Promise<PaymentPlan[]> {
+    return await db.select().from(schema.paymentPlans)
+      .where(eq(schema.paymentPlans.isActive, true))
+      .orderBy(schema.paymentPlans.priceAmount);
+  }
+
+  async getPaymentPlan(id: string): Promise<PaymentPlan | null> {
+    const result = await db.select().from(schema.paymentPlans)
+      .where(eq(schema.paymentPlans.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  // User Subscriptions
+  async createUserSubscription(insertSubscription: InsertUserSubscription): Promise<UserSubscription> {
+    const processedSubscription = safeParseDates(insertSubscription, ['currentPeriodStart', 'currentPeriodEnd', 'trialStart', 'trialEnd']);
+    const result = await db.insert(schema.userSubscriptions).values(processedSubscription).returning();
+    return result[0];
+  }
+
+  async getUserSubscriptions(userId: string): Promise<UserSubscription[]> {
+    return await db.select().from(schema.userSubscriptions)
+      .where(eq(schema.userSubscriptions.userId, userId))
+      .orderBy(desc(schema.userSubscriptions.createdAt));
+  }
+
+  async getUserSubscription(id: string): Promise<UserSubscription | null> {
+    const result = await db.select().from(schema.userSubscriptions)
+      .where(eq(schema.userSubscriptions.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async getUserSubscriptionByStripeId(stripeSubscriptionId: string): Promise<UserSubscription | null> {
+    const result = await db.select().from(schema.userSubscriptions)
+      .where(eq(schema.userSubscriptions.stripeSubscriptionId, stripeSubscriptionId))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async updateUserSubscription(id: string, updates: Partial<UserSubscription>): Promise<UserSubscription> {
+    const processedUpdates = safeParseDates(updates, ['currentPeriodStart', 'currentPeriodEnd', 'trialStart', 'trialEnd']);
+    const result = await db.update(schema.userSubscriptions)
+      .set({ ...processedUpdates, updatedAt: new Date() })
+      .where(eq(schema.userSubscriptions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Payment Transactions
+  async createPaymentTransaction(insertTransaction: InsertPaymentTransaction): Promise<PaymentTransaction> {
+    const result = await db.insert(schema.paymentTransactions).values(insertTransaction).returning();
+    return result[0];
+  }
+
+  async getPaymentTransactions(userId: string): Promise<PaymentTransaction[]> {
+    return await db.select().from(schema.paymentTransactions)
+      .where(eq(schema.paymentTransactions.userId, userId))
+      .orderBy(desc(schema.paymentTransactions.createdAt));
+  }
+
+  async getPaymentTransaction(id: string): Promise<PaymentTransaction | null> {
+    const result = await db.select().from(schema.paymentTransactions)
+      .where(eq(schema.paymentTransactions.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async getPaymentTransactionByStripeId(stripePaymentIntentId: string): Promise<PaymentTransaction | null> {
+    const result = await db.select().from(schema.paymentTransactions)
+      .where(eq(schema.paymentTransactions.stripePaymentIntentId, stripePaymentIntentId))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async updatePaymentTransaction(id: string, updates: Partial<PaymentTransaction>): Promise<PaymentTransaction> {
+    const result = await db.update(schema.paymentTransactions)
+      .set(updates)
+      .where(eq(schema.paymentTransactions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // User Payment Methods
+  async createUserPaymentMethod(insertPaymentMethod: InsertUserPaymentMethod): Promise<UserPaymentMethod> {
+    const result = await db.insert(schema.userPaymentMethods).values(insertPaymentMethod).returning();
+    return result[0];
+  }
+
+  async getUserPaymentMethods(userId: string): Promise<UserPaymentMethod[]> {
+    return await db.select().from(schema.userPaymentMethods)
+      .where(eq(schema.userPaymentMethods.userId, userId))
+      .orderBy(desc(schema.userPaymentMethods.createdAt));
+  }
+
+  async getUserPaymentMethod(id: string): Promise<UserPaymentMethod | null> {
+    const result = await db.select().from(schema.userPaymentMethods)
+      .where(eq(schema.userPaymentMethods.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async getUserPaymentMethodByStripeId(stripePaymentMethodId: string): Promise<UserPaymentMethod | null> {
+    const result = await db.select().from(schema.userPaymentMethods)
+      .where(eq(schema.userPaymentMethods.stripePaymentMethodId, stripePaymentMethodId))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async updateUserPaymentMethod(id: string, updates: Partial<UserPaymentMethod>): Promise<UserPaymentMethod> {
+    const result = await db.update(schema.userPaymentMethods)
+      .set(updates)
+      .where(eq(schema.userPaymentMethods.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteUserPaymentMethod(id: string): Promise<void> {
+    await db.delete(schema.userPaymentMethods).where(eq(schema.userPaymentMethods.id, id));
   }
 }

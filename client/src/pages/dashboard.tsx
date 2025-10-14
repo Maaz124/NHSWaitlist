@@ -20,10 +20,72 @@ import heroImage from "@assets/generated_images/peaceful_mental_health_hero_ce9d
 import supportImage from "@assets/generated_images/supportive_community_wellness_46a91c38.png";
 import wellnessImage from "@assets/generated_images/mindful_breathing_wellness_a8cd19ea.png";
 import { Footer } from "@/components/ui/footer";
+import { PaymentStatus } from "@/components/PaymentStatus";
+import { PaymentSuccessModal, PaymentCanceledModal } from "@/components/PaymentModals";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { user, isLoading: userLoading, isAuthenticated } = useUser();
+  const { toast } = useToast();
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [showPaymentCanceled, setShowPaymentCanceled] = useState(false);
+
+  // Handle payment success/cancel from URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const payment = urlParams.get('payment');
+    
+    if (payment === 'success') {
+      console.log('🎉 Payment success detected!');
+      
+      // Update user's payment status directly
+      const updatePaymentStatus = async () => {
+        try {
+          console.log('🔄 Updating payment status for user:', user?.id);
+          
+          // Call the simple update-status endpoint to update the database
+          const response = await fetch('/api/payments/update-status', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            console.log('✅ Payment status updated successfully');
+            // Show success modal
+            setShowPaymentSuccess(true);
+            // Clean up URL
+            window.history.replaceState({}, '', '/');
+            // Reload page after showing modal briefly
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          } else {
+            console.error('❌ Failed to update payment status:', response.status);
+            // Still show success modal even if database update fails
+            setShowPaymentSuccess(true);
+            window.history.replaceState({}, '', '/');
+          }
+        } catch (error) {
+          console.error('❌ Error updating payment status:', error);
+          // Still show success modal even if there's an error
+          setShowPaymentSuccess(true);
+          window.history.replaceState({}, '', '/');
+        }
+      };
+
+      // Execute the update
+      updatePaymentStatus();
+      
+    } else if (payment === 'canceled') {
+      setShowPaymentCanceled(true);
+      // Clean up URL
+      window.history.replaceState({}, '', '/');
+    }
+  }, [user?.id]);
 
   // Redirect if not authenticated or onboarding not completed
   useEffect(() => {
@@ -32,6 +94,8 @@ export default function Dashboard() {
       setLocation("/login");
       return;
     }
+    
+    // Note: Users can freely use the dashboard, payment check only happens when clicking anxiety modules
     
     // Check if user has completed onboarding
     if (user?.id) {
@@ -137,6 +201,17 @@ export default function Dashboard() {
     
     // Show success feedback (in real app, use toast)
     alert("Mood logged successfully!");
+  };
+
+  const handleModuleClick = (weekNumber: number) => {
+    // If user hasn't paid, redirect to pricing
+    if (!(user as any)?.hasPaid) {
+      setLocation('/pricing');
+      return;
+    }
+    
+    // If user has paid, allow access to modules
+    setLocation(`/anxiety-track/module/${weekNumber}`);
   };
 
   const handleBreathingExercise = () => {
@@ -261,6 +336,11 @@ export default function Dashboard() {
             </Card>
           </div>
 
+          {/* Payment Status */}
+          <div className="mb-8">
+            <PaymentStatus user={user} />
+          </div>
+
           {/* Progress Overview */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* 6-Week Progress */}
@@ -285,11 +365,12 @@ export default function Dashboard() {
                       <div 
                         key={module.id}
                         className={cn(
-                          "flex items-center p-3 rounded-md",
+                          "flex items-center p-3 rounded-md cursor-pointer hover:bg-accent/5 transition-colors",
                           isCompleted && "bg-accent/10",
                           isInProgress && "bg-primary/10 border-l-4 border-primary",
                           module.isLocked && "bg-muted opacity-60"
                         )}
+                        onClick={() => handleModuleClick(module.weekNumber)}
                       >
                         <div className="mr-3">
                           {isCompleted ? (
@@ -325,15 +406,13 @@ export default function Dashboard() {
                           )}
                         </div>
                         {(isCompleted || isInProgress) && (
-                          <Link href={`/anxiety-track/module/${module.weekNumber}`}>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              data-testid={`button-${isCompleted ? 'review' : 'continue'}-module-${module.weekNumber}`}
-                            >
-                              {isCompleted ? "Review" : "Continue"}
-                            </Button>
-                          </Link>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            data-testid={`button-${isCompleted ? 'review' : 'continue'}-module-${module.weekNumber}`}
+                          >
+                            {isCompleted ? "Review" : "Continue"}
+                          </Button>
                         )}
                       </div>
                     );
@@ -797,6 +876,21 @@ export default function Dashboard() {
       </main>
 
       <Footer />
+      
+      {/* Payment Modals */}
+      <PaymentSuccessModal 
+        isOpen={showPaymentSuccess} 
+        onClose={() => setShowPaymentSuccess(false)} 
+      />
+      
+      <PaymentCanceledModal 
+        isOpen={showPaymentCanceled} 
+        onClose={() => setShowPaymentCanceled(false)}
+        onRetry={() => {
+          setShowPaymentCanceled(false);
+          setLocation('/pricing');
+        }}
+      />
     </div>
   );
 }

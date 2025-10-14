@@ -6,13 +6,14 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
-    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-    first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL,
-    nhs_number TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  password TEXT NOT NULL,
+  nhs_number TEXT,
+  has_paid BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Create onboarding_responses table
@@ -204,6 +205,70 @@ CREATE TABLE IF NOT EXISTS lifestyle_assessments (
     progress_data JSONB,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create payment_plans table
+CREATE TABLE IF NOT EXISTS payment_plans (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    description TEXT,
+    price_amount INTEGER NOT NULL,
+    currency VARCHAR(3) DEFAULT 'usd',
+    interval_type VARCHAR(20),
+    interval_count INTEGER DEFAULT 1,
+    stripe_price_id VARCHAR,
+    stripe_product_id VARCHAR,
+    is_active BOOLEAN DEFAULT TRUE,
+    features JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create user_subscriptions table
+CREATE TABLE IF NOT EXISTS user_subscriptions (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    plan_id VARCHAR REFERENCES payment_plans(id) NOT NULL,
+    stripe_subscription_id VARCHAR UNIQUE,
+    stripe_customer_id VARCHAR,
+    status VARCHAR(20) NOT NULL,
+    current_period_start TIMESTAMP,
+    current_period_end TIMESTAMP,
+    cancel_at_period_end BOOLEAN DEFAULT FALSE,
+    trial_start TIMESTAMP,
+    trial_end TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create payment_transactions table
+CREATE TABLE IF NOT EXISTS payment_transactions (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    subscription_id VARCHAR REFERENCES user_subscriptions(id),
+    stripe_payment_intent_id VARCHAR UNIQUE,
+    stripe_invoice_id VARCHAR,
+    amount INTEGER NOT NULL,
+    currency VARCHAR(3) DEFAULT 'usd',
+    status VARCHAR(20) NOT NULL,
+    payment_method VARCHAR(50),
+    description TEXT,
+    metadata JSONB,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create user_payment_methods table
+CREATE TABLE IF NOT EXISTS user_payment_methods (
+    id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR REFERENCES users(id) NOT NULL,
+    stripe_payment_method_id VARCHAR UNIQUE,
+    type VARCHAR(20) NOT NULL,
+    card_brand VARCHAR(20),
+    card_last4 VARCHAR(4),
+    card_exp_month INTEGER,
+    card_exp_year INTEGER,
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Create health_check table (if not exists)

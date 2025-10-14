@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   nhsNumber: text("nhs_number"),
+  hasPaid: boolean("has_paid").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -194,6 +195,67 @@ export const lifestyleAssessments = pgTable("lifestyle_assessments", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Billing tables for Stripe integration
+export const paymentPlans = pgTable("payment_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  priceAmount: integer("price_amount").notNull(), // amount in smallest unit (e.g., cents)
+  currency: varchar("currency", { length: 3 }).default("usd"),
+  intervalType: varchar("interval_type", { length: 20 }), // 'month' | 'year' | 'one_time'
+  intervalCount: integer("interval_count").default(1),
+  stripePriceId: varchar("stripe_price_id"),
+  stripeProductId: varchar("stripe_product_id"),
+  isActive: boolean("is_active").default(true),
+  features: jsonb("features"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  planId: varchar("plan_id").references(() => paymentPlans.id).notNull(),
+  stripeSubscriptionId: varchar("stripe_subscription_id").unique(),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  status: varchar("status", { length: 20 }).notNull(), // 'active' | 'canceled' | 'past_due' | 'incomplete'
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  trialStart: timestamp("trial_start"),
+  trialEnd: timestamp("trial_end"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const paymentTransactions = pgTable("payment_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  subscriptionId: varchar("subscription_id").references(() => userSubscriptions.id),
+  stripePaymentIntentId: varchar("stripe_payment_intent_id").unique(),
+  stripeInvoiceId: varchar("stripe_invoice_id"),
+  amount: integer("amount").notNull(),
+  currency: varchar("currency", { length: 3 }).default("usd"),
+  status: varchar("status", { length: 20 }).notNull(), // 'succeeded' | 'failed' | 'processing'
+  paymentMethod: varchar("payment_method", { length: 50 }),
+  description: text("description"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userPaymentMethods = pgTable("user_payment_methods", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  stripePaymentMethodId: varchar("stripe_payment_method_id").unique(),
+  type: varchar("type", { length: 20 }).notNull(), // 'card' | 'bank_account'
+  cardBrand: varchar("card_brand", { length: 20 }),
+  cardLast4: varchar("card_last4", { length: 4 }),
+  cardExpMonth: integer("card_exp_month"),
+  cardExpYear: integer("card_exp_year"),
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertOnboardingResponseSchema = createInsertSchema(onboardingResponses).omit({ id: true, completedAt: true });
 export const insertWeeklyAssessmentSchema = createInsertSchema(weeklyAssessments).omit({ id: true, completedAt: true });
@@ -206,6 +268,10 @@ export const insertThoughtRecordSchema = createInsertSchema(thoughtRecords).omit
 export const insertWeeklyThoughtRecordSchema = createInsertSchema(weeklyThoughtRecords).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertAnxietyGuideSchema = createInsertSchema(anxietyGuides).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPaymentPlanSchema = createInsertSchema(paymentPlans).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPaymentTransactionSchema = createInsertSchema(paymentTransactions).omit({ id: true, createdAt: true });
+export const insertUserPaymentMethodSchema = createInsertSchema(userPaymentMethods).omit({ id: true, createdAt: true });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -231,3 +297,11 @@ export type SleepAssessment = typeof sleepAssessments.$inferSelect;
 export type InsertSleepAssessment = z.infer<typeof insertSleepAssessmentSchema>;
 export type LifestyleAssessment = typeof lifestyleAssessments.$inferSelect;
 export type InsertLifestyleAssessment = z.infer<typeof insertLifestyleAssessmentSchema>;
+export type PaymentPlan = typeof paymentPlans.$inferSelect;
+export type InsertPaymentPlan = z.infer<typeof insertPaymentPlanSchema>;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema>;
+export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
+export type InsertPaymentTransaction = z.infer<typeof insertPaymentTransactionSchema>;
+export type UserPaymentMethod = typeof userPaymentMethods.$inferSelect;
+export type InsertUserPaymentMethod = z.infer<typeof insertUserPaymentMethodSchema>;

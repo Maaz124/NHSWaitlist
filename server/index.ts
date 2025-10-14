@@ -8,7 +8,14 @@ import createMemoryStore from "memorystore";
 const MemoryStore = createMemoryStore(session);
 
 const app = express();
-app.use(express.json());
+// Use a custom verifier to preserve the raw body for Stripe webhooks
+app.use(express.json({
+  verify: (req: any, _res, buf) => {
+    if (req.originalUrl && req.originalUrl.startsWith("/api/webhooks/stripe")) {
+      req.rawBody = buf;
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: false }));
 
 // Session middleware (dev-friendly, in-memory persisted store)

@@ -46,6 +46,13 @@ export function Header({ user }: HeaderProps) {
           </div>
           
           <div className="flex items-center space-x-4">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setLocation('/pricing')}
+            >
+              Pricing
+            </Button>
             <CrisisButton />
             
             {/* Only show user profile dropdown if user is logged in and not on login/signup page */}
