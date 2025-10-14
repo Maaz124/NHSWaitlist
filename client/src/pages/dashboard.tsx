@@ -59,7 +59,7 @@ export default function Dashboard() {
             setShowPaymentSuccess(true);
             // Clean up URL
             window.history.replaceState({}, '', '/');
-            // Reload page after showing modal briefly
+            // Reload page after showing modal briefly to refresh user data
             setTimeout(() => {
               window.location.reload();
             }, 2000);

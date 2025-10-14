@@ -235,11 +235,13 @@ CREATE TABLE IF NOT EXISTS payment_plans (
     name TEXT NOT NULL,
     description TEXT,
     price_amount INTEGER NOT NULL,
-    currency VARCHAR(3) DEFAULT 'USD',
-    interval_type VARCHAR(20) NOT NULL, -- 'one_time', 'month', 'year'
+    currency VARCHAR(3) DEFAULT 'usd',
+    interval_type VARCHAR(20),
     interval_count INTEGER DEFAULT 1,
     stripe_price_id VARCHAR,
+    stripe_product_id VARCHAR,
     is_active BOOLEAN DEFAULT TRUE,
+    features JSONB,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -254,6 +256,9 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
     status VARCHAR(20) DEFAULT 'active', -- 'active', 'canceled', 'past_due', etc.
     current_period_start TIMESTAMP,
     current_period_end TIMESTAMP,
+    cancel_at_period_end BOOLEAN DEFAULT FALSE,
+    trial_start TIMESTAMP,
+    trial_end TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -264,11 +269,14 @@ CREATE TABLE IF NOT EXISTS payment_transactions (
     user_id VARCHAR REFERENCES users(id) NOT NULL,
     subscription_id VARCHAR REFERENCES user_subscriptions(id),
     stripe_payment_intent_id VARCHAR UNIQUE,
+    stripe_invoice_id VARCHAR,
     amount INTEGER NOT NULL,
-    currency VARCHAR(3) DEFAULT 'USD',
-    status VARCHAR(20) NOT NULL, -- 'succeeded', 'failed', 'pending', etc.
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    currency VARCHAR(3) DEFAULT 'usd',
+    status VARCHAR(20) NOT NULL, -- 'succeeded', 'failed', 'processing', etc.
+    payment_method VARCHAR(50),
+    description TEXT,
+    metadata JSONB,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Create user_payment_methods table
@@ -277,13 +285,12 @@ CREATE TABLE IF NOT EXISTS user_payment_methods (
     user_id VARCHAR REFERENCES users(id) NOT NULL,
     stripe_payment_method_id VARCHAR UNIQUE NOT NULL,
     type VARCHAR(20) NOT NULL, -- 'card', 'bank_account', etc.
-    card_last_four VARCHAR(4),
     card_brand VARCHAR(20),
+    card_last4 VARCHAR(4),
     card_exp_month INTEGER,
     card_exp_year INTEGER,
     is_default BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- =====================================================

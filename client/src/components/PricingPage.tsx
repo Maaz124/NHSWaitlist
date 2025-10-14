@@ -51,7 +51,7 @@ export function PricingPage() {
         body: JSON.stringify({
           planId,
           successUrl: `${window.location.protocol}//${window.location.host}/?payment=success`,
-          cancelUrl: `${window.location.protocol}//${window.location.host}/pricing?payment=canceled`,
+          cancelUrl: `${window.location.protocol}//${window.location.host}/?payment=canceled`,
         }),
       });
 

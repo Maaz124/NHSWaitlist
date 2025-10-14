@@ -10,6 +10,7 @@ interface HeaderProps {
     firstName: string;
     lastName: string;
     email: string;
+    hasPaid?: boolean;
   };
 }
 
@@ -46,13 +47,16 @@ export function Header({ user }: HeaderProps) {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setLocation('/pricing')}
-            >
-              Pricing
-            </Button>
+            {/* Only show Pricing button if user is logged in and hasn't paid */}
+            {activeUser && activeUser.email && !(activeUser as any)?.hasPaid && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setLocation('/pricing')}
+              >
+                Pricing
+              </Button>
+            )}
             <CrisisButton />
             
             {/* Only show user profile dropdown if user is logged in and not on login/signup page */}

@@ -82,8 +82,15 @@ export function PaymentStatus({ user }: { user: User }) {
     },
   });
 
-  // Check if user has any successful payments
+  // Check if user has any successful payments OR if hasPaid flag is true
   useEffect(() => {
+    // First check if user has paid flag is set
+    if (user?.hasPaid === true) {
+      setHasPaid(true);
+      return;
+    }
+    
+    // Then check for successful transactions
     if (transactions.length > 0) {
       const hasSuccessfulPayment = transactions.some(
         (transaction: PaymentTransaction) => transaction.status === 'succeeded'
@@ -92,7 +99,7 @@ export function PaymentStatus({ user }: { user: User }) {
     } else {
       setHasPaid(false);
     }
-  }, [transactions]);
+  }, [transactions, user?.hasPaid]);
 
   const formatPrice = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
