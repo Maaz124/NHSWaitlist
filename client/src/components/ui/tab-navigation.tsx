@@ -1,8 +1,9 @@
-import { Activity, Brain, ClipboardCheck, BriefcaseMedical, Settings } from "lucide-react";
+import { Activity, Brain, ClipboardCheck, BriefcaseMedical, Settings, CreditCard } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/contexts/UserContext";
 
-const tabs = [
+const baseTabs = [
   { id: "dashboard", label: "Dashboard", icon: Activity, path: "/" },
   { id: "anxiety-track", label: "Anxiety Support", icon: Brain, path: "/anxiety-track" },
   { id: "check-ins", label: "Check-ins", icon: ClipboardCheck, path: "/check-ins" },
@@ -12,6 +13,10 @@ const tabs = [
 
 export function TabNavigation() {
   const [location] = useLocation();
+  const { user } = useUser();
+  const tabs = user && !(user as any)?.hasPaid
+    ? [...baseTabs, { id: "pricing", label: "Pricing", icon: CreditCard, path: "/pricing" }]
+    : baseTabs;
 
   return (
     <div className="bg-card border-b border-border">

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { CheckCircle, XCircle, Loader2, CreditCard, TestTube } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, CreditCard } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface User {
@@ -43,44 +43,7 @@ export function PaymentStatus({ user }: { user: User }) {
     }
   });
 
-  // Manual payment verification mutation (for testing)
-  const verifyPaymentMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch('/api/payments/manual-verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          userId: user.id,
-          amount: 14900,
-          description: 'Test payment verification'
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to verify payment');
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Payment Verified!",
-        description: "Your payment has been manually verified for testing purposes.",
-        variant: "default",
-      });
-      refetch(); // Refresh the payment status
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to verify payment. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  // Removed manual payment verification (test) button and mutation
 
   // Check if user has any successful payments OR if hasPaid flag is true
   useEffect(() => {
@@ -205,17 +168,7 @@ export function PaymentStatus({ user }: { user: User }) {
                 Upgrade to Full Access
               </Button>
               
-              {/* Test button for manual payment verification */}
-              <Button
-                onClick={() => verifyPaymentMutation.mutate()}
-                disabled={verifyPaymentMutation.isPending}
-                variant="outline"
-                size="sm"
-                className="w-full text-xs"
-              >
-                <TestTube className="h-3 w-3 mr-1" />
-                {verifyPaymentMutation.isPending ? 'Verifying...' : 'Test: Verify Payment'}
-              </Button>
+              
             </div>
           </div>
         )}

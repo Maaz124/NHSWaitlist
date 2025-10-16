@@ -40,7 +40,6 @@ interface WeeklyThoughtRecord {
   balancedThought: string;
   newEmotion: string;
   newIntensity: number;
-  actionPlan: string;
   selectedDistortions: string[];
 }
 
@@ -68,8 +67,7 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
     evidenceAgainst: "",
     balancedThought: "",
     newEmotion: "",
-    newIntensity: 3,
-    actionPlan: ""
+    newIntensity: 3
   });
 
   const [savedRecords, setSavedRecords] = useState<WeeklyThoughtRecord[]>([]);
@@ -284,7 +282,7 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
   useEffect(() => {
     if (!user?.id || !moduleId) return;
 
-    const { situation, emotion, intensity, physicalSensations, automaticThought, evidenceFor, evidenceAgainst, balancedThought, newEmotion, newIntensity, actionPlan } = currentRecord;
+    const { situation, emotion, intensity, physicalSensations, automaticThought, evidenceFor, evidenceAgainst, balancedThought, newEmotion, newIntensity } = currentRecord;
     
     // Only auto-save if we have the minimum required fields (situation + emotion)
     if (situation && emotion && intensity !== undefined) {
@@ -308,7 +306,6 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
           balancedThought: balancedThought || "",
           newEmotion: newEmotion || "",
           newIntensity: newIntensity || null,
-          actionPlan: actionPlan || "",
           selectedDistortions
         };
 
@@ -336,7 +333,7 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
     return () => {
       clearTimeout((window as any).weeklyThoughtRecordSaveTimeout);
     };
-  }, [currentRecord.situation, currentRecord.emotion, currentRecord.intensity, currentRecord.physicalSensations, currentRecord.automaticThought, currentRecord.evidenceFor, currentRecord.evidenceAgainst, currentRecord.balancedThought, currentRecord.newEmotion, currentRecord.newIntensity, currentRecord.actionPlan, selectedDistortions, user?.id, moduleId, weekNumber, currentRecordId]);
+  }, [currentRecord.situation, currentRecord.emotion, currentRecord.intensity, currentRecord.physicalSensations, currentRecord.automaticThought, currentRecord.evidenceFor, currentRecord.evidenceAgainst, currentRecord.balancedThought, currentRecord.newEmotion, currentRecord.newIntensity, selectedDistortions, user?.id, moduleId, weekNumber, currentRecordId]);
 
   const saveRecord = () => {
     if (!user?.id || !moduleId) return;
@@ -355,7 +352,6 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
       balancedThought: currentRecord.balancedThought || "",
       newEmotion: currentRecord.newEmotion || "",
       newIntensity: currentRecord.newIntensity || null,
-      actionPlan: currentRecord.actionPlan || "",
       selectedDistortions
     };
 
@@ -394,8 +390,7 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
       evidenceAgainst: "",
       balancedThought: "",
       newEmotion: "",
-      newIntensity: 3,
-      actionPlan: ""
+      newIntensity: 3
     });
     setSelectedDistortions([]);
     setCurrentRecordId(null);
@@ -413,8 +408,7 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
       evidenceAgainst: record.evidenceAgainst || "",
       balancedThought: record.balancedThought || "",
       newEmotion: record.newEmotion || "",
-      newIntensity: record.newIntensity || 3,
-      actionPlan: record.actionPlan || ""
+      newIntensity: record.newIntensity || 3
     });
     setSelectedDistortions(record.selectedDistortions || []);
     setCurrentRecordId(record.id);
@@ -467,13 +461,12 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="situation">Situation</TabsTrigger>
-          <TabsTrigger value="thoughts">Thoughts</TabsTrigger>
-          <TabsTrigger value="evidence">Evidence</TabsTrigger>
-          <TabsTrigger value="balanced">Balanced View</TabsTrigger>
-          <TabsTrigger value="action">Action Plan</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+        <TabsList className="w-full flex gap-2 overflow-x-auto md:grid md:grid-cols-5 md:overflow-visible">
+          <TabsTrigger value="situation" className="shrink-0 text-xs md:text-sm px-3 py-2">Situation</TabsTrigger>
+          <TabsTrigger value="thoughts" className="shrink-0 text-xs md:text-sm px-3 py-2">Thoughts</TabsTrigger>
+          <TabsTrigger value="evidence" className="shrink-0 text-xs md:text-sm px-3 py-2">Evidence</TabsTrigger>
+          <TabsTrigger value="balanced" className="shrink-0 text-xs md:text-sm px-3 py-2">Balanced View</TabsTrigger>
+          <TabsTrigger value="history" className="shrink-0 text-xs md:text-sm px-3 py-2">History</TabsTrigger>
         </TabsList>
 
         {/* Step 1: Situation & Emotions */}
@@ -905,71 +898,6 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
                 <Button variant="outline" onClick={() => setActiveTab("evidence")}>
                   Back: Evidence
                 </Button>
-                <Button 
-                  onClick={() => setActiveTab("action")}
-                  disabled={!currentRecord.balancedThought}
-                  data-testid="button-next-to-action"
-                >
-                  Next: Action Plan
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Step 5: Action Plan */}
-        <TabsContent value="action" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5" />
-                Step 5: Create an Action Plan
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                What specific steps can you take based on your new understanding?
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="action-plan">Action Steps</Label>
-                  {isAutoSaving && currentRecord.actionPlan && (
-                    <Badge variant="secondary" className="text-xs">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></div>
-                      Saving...
-                    </Badge>
-                  )}
-                </div>
-                <Textarea
-                  id="action-plan"
-                  placeholder="What can you do differently? What steps will you take? How will you handle similar situations in the future?"
-                  value={currentRecord.actionPlan}
-                  onChange={(e) => setCurrentRecord(prev => ({ ...prev, actionPlan: e.target.value }))}
-                  className="mt-1"
-                  rows={4}
-                  data-testid="textarea-action-plan"
-                />
-              </div>
-
-              {/* Summary */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">📝 Thought Record Summary</h4>
-                <div className="space-y-2 text-sm">
-                  <div><strong>Situation:</strong> {currentRecord.situation || "Not specified"}</div>
-                  <div><strong>Original Emotion:</strong> {currentRecord.emotion || "Not specified"} (Intensity: {currentRecord.intensity}/10)</div>
-                  <div><strong>Automatic Thought:</strong> {currentRecord.automaticThought || "Not specified"}</div>
-                  <div><strong>Balanced Thought:</strong> {currentRecord.balancedThought || "Not specified"}</div>
-                  <div><strong>New Emotion:</strong> {currentRecord.newEmotion || "Not specified"} (Intensity: {currentRecord.newIntensity}/10)</div>
-                  {selectedDistortions.length > 0 && (
-                    <div><strong>Thinking Patterns:</strong> {selectedDistortions.join(", ")}</div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setActiveTab("balanced")}>
-                  Back: Balanced Thought
-                </Button>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={exportRecord} className="gap-2">
                     <Download className="w-4 h-4" />
@@ -979,6 +907,7 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
                     onClick={saveRecord}
                     className="gap-2"
                     data-testid="button-save-record"
+                    disabled={!currentRecord.balancedThought}
                   >
                     <Save className="w-4 h-4" />
                     Save Record
