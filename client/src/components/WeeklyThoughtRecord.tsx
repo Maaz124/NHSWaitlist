@@ -13,7 +13,6 @@ import {
   Brain, 
   Lightbulb, 
   Scale, 
-  Download,
   Plus,
   X,
   CheckCircle,
@@ -95,6 +94,20 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
       return data;
     }
   });
+
+  // Auto-load the most recent thought record when data is available
+  useEffect(() => {
+    if (savedWeeklyThoughtRecords.length > 0 && !currentRecordId) {
+      // Sort by date (most recent first) and load the first one
+      const sortedRecords = [...savedWeeklyThoughtRecords].sort((a, b) => 
+        new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime()
+      );
+      const mostRecentRecord = sortedRecords[0];
+      
+      console.log('🔄 Auto-loading most recent thought record:', mostRecentRecord);
+      loadRecord(mostRecentRecord);
+    }
+  }, [savedWeeklyThoughtRecords, currentRecordId]);
 
   // Create weekly thought record mutation
   const createWeeklyThoughtRecordMutation = useMutation({
@@ -415,25 +428,6 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
     setActiveTab("situation");
   };
 
-  const exportRecord = () => {
-    const exportData = {
-      currentRecord,
-      selectedDistortions,
-      savedRecords: savedWeeklyThoughtRecords,
-      moduleId,
-      weekNumber,
-      exportDate: new Date().toISOString()
-    };
-
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `weekly-thought-records-week-${weekNumber}-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
 
   const getIntensityColor = (intensity: number) => {
     if (intensity <= 3) return "bg-green-500";
@@ -450,23 +444,35 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
     <div className="space-y-6">
       <Card className="bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
-            Weekly Thought Record Practice
-          </CardTitle>
-          <p className="text-muted-foreground">
-            Identify and challenge anxious thoughts using cognitive behavioral techniques - Week {weekNumber}
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="w-5 h-5 text-purple-600" />
+                Weekly Thought Record Practice
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Identify and challenge anxious thoughts using cognitive behavioral techniques - Week {weekNumber}
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={resetForm}
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New Record
+            </Button>
+          </div>
         </CardHeader>
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full flex gap-2 overflow-x-auto md:grid md:grid-cols-5 md:overflow-visible">
-          <TabsTrigger value="situation" className="shrink-0 text-xs md:text-sm px-3 py-2">Situation</TabsTrigger>
-          <TabsTrigger value="thoughts" className="shrink-0 text-xs md:text-sm px-3 py-2">Thoughts</TabsTrigger>
-          <TabsTrigger value="evidence" className="shrink-0 text-xs md:text-sm px-3 py-2">Evidence</TabsTrigger>
-          <TabsTrigger value="balanced" className="shrink-0 text-xs md:text-sm px-3 py-2">Balanced View</TabsTrigger>
-          <TabsTrigger value="history" className="shrink-0 text-xs md:text-sm px-3 py-2">History</TabsTrigger>
+        <TabsList className="w-full flex gap-1 overflow-x-auto md:grid md:grid-cols-4 md:gap-2 md:overflow-visible">
+          <TabsTrigger value="situation" className="shrink-0 text-xs md:text-sm px-2 py-2 min-w-fit">Situation</TabsTrigger>
+          <TabsTrigger value="thoughts" className="shrink-0 text-xs md:text-sm px-2 py-2 min-w-fit">Thoughts</TabsTrigger>
+          <TabsTrigger value="evidence" className="shrink-0 text-xs md:text-sm px-2 py-2 min-w-fit">Evidence</TabsTrigger>
+          <TabsTrigger value="balanced" className="shrink-0 text-xs md:text-sm px-2 py-2 min-w-fit">Balanced View</TabsTrigger>
         </TabsList>
 
         {/* Step 1: Situation & Emotions */}
@@ -898,121 +904,20 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
                 <Button variant="outline" onClick={() => setActiveTab("evidence")}>
                   Back: Evidence
                 </Button>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={exportRecord} className="gap-2">
-                    <Download className="w-4 h-4" />
-                    Export
-                  </Button>
-                  <Button 
-                    onClick={saveRecord}
-                    className="gap-2"
-                    data-testid="button-save-record"
-                    disabled={!currentRecord.balancedThought}
-                  >
-                    <Save className="w-4 h-4" />
-                    Save Record
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* History Tab */}
-        <TabsContent value="history" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5" />
-                    Saved Weekly Thought Records
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Review your previous thought records for Week {weekNumber} to track patterns and progress
-                  </p>
-                </div>
                 <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={resetForm}
+                  onClick={saveRecord}
                   className="gap-2"
+                  data-testid="button-save-record"
+                  disabled={!currentRecord.balancedThought}
                 >
-                  <Plus className="w-4 h-4" />
-                  New Record
+                  <Save className="w-4 h-4" />
+                  Save Record
                 </Button>
               </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Brain className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-                  <p>Loading thought records...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-8 text-red-500">
-                  <Brain className="w-12 h-12 mx-auto mb-4 text-red-500/50" />
-                  <p>Error loading thought records: {error.message}</p>
-                  <Button onClick={() => refetchWeeklyThoughtRecords()} className="mt-2">
-                    Retry
-                  </Button>
-                </div>
-              ) : savedWeeklyThoughtRecords.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Brain className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-                  <p>No saved thought records yet for Week {weekNumber}.</p>
-                  <p className="text-sm">Complete a thought record to see it here.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {savedWeeklyThoughtRecords.map((record) => (
-                    <Card key={record.id} className="border-l-4 border-l-blue-400">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium">
-                            {record.emotion} → {record.newEmotion || "Not completed"}
-                          </h4>
-                          <div className="flex items-center gap-2">
-                            <Badge 
-                              variant="outline" 
-                              className={record.newIntensity && record.newIntensity < record.intensity ? "border-green-500 text-green-700" : ""}
-                            >
-                              {record.intensity} → {record.newIntensity || "N/A"}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(record.createdAt || record.date).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2 text-sm">
-                          <div><strong>Situation:</strong> {(record.situation || '').substring(0, 100)}...</div>
-                          <div><strong>Automatic Thought:</strong> {(record.automaticThought || '').substring(0, 100)}...</div>
-                          <div><strong>Balanced Thought:</strong> {(record.balancedThought || '').substring(0, 100)}...</div>
-                          {record.actionPlan && (
-                            <div><strong>Action Plan:</strong> {record.actionPlan.substring(0, 100)}...</div>
-                          )}
-                        </div>
-
-                        <div className="flex justify-end mt-4">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => loadRecord(record)}
-                            className="gap-2"
-                          >
-                            <Brain className="w-4 h-4" />
-                            Load into Form
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
+
       </Tabs>
     </div>
   );
