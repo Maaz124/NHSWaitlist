@@ -149,10 +149,8 @@ export default function Onboarding() {
               console.log("Onboarding check error:", error);
             }
           }
-        } else if (isMounted) {
-          // Not authenticated, redirect to login
-          setLocation("/login");
         }
+        // If not authenticated, just stay on onboarding page
       } catch {
         // ignore
       }
