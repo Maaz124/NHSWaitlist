@@ -841,19 +841,6 @@ export default function Dashboard() {
                   </Link>
                 </div>
                 
-                <div className="flex items-center p-4 bg-accent/5 border-l-4 border-accent rounded-r-md">
-                  <GraduationCap className="w-5 h-5 text-accent mr-4" />
-                  <div className="flex-1">
-                    <p className="font-medium text-card-foreground">Module 3: Cognitive Strategies</p>
-                    <p className="text-sm text-muted-foreground">Continue where you left off</p>
-                  </div>
-                  <Link href="/anxiety-track">
-                    <Button variant="ghost" size="sm" data-testid="button-continue-module">
-                      Continue
-                    </Button>
-                  </Link>
-                </div>
-                
                 <div className="flex items-center p-4 bg-secondary rounded-md">
                   <FileText className="w-5 h-5 text-muted-foreground mr-4" />
                   <div className="flex-1">

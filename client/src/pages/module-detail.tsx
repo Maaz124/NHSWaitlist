@@ -67,6 +67,11 @@ export default function ModuleDetail() {
     if (userLoading) return; // Still loading
     if (!isAuthenticated) {
       setLocation("/login");
+      return;
+    }
+    // Enforce payment status for direct URL access to module detail
+    if (!(user as any)?.hasPaid) {
+      setLocation('/pricing');
     }
   }, [isAuthenticated, userLoading, setLocation]);
   

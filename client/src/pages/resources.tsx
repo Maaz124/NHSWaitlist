@@ -28,6 +28,11 @@ export default function Resources() {
     if (userLoading) return; // Still loading
     if (!isAuthenticated) {
       setLocation("/login");
+      return;
+    }
+    // Enforce payment for accessing resources
+    if (!(user as any)?.hasPaid) {
+      setLocation('/pricing');
     }
   }, [isAuthenticated, userLoading, setLocation]);
   

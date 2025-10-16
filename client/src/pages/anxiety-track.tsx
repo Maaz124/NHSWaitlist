@@ -43,6 +43,11 @@ export default function AnxietyTrack() {
     if (userLoading) return; // Still loading
     if (!isAuthenticated) {
         setLocation("/login");
+        return;
+    }
+    // Enforce payment status for accessing modules overview
+    if (!(user as any)?.hasPaid) {
+        setLocation('/pricing');
     }
   }, [isAuthenticated, userLoading, setLocation]);
 
