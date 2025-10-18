@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Header } from '@/components/ui/header';
 import PaymentPlansManagement from '@/components/PaymentPlansManagement';
+import StripeConfigManagement from '@/components/StripeConfigManagement';
 
 interface DashboardStats {
   overview: {
@@ -223,6 +224,11 @@ export default function AdminDashboard() {
             </Card>
           </div>
         ) : null}
+
+        {/* Stripe Configuration Management */}
+        <div className="mb-8">
+          <StripeConfigManagement />
+        </div>
 
         {/* Payment Plans Management */}
         <div className="mb-8">

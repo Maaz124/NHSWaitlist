@@ -1353,6 +1353,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Get Stripe configuration
+  app.get("/api/admin/stripe-config", requireAuth, async (req, res) => {
+    try {
+      const stripeConfig = {
+        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
+        secretKey: process.env.STRIPE_SECRET_KEY || '',
+        hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
+        hasPublishableKey: !!process.env.STRIPE_PUBLISHABLE_KEY,
+      };
+      
+      res.json({ stripeConfig });
+    } catch (error: any) {
+      console.error('Error fetching Stripe config:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Update Stripe configuration
+  app.put("/api/admin/stripe-config", requireAuth, async (req, res) => {
+    try {
+      const { publishableKey, secretKey } = req.body;
+      
+      // Validate keys
+      if (publishableKey && !publishableKey.startsWith('pk_')) {
+        return res.status(400).json({ error: "Invalid publishable key format" });
+      }
+      
+      if (secretKey && !secretKey.startsWith('sk_')) {
+        return res.status(400).json({ error: "Invalid secret key format" });
+      }
+
+      // Update environment variables (this will only affect the current process)
+      if (publishableKey) {
+        process.env.STRIPE_PUBLISHABLE_KEY = publishableKey;
+      }
+      
+      if (secretKey) {
+        process.env.STRIPE_SECRET_KEY = secretKey;
+      }
+
+      // Update .env file
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      const envPath = path.join(process.cwd(), '.env');
+      let envContent = '';
+      
+      try {
+        envContent = fs.readFileSync(envPath, 'utf8');
+      } catch (error) {
+        // .env file doesn't exist, create it
+        envContent = '';
+      }
+
+      // Update or add STRIPE_PUBLISHABLE_KEY
+      if (publishableKey) {
+        const publishableKeyRegex = /^STRIPE_PUBLISHABLE_KEY=.*$/m;
+        const publishableKeyLine = `STRIPE_PUBLISHABLE_KEY=${publishableKey}`;
+        
+        if (publishableKeyRegex.test(envContent)) {
+          envContent = envContent.replace(publishableKeyRegex, publishableKeyLine);
+        } else {
+          envContent += (envContent ? '\n' : '') + publishableKeyLine;
+        }
+      }
+
+      // Update or add STRIPE_SECRET_KEY
+      if (secretKey) {
+        const secretKeyRegex = /^STRIPE_SECRET_KEY=.*$/m;
+        const secretKeyLine = `STRIPE_SECRET_KEY=${secretKey}`;
+        
+        if (secretKeyRegex.test(envContent)) {
+          envContent = envContent.replace(secretKeyRegex, secretKeyLine);
+        } else {
+          envContent += (envContent ? '\n' : '') + secretKeyLine;
+        }
+      }
+
+      // Write back to .env file
+      fs.writeFileSync(envPath, envContent);
+
+      res.json({ 
+        success: true, 
+        message: "Stripe configuration updated successfully. Please restart the server for changes to take effect."
+      });
+    } catch (error: any) {
+      console.error('Error updating Stripe config:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Admin: Update payment plan
   app.put("/api/admin/payment-plans/:planId", requireAuth, async (req, res) => {
     try {
