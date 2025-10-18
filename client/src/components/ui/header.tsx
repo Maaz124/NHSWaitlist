@@ -11,6 +11,7 @@ interface HeaderProps {
     lastName: string;
     email: string;
     hasPaid?: boolean;
+    isAdmin?: boolean;
   };
 }
 
@@ -82,6 +83,13 @@ export function Header({ user }: HeaderProps) {
                   >
                     Profile Settings
                   </DropdownMenuItem>
+                  {(activeUser as any)?.isAdmin && (
+                    <DropdownMenuItem
+                      onClick={() => setLocation("/admin")}
+                    >
+                      Admin Dashboard
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     onClick={async () => {
                       try {

@@ -107,7 +107,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={null} />
+      <Header />
       <main className="flex-1 bg-background">
         <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Card>
@@ -126,9 +126,14 @@ export default function Login() {
                   {isSubmitting ? "Logging in..." : "Log in"}
                 </Button>
               </form>
-              <p className="text-sm text-muted-foreground mt-4">
-                Don't have an account? <Link href="/signup">Sign up</Link>
-              </p>
+              <div className="mt-4 space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Don't have an account? <Link href="/signup">Sign up</Link>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Admin access? <Link href="/admin/login" className="text-primary hover:underline">Admin Login</Link>
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   hasPaid: boolean("has_paid").default(false),
   paidAmount: integer("paid_amount").default(0), // Amount in cents (e.g., 14900 = $149.00)
   paidCurrency: text("paid_currency").default("usd"),
+  isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -63,6 +63,10 @@ export class PostgresStorage implements IStorage {
     return result[0];
   }
 
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(schema.users);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const result = await db.insert(schema.users).values(insertUser).returning();
     return result[0];
@@ -711,6 +715,14 @@ export class PostgresStorage implements IStorage {
     return result[0] || null;
   }
 
+  async updatePaymentPlan(planId: string, updates: Partial<PaymentPlan>): Promise<PaymentPlan | null> {
+    const result = await db.update(schema.paymentPlans)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(schema.paymentPlans.id, planId))
+      .returning();
+    return result[0] || null;
+  }
+
   // User Subscriptions
   async createUserSubscription(insertSubscription: InsertUserSubscription): Promise<UserSubscription> {
     const processedSubscription = safeParseDates(insertSubscription, ['currentPeriodStart', 'currentPeriodEnd', 'trialStart', 'trialEnd']);
@@ -764,6 +776,15 @@ export class PostgresStorage implements IStorage {
       .where(eq(schema.paymentTransactions.id, id))
       .limit(1);
     return result[0] || null;
+  }
+
+  async getLatestPaymentTransaction(userId: string): Promise<PaymentTransaction | undefined> {
+    const result = await db.select()
+      .from(schema.paymentTransactions)
+      .where(eq(schema.paymentTransactions.userId, userId))
+      .orderBy(desc(schema.paymentTransactions.createdAt))
+      .limit(1);
+    return result[0];
   }
 
   async getPaymentTransactionByStripeId(stripePaymentIntentId: string): Promise<PaymentTransaction | null> {

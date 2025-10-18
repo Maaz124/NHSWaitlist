@@ -909,6 +909,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Simply mark user as paid using session userId
       await storage.markUserAsPaid(currentUserId, amount, 'usd');
 
+      // Create a payment transaction record
+      await storage.createPaymentTransaction({
+        userId: currentUserId,
+        subscriptionId: null,
+        stripePaymentIntentId: `manual_${Date.now()}`, // Manual transaction ID
+        stripeInvoiceId: null,
+        amount: amount,
+        currency: 'usd',
+        status: 'succeeded',
+        paymentMethod: 'manual_verification',
+        description: 'Manual payment verification',
+        metadata: { source: 'admin_manual_verification' }
+      });
+
       console.log(`✅ Payment status updated for user ${currentUserId}`);
       res.json({ 
         success: true, 
@@ -1264,6 +1278,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('Error fetching payment summary:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Get dashboard statistics
+  app.get("/api/admin/dashboard-stats", requireAuth, async (req, res) => {
+    try {
+      // Get all users
+      const allUsers = await storage.getAllUsers();
+      
+      // Calculate statistics
+      const totalUsers = allUsers.length;
+      const paidUsers = allUsers.filter(user => user.hasPaid).length;
+      const unpaidUsers = totalUsers - paidUsers;
+      
+      // Calculate revenue
+      const totalRevenue = allUsers.reduce((sum, user) => sum + (user.paidAmount || 0), 0);
+      
+      // Get recent signups (last 7 days)
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const recentSignups = allUsers.filter(user => 
+        new Date(user.createdAt || 0) > sevenDaysAgo
+      ).length;
+      
+      // Get users with phone numbers
+      const usersWithPhone = allUsers.filter(user => user.phoneNumber && user.phoneNumber.trim() !== '').length;
+      
+      // Get payment plans
+      const paymentPlans = await storage.getPaymentPlans();
+      const activePlan = paymentPlans.find(plan => plan.isActive);
+      
+      res.json({
+        overview: {
+          totalUsers,
+          paidUsers,
+          unpaidUsers,
+          conversionRate: totalUsers > 0 ? Math.round((paidUsers / totalUsers) * 100) : 0,
+          totalRevenue,
+          revenueFormatted: new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+          }).format(totalRevenue / 100),
+        },
+        recent: {
+          signupsLast7Days: recentSignups,
+          usersWithPhone,
+        },
+        paymentPlan: activePlan ? {
+          id: activePlan.id,
+          name: activePlan.name,
+          priceAmount: activePlan.priceAmount,
+          currency: activePlan.currency,
+          priceFormatted: new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: activePlan.currency.toUpperCase(),
+          }).format(activePlan.priceAmount / 100),
+        } : null,
+      });
+    } catch (error: any) {
+      console.error('Error fetching dashboard stats:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Get all payment plans
+  app.get("/api/admin/payment-plans", requireAuth, async (req, res) => {
+    try {
+      const paymentPlans = await storage.getPaymentPlans();
+      res.json({ paymentPlans });
+    } catch (error: any) {
+      console.error('Error fetching payment plans:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Update payment plan
+  app.put("/api/admin/payment-plans/:planId", requireAuth, async (req, res) => {
+    try {
+      const { planId } = req.params;
+      const updates = req.body;
+      
+      // Validate required fields
+      if (updates.priceAmount && (typeof updates.priceAmount !== 'number' || updates.priceAmount <= 0)) {
+        return res.status(400).json({ error: "Invalid price amount" });
+      }
+      
+      const updatedPlan = await storage.updatePaymentPlan(planId, updates);
+      
+      if (!updatedPlan) {
+        return res.status(404).json({ error: "Payment plan not found" });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: "Payment plan updated successfully",
+        paymentPlan: updatedPlan 
+      });
+    } catch (error: any) {
+      console.error('Error updating payment plan:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Get all users with pagination
+  app.get("/api/admin/users", requireAuth, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = (page - 1) * limit;
+      
+      const allUsers = await storage.getAllUsers();
+      const totalUsers = allUsers.length;
+      
+      // Get latest payment time for each user
+      const usersWithPaymentTime = await Promise.all(
+        allUsers.map(async (user) => {
+          const latestTransaction = await storage.getLatestPaymentTransaction(user.id);
+          return {
+            ...user,
+            latestPaymentTime: latestTransaction?.createdAt || null,
+          };
+        })
+      );
+      
+      // Sort by creation date (newest first)
+      const sortedUsers = usersWithPaymentTime.sort((a, b) => 
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      );
+      
+      const paginatedUsers = sortedUsers.slice(offset, offset + limit);
+      
+      res.json({
+        users: paginatedUsers,
+        pagination: {
+          page,
+          limit,
+          total: totalUsers,
+          totalPages: Math.ceil(totalUsers / limit),
+        }
+      });
+    } catch (error: any) {
+      console.error('Error fetching users:', error);
       res.status(500).json({ error: error.message });
     }
   });

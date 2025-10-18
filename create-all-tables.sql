@@ -19,9 +19,10 @@ CREATE TABLE IF NOT EXISTS users (
     phone_number TEXT,
     nhs_number TEXT,
     has_paid BOOLEAN DEFAULT FALSE,
-    paid_amount INTEGER DEFAULT 0,
-    paid_currency TEXT DEFAULT 'usd',
-    created_at TIMESTAMP DEFAULT NOW()
+  paid_amount INTEGER DEFAULT 0,
+  paid_currency TEXT DEFAULT 'usd',
+  is_admin BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- =====================================================
