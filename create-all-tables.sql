@@ -398,6 +398,73 @@ INSERT INTO health_check (status) VALUES ('tables_created') ON CONFLICT DO NOTHI
 -- and gets loaded dynamically when users access each module.
 
 -- =====================================================
+-- ADD MISSING COLUMNS TO EXISTING TABLES
+-- =====================================================
+
+-- Add missing columns to users table
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_number TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS paid_amount INTEGER DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS paid_currency TEXT DEFAULT 'usd';
+
+-- Add missing columns to payment_plans table (if needed)
+ALTER TABLE payment_plans ADD COLUMN IF NOT EXISTS stripe_price_id VARCHAR;
+ALTER TABLE payment_plans ADD COLUMN IF NOT EXISTS stripe_product_id VARCHAR;
+ALTER TABLE payment_plans ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+
+-- Add missing columns to user_subscriptions table (if needed)
+ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN DEFAULT FALSE;
+ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS trial_start TIMESTAMP;
+ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS trial_end TIMESTAMP;
+ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+
+-- Add missing columns to payment_transactions table (if needed)
+ALTER TABLE payment_transactions ADD COLUMN IF NOT EXISTS stripe_invoice_id VARCHAR;
+ALTER TABLE payment_transactions ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50);
+ALTER TABLE payment_transactions ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE payment_transactions ADD COLUMN IF NOT EXISTS metadata JSONB;
+
+-- Add missing columns to user_payment_methods table (if needed)
+ALTER TABLE user_payment_methods ADD COLUMN IF NOT EXISTS card_brand VARCHAR(20);
+ALTER TABLE user_payment_methods ADD COLUMN IF NOT EXISTS card_last4 VARCHAR(4);
+ALTER TABLE user_payment_methods ADD COLUMN IF NOT EXISTS card_exp_month INTEGER;
+ALTER TABLE user_payment_methods ADD COLUMN IF NOT EXISTS card_exp_year INTEGER;
+ALTER TABLE user_payment_methods ADD COLUMN IF NOT EXISTS is_default BOOLEAN DEFAULT FALSE;
+
+-- =====================================================
+-- SAMPLE DATA
+-- =====================================================
+
+-- Insert default payment plan
+INSERT INTO payment_plans (
+    id,
+    name,
+    description,
+    price_amount,
+    currency,
+    interval_type,
+    interval_count,
+    stripe_price_id,
+    stripe_product_id,
+    is_active,
+    features,
+    created_at
+) VALUES (
+    '17ae3aa5-0d55-4b49-8c47-3458834ce278',
+    'Full Access Plan',
+    'Complete access to all NHS Waitlist features and modules',
+    14900,
+    'usd',
+    'one_time',
+    1,
+    NULL,
+    NULL,
+    TRUE,
+    '["Full access to all 6-week anxiety modules", "Access to all self-help tools", "Mood tracking and progress monitoring", "Priority support"]',
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- =====================================================
 -- VERIFICATION
 -- =====================================================
 

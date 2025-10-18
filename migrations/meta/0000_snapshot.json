@@ -1,0 +1,1795 @@
+{
+  "id": "767b9fac-8965-495e-856f-e32f98eca75f",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.anxiety_guides": {
+      "name": "anxiety_guides",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "completed_sections": {
+          "name": "completed_sections",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "personal_notes": {
+          "name": "personal_notes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "symptom_checklist": {
+          "name": "symptom_checklist",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coping_tools_rating": {
+          "name": "coping_tools_rating",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "worksheet_entries": {
+          "name": "worksheet_entries",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quiz_answers": {
+          "name": "quiz_answers",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "action_plan_data": {
+          "name": "action_plan_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "symptom_tracking_worksheet": {
+          "name": "symptom_tracking_worksheet",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "personal_management_plan": {
+          "name": "personal_management_plan",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_data": {
+          "name": "progress_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "anxiety_guides_user_id_users_id_fk": {
+          "name": "anxiety_guides_user_id_users_id_fk",
+          "tableFrom": "anxiety_guides",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.anxiety_modules": {
+      "name": "anxiety_modules",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "week_number": {
+          "name": "week_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estimated_minutes": {
+          "name": "estimated_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activities_total": {
+          "name": "activities_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activities_completed": {
+          "name": "activities_completed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "minutes_completed": {
+          "name": "minutes_completed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "is_locked": {
+          "name": "is_locked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_accessed_at": {
+          "name": "last_accessed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content_data": {
+          "name": "content_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_progress": {
+          "name": "user_progress",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "anxiety_modules_user_id_users_id_fk": {
+          "name": "anxiety_modules_user_id_users_id_fk",
+          "tableFrom": "anxiety_modules",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.lifestyle_assessments": {
+      "name": "lifestyle_assessments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "exercise_frequency": {
+          "name": "exercise_frequency",
+          "type": "numeric(3, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "exercise_types": {
+          "name": "exercise_types",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "diet_quality": {
+          "name": "diet_quality",
+          "type": "numeric(3, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "social_connections": {
+          "name": "social_connections",
+          "type": "numeric(3, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stress_management": {
+          "name": "stress_management",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sleep_quality": {
+          "name": "sleep_quality",
+          "type": "numeric(3, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "screen_time": {
+          "name": "screen_time",
+          "type": "numeric(4, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outdoor_time": {
+          "name": "outdoor_time",
+          "type": "numeric(3, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hobbies": {
+          "name": "hobbies",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "barriers": {
+          "name": "barriers",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "eating_habits": {
+          "name": "eating_habits",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nutrition_challenges": {
+          "name": "nutrition_challenges",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "social_support": {
+          "name": "social_support",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "social_challenges": {
+          "name": "social_challenges",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "personal_goals": {
+          "name": "personal_goals",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "personal_notes": {
+          "name": "personal_notes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_sections": {
+          "name": "completed_sections",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_data": {
+          "name": "progress_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "lifestyle_assessments_user_id_users_id_fk": {
+          "name": "lifestyle_assessments_user_id_users_id_fk",
+          "tableFrom": "lifestyle_assessments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.module_activities": {
+      "name": "module_activities",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "module_id": {
+          "name": "module_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activity_type": {
+          "name": "activity_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content": {
+          "name": "content",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estimated_minutes": {
+          "name": "estimated_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_index": {
+          "name": "order_index",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_completed": {
+          "name": "is_completed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_response": {
+          "name": "user_response",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "module_activities_module_id_anxiety_modules_id_fk": {
+          "name": "module_activities_module_id_anxiety_modules_id_fk",
+          "tableFrom": "module_activities",
+          "tableTo": "anxiety_modules",
+          "columnsFrom": [
+            "module_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mood_entries": {
+      "name": "mood_entries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entry_date": {
+          "name": "entry_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mood": {
+          "name": "mood",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "energy": {
+          "name": "energy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anxiety": {
+          "name": "anxiety",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sleep": {
+          "name": "sleep",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "emotions": {
+          "name": "emotions",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activities": {
+          "name": "activities",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "thoughts": {
+          "name": "thoughts",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gratitude": {
+          "name": "gratitude",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "challenges": {
+          "name": "challenges",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "wins": {
+          "name": "wins",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "mood_entries_user_id_users_id_fk": {
+          "name": "mood_entries_user_id_users_id_fk",
+          "tableFrom": "mood_entries",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.onboarding_responses": {
+      "name": "onboarding_responses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "responses": {
+          "name": "responses",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "risk_score": {
+          "name": "risk_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "baseline_anxiety_level": {
+          "name": "baseline_anxiety_level",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "onboarding_responses_user_id_users_id_fk": {
+          "name": "onboarding_responses_user_id_users_id_fk",
+          "tableFrom": "onboarding_responses",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.payment_plans": {
+      "name": "payment_plans",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_amount": {
+          "name": "price_amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'usd'"
+        },
+        "interval_type": {
+          "name": "interval_type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interval_count": {
+          "name": "interval_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "stripe_price_id": {
+          "name": "stripe_price_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripe_product_id": {
+          "name": "stripe_product_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "features": {
+          "name": "features",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.payment_transactions": {
+      "name": "payment_transactions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subscription_id": {
+          "name": "subscription_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripe_payment_intent_id": {
+          "name": "stripe_payment_intent_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripe_invoice_id": {
+          "name": "stripe_invoice_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'usd'"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_method": {
+          "name": "payment_method",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "payment_transactions_user_id_users_id_fk": {
+          "name": "payment_transactions_user_id_users_id_fk",
+          "tableFrom": "payment_transactions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "payment_transactions_subscription_id_user_subscriptions_id_fk": {
+          "name": "payment_transactions_subscription_id_user_subscriptions_id_fk",
+          "tableFrom": "payment_transactions",
+          "tableTo": "user_subscriptions",
+          "columnsFrom": [
+            "subscription_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "payment_transactions_stripe_payment_intent_id_unique": {
+          "name": "payment_transactions_stripe_payment_intent_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "stripe_payment_intent_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.progress_reports": {
+      "name": "progress_reports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "report_data": {
+          "name": "report_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "generated_at": {
+          "name": "generated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "progress_reports_user_id_users_id_fk": {
+          "name": "progress_reports_user_id_users_id_fk",
+          "tableFrom": "progress_reports",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sleep_assessments": {
+      "name": "sleep_assessments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bed_time": {
+          "name": "bed_time",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "wake_time": {
+          "name": "wake_time",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sleep_latency": {
+          "name": "sleep_latency",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "night_wakes": {
+          "name": "night_wakes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sleep_quality": {
+          "name": "sleep_quality",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "daytime_energy": {
+          "name": "daytime_energy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anxiety_level": {
+          "name": "anxiety_level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sleep_environment": {
+          "name": "sleep_environment",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pre_sleep_routine": {
+          "name": "pre_sleep_routine",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hindrances": {
+          "name": "hindrances",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "personal_plan": {
+          "name": "personal_plan",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "personal_notes": {
+          "name": "personal_notes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "additional_notes": {
+          "name": "additional_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_sections": {
+          "name": "completed_sections",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_data": {
+          "name": "progress_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sleep_assessments_user_id_users_id_fk": {
+          "name": "sleep_assessments_user_id_users_id_fk",
+          "tableFrom": "sleep_assessments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.thought_records": {
+      "name": "thought_records",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "situation": {
+          "name": "situation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "emotion": {
+          "name": "emotion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "intensity": {
+          "name": "intensity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "physical_sensations": {
+          "name": "physical_sensations",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "automatic_thought": {
+          "name": "automatic_thought",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evidence_for": {
+          "name": "evidence_for",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evidence_against": {
+          "name": "evidence_against",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "balanced_thought": {
+          "name": "balanced_thought",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "new_emotion": {
+          "name": "new_emotion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "new_intensity": {
+          "name": "new_intensity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "action_plan": {
+          "name": "action_plan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "selected_distortions": {
+          "name": "selected_distortions",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "thought_records_user_id_users_id_fk": {
+          "name": "thought_records_user_id_users_id_fk",
+          "tableFrom": "thought_records",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_payment_methods": {
+      "name": "user_payment_methods",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stripe_payment_method_id": {
+          "name": "stripe_payment_method_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "card_brand": {
+          "name": "card_brand",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "card_last4": {
+          "name": "card_last4",
+          "type": "varchar(4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "card_exp_month": {
+          "name": "card_exp_month",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "card_exp_year": {
+          "name": "card_exp_year",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_default": {
+          "name": "is_default",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_payment_methods_user_id_users_id_fk": {
+          "name": "user_payment_methods_user_id_users_id_fk",
+          "tableFrom": "user_payment_methods",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_payment_methods_stripe_payment_method_id_unique": {
+          "name": "user_payment_methods_stripe_payment_method_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "stripe_payment_method_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_subscriptions": {
+      "name": "user_subscriptions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_id": {
+          "name": "plan_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stripe_subscription_id": {
+          "name": "stripe_subscription_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripe_customer_id": {
+          "name": "stripe_customer_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "current_period_start": {
+          "name": "current_period_start",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "current_period_end": {
+          "name": "current_period_end",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancel_at_period_end": {
+          "name": "cancel_at_period_end",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "trial_start": {
+          "name": "trial_start",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trial_end": {
+          "name": "trial_end",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_subscriptions_user_id_users_id_fk": {
+          "name": "user_subscriptions_user_id_users_id_fk",
+          "tableFrom": "user_subscriptions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "user_subscriptions_plan_id_payment_plans_id_fk": {
+          "name": "user_subscriptions_plan_id_payment_plans_id_fk",
+          "tableFrom": "user_subscriptions",
+          "tableTo": "payment_plans",
+          "columnsFrom": [
+            "plan_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_subscriptions_stripe_subscription_id_unique": {
+          "name": "user_subscriptions_stripe_subscription_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "stripe_subscription_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nhs_number": {
+          "name": "nhs_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_paid": {
+          "name": "has_paid",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "paid_amount": {
+          "name": "paid_amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "paid_currency": {
+          "name": "paid_currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'usd'"
+        },
+        "is_admin": {
+          "name": "is_admin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.weekly_assessments": {
+      "name": "weekly_assessments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "week_number": {
+          "name": "week_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "responses": {
+          "name": "responses",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "risk_score": {
+          "name": "risk_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "risk_level": {
+          "name": "risk_level",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "needs_escalation": {
+          "name": "needs_escalation",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "weekly_assessments_user_id_users_id_fk": {
+          "name": "weekly_assessments_user_id_users_id_fk",
+          "tableFrom": "weekly_assessments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.weekly_thought_records": {
+      "name": "weekly_thought_records",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "module_id": {
+          "name": "module_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "week_number": {
+          "name": "week_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "situation": {
+          "name": "situation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "emotion": {
+          "name": "emotion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "intensity": {
+          "name": "intensity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "physical_sensations": {
+          "name": "physical_sensations",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "automatic_thought": {
+          "name": "automatic_thought",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evidence_for": {
+          "name": "evidence_for",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evidence_against": {
+          "name": "evidence_against",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "balanced_thought": {
+          "name": "balanced_thought",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "new_emotion": {
+          "name": "new_emotion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "new_intensity": {
+          "name": "new_intensity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "action_plan": {
+          "name": "action_plan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "selected_distortions": {
+          "name": "selected_distortions",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "weekly_thought_records_user_id_users_id_fk": {
+          "name": "weekly_thought_records_user_id_users_id_fk",
+          "tableFrom": "weekly_thought_records",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "weekly_thought_records_module_id_anxiety_modules_id_fk": {
+          "name": "weekly_thought_records_module_id_anxiety_modules_id_fk",
+          "tableFrom": "weekly_thought_records",
+          "tableTo": "anxiety_modules",
+          "columnsFrom": [
+            "module_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
