@@ -74,9 +74,15 @@ export class PostgresStorage implements IStorage {
     return result[0];
   }
 
-  async markUserAsPaid(userId: string): Promise<User> {
+  async markUserAsPaid(userId: string, paidAmount?: number, paidCurrency: string = "usd"): Promise<User> {
+    const updateData: any = { hasPaid: true };
+    if (paidAmount !== undefined) {
+      updateData.paidAmount = paidAmount;
+      updateData.paidCurrency = paidCurrency;
+    }
+    
     const result = await db.update(schema.users)
-      .set({ hasPaid: true })
+      .set(updateData)
       .where(eq(schema.users.id, userId))
       .returning();
     if (result.length === 0) throw new Error("User not found");

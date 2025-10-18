@@ -9,8 +9,11 @@ export const users = pgTable("users", {
   lastName: text("last_name").notNull(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  phoneNumber: text("phone_number"),
   nhsNumber: text("nhs_number"),
   hasPaid: boolean("has_paid").default(false),
+  paidAmount: integer("paid_amount").default(0), // Amount in cents (e.g., 14900 = $149.00)
+  paidCurrency: text("paid_currency").default("usd"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

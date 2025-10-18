@@ -16,8 +16,11 @@ CREATE TABLE IF NOT EXISTS users (
     last_name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
+    phone_number TEXT,
     nhs_number TEXT,
     has_paid BOOLEAN DEFAULT FALSE,
+    paid_amount INTEGER DEFAULT 0,
+    paid_currency TEXT DEFAULT 'usd',
     created_at TIMESTAMP DEFAULT NOW()
 );
 

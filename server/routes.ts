@@ -901,8 +901,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User not authenticated" });
       }
 
+      // Get the active payment plan to get the amount
+      const paymentPlans = await storage.getPaymentPlans();
+      const activePlan = paymentPlans.find(plan => plan.isActive);
+      const amount = activePlan?.priceAmount || 14900; // Default to $149.00
+      
       // Simply mark user as paid using session userId
-      await storage.markUserAsPaid(currentUserId);
+      await storage.markUserAsPaid(currentUserId, amount, 'usd');
 
       console.log(`✅ Payment status updated for user ${currentUserId}`);
       res.json({ 
@@ -941,7 +946,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Mark user as paid
-      await storage.markUserAsPaid(targetUserId);
+      await storage.markUserAsPaid(targetUserId, amount, 'usd');
 
       console.log(`✅ Manual payment verification for user ${targetUserId}:`, transaction);
       res.json({ 
@@ -1037,7 +1042,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
       });
       // Mark user as paid for subscription
-      await storage.markUserAsPaid(userId);
+      await storage.markUserAsPaid(userId, session.amount_total || 0, session.currency || 'usd');
     } else if (session.mode === 'payment') {
       // Handle one-time payment
       await storage.createPaymentTransaction({
@@ -1050,7 +1055,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: session.metadata?.description || 'One-time payment',
       });
       // Mark user as paid for one-time payment
-      await storage.markUserAsPaid(userId);
+      await storage.markUserAsPaid(userId, session.amount_total || 0, session.currency || 'usd');
     }
   }
 
@@ -1116,6 +1121,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   }
+
+  // =====================================================
+  // ADMIN API ENDPOINTS
+  // =====================================================
+
+  // Admin: Get user's Stripe transactions
+  app.get("/api/admin/user/:userId/stripe-transactions", requireAuth, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Import the StripeAdminService
+      const { StripeAdminService } = await import("./stripe-admin");
+      
+      // Sync and get transactions
+      const result = await StripeAdminService.syncUserTransactions(userId, user.email);
+      
+      res.json({
+        userId,
+        email: user.email,
+        syncedTransactions: result.synced,
+        transactions: result.transactions,
+      });
+    } catch (error: any) {
+      console.error('Error fetching user Stripe transactions:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Get all recent Stripe transactions
+  app.get("/api/admin/stripe-transactions", requireAuth, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      
+      // Import the StripeAdminService
+      const { StripeAdminService } = await import("./stripe-admin");
+      
+      const transactions = await StripeAdminService.getAllPaymentIntents(limit);
+      
+      res.json({
+        total: transactions.length,
+        transactions,
+      });
+    } catch (error: any) {
+      console.error('Error fetching all Stripe transactions:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Sync specific user's transactions
+  app.post("/api/admin/user/:userId/sync-stripe", requireAuth, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Import the StripeAdminService
+      const { StripeAdminService } = await import("./stripe-admin");
+      
+      const result = await StripeAdminService.syncUserTransactions(userId, user.email);
+      
+      // Also update local database with the transactions
+      for (const transaction of result.transactions) {
+        try {
+          await storage.createPaymentTransaction({
+            userId,
+            stripePaymentIntentId: transaction.id,
+            amount: transaction.amount,
+            currency: transaction.currency,
+            status: transaction.status === 'succeeded' ? 'succeeded' : 'failed',
+            paymentMethod: 'card',
+            description: transaction.description || `Stripe ${transaction.type}`,
+            metadata: {
+              stripeType: transaction.type,
+              stripeCreated: new Date(transaction.created * 1000).toISOString(),
+              receiptUrl: transaction.receipt_url || undefined,
+            },
+          });
+        } catch (dbError) {
+          // Transaction might already exist, continue with others
+          console.log(`Transaction ${transaction.id} might already exist in database`);
+        }
+      }
+      
+      res.json({
+        message: "Transactions synced successfully",
+        userId,
+        syncedCount: result.synced,
+        transactions: result.transactions,
+      });
+    } catch (error: any) {
+      console.error('Error syncing user transactions:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Get user payment summary
+  app.get("/api/admin/user/:userId/payment-summary", requireAuth, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Get local transactions
+      const localTransactions = await storage.getPaymentTransactions(userId);
+      
+      // Get Stripe transactions
+      const { StripeAdminService } = await import("./stripe-admin");
+      const stripeResult = await StripeAdminService.syncUserTransactions(userId, user.email);
+      
+      res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          hasPaid: user.hasPaid,
+        },
+        localTransactions: {
+          count: localTransactions.length,
+          transactions: localTransactions,
+        },
+        stripeTransactions: {
+          count: stripeResult.synced,
+          transactions: stripeResult.transactions,
+        },
+        summary: {
+          totalLocalTransactions: localTransactions.length,
+          totalStripeTransactions: stripeResult.synced,
+          totalAmount: stripeResult.transactions.reduce((sum, t) => sum + t.amount, 0),
+          lastTransaction: stripeResult.transactions[0] || null,
+        }
+      });
+    } catch (error: any) {
+      console.error('Error fetching payment summary:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
