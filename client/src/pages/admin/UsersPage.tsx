@@ -4,7 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { RefreshCw, Eye } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RefreshCw, Search } from 'lucide-react';
 
 interface User {
   id: string;
@@ -31,18 +33,27 @@ interface UsersResponse {
 
 export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('all');
 
-  // Fetch users with pagination
+  // Fetch users with pagination, search, and payment status filter
   const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useQuery<UsersResponse>({
-    queryKey: ['/api/admin/users', currentPage],
+    queryKey: ['/api/admin/users', currentPage, searchQuery, paymentStatusFilter],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/users?page=${currentPage}&limit=20`, {
+      const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
+      const statusParam = paymentStatusFilter !== 'all' ? `&status=${paymentStatusFilter}` : '';
+      const response = await fetch(`/api/admin/users?page=${currentPage}&limit=20${searchParam}${statusParam}`, {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to fetch users');
       return response.json();
     },
   });
+
+  // Reset to first page when search or filter changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, paymentStatusFilter]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -67,6 +78,35 @@ export default function UsersPage() {
         <h1 className="text-3xl font-bold text-foreground mb-2">Users Management</h1>
         <p className="text-muted-foreground">View and manage all registered users</p>
       </div>
+
+      {/* Search and Filter Bar */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search by name, email, or phone number..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="w-48">
+              <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="paid">Paid Users</SelectItem>
+                  <SelectItem value="unpaid">Unpaid Users</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -108,7 +148,6 @@ export default function UsersPage() {
                     <TableHead>Payment</TableHead>
                     <TableHead>Payment Time</TableHead>
                     <TableHead>Signup Date</TableHead>
-                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -151,12 +190,6 @@ export default function UsersPage() {
                         )}
                       </TableCell>
                       <TableCell>{formatDate(user.createdAt)}</TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-2" />
-                          View
-                        </Button>
-                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

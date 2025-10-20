@@ -43,8 +43,8 @@ export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
   const [location] = useLocation();
 
   return (
-    <div className="w-64 bg-background border-r border-border min-h-screen">
-      <div className="p-6">
+    <div className="w-64 bg-background border-r border-border min-h-screen flex flex-col">
+      <div className="p-6 flex-1">
         <div className="flex items-center space-x-2 mb-8">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Home className="h-4 w-4 text-primary-foreground" />
@@ -80,7 +80,7 @@ export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
         </nav>
       </div>
 
-      <div className="absolute bottom-6 left-6 right-6">
+      <div className="p-6 pt-0">
         <Button
           variant="outline"
           onClick={onLogout}

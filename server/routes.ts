@@ -1472,14 +1472,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin: Get all users with pagination
+  // Admin: Get all users with pagination, search, and payment status filter
   app.get("/api/admin/users", requireAuth, async (req, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
+      const search = req.query.search as string || '';
+      const status = req.query.status as string || 'all';
       const offset = (page - 1) * limit;
       
-      const allUsers = await storage.getAllUsers();
+      let allUsers = await storage.getAllUsers();
+      
+      // Apply search filter if provided
+      if (search.trim()) {
+        const searchLower = search.toLowerCase();
+        allUsers = allUsers.filter(user => {
+          const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+          const email = user.email.toLowerCase();
+          const phone = user.phoneNumber?.toLowerCase() || '';
+          
+          return fullName.includes(searchLower) || 
+                 email.includes(searchLower) || 
+                 phone.includes(searchLower);
+        });
+      }
+      
+      // Apply payment status filter if provided
+      if (status !== 'all') {
+        allUsers = allUsers.filter(user => {
+          if (status === 'paid') {
+            return user.hasPaid === true;
+          } else if (status === 'unpaid') {
+            return user.hasPaid === false;
+          }
+          return true;
+        });
+      }
+      
       const totalUsers = allUsers.length;
       
       // Get latest payment time for each user
