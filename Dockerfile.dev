@@ -1,0 +1,24 @@
+# Development Dockerfile with hot reload
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm ci --no-audit --no-fund
+
+# Copy source code
+COPY . .
+
+# Expose ports (app + Vite HMR)
+EXPOSE 5000 24678
+
+# Set environment variables
+ENV NODE_ENV=development
+ENV PORT=5000
+
+# Start the development server
+CMD ["npm", "run", "dev"]

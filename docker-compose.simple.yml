@@ -4,7 +4,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: nhs-waitlist-db
+    container_name: nhs-waitlist-db-simple
     environment:
       POSTGRES_DB: nhs_waitlist
       POSTGRES_USER: nhs_user
@@ -13,7 +13,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_simple:/var/lib/postgresql/data
       - ./create-all-tables.sql:/docker-entrypoint-initdb.d/create-all-tables.sql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
@@ -22,45 +22,35 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - nhs-network
+      - nhs-network-simple
     restart: unless-stopped
 
   # NHS Waitlist Application
   app:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: nhs-waitlist-app
+      dockerfile: Dockerfile.simple
+    container_name: nhs-waitlist-app-simple
     environment:
       NODE_ENV: production
       PORT: 5000
       DATABASE_URL: postgresql://nhs_user:nhs_password@postgres:5432/nhs_waitlist
       SESSION_SECRET: your-super-secret-session-key-change-this-in-production
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_your_stripe_secret_key}
-      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-pk_test_your_stripe_publishable_key}
+      STRIPE_SECRET_KEY: sk_test_your_stripe_secret_key_here
+      STRIPE_PUBLISHABLE_KEY: pk_test_your_stripe_publishable_key_here
     ports:
       - "5000:5000"
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     networks:
-      - nhs-network
+      - nhs-network-simple
     restart: unless-stopped
-    volumes:
-      - app_logs:/app/logs
 
 volumes:
-  postgres_data:
-    driver: local
-  app_logs:
+  postgres_data_simple:
     driver: local
 
 networks:
-  nhs-network:
+  nhs-network-simple:
     driver: bridge
