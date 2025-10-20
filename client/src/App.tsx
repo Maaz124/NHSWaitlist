@@ -16,7 +16,11 @@ import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import Pricing from "@/pages/pricing";
 import AdminLogin from "@/pages/admin-login";
-import AdminDashboard from "@/pages/admin-dashboard";
+import AdminLayout from "@/components/AdminLayout";
+import DashboardOverview from "@/pages/admin/DashboardOverview";
+import UsersPage from "@/pages/admin/UsersPage";
+import PaymentPlansPage from "@/pages/admin/PaymentPlansPage";
+import StripeConfigPage from "@/pages/admin/StripeConfigPage";
 
 const ModuleDetail = lazy(() => import("@/pages/module-detail"));
 
@@ -42,7 +46,10 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin" component={AdminLayout} />
+      <Route path="/admin/users" component={AdminLayout} />
+      <Route path="/admin/payment-plans" component={AdminLayout} />
+      <Route path="/admin/stripe-config" component={AdminLayout} />
       <Route component={NotFound} />
     </Switch>
   );
