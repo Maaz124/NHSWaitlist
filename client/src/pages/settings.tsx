@@ -73,15 +73,11 @@ export default function Settings() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log('Updating profile with data:', data);
       const response = await apiRequest("PATCH", `/api/users/${userId}`, data);
-      console.log('Response status:', response.status);
       const result = await response.json();
-      console.log('Response data:', result);
       return result;
     },
     onSuccess: (data) => {
-      console.log('Update successful:', data);
       // Invalidate user queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       toast({
@@ -90,7 +86,6 @@ export default function Settings() {
       });
     },
     onError: (error) => {
-      console.error('Update failed:', error);
       toast({
         title: "Update Failed",
         description: "Failed to update profile. Please try again.",

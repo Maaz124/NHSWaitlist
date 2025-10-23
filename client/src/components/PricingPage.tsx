@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 
 interface PaymentPlan {
   id: string;
@@ -18,6 +19,7 @@ interface PaymentPlan {
 export function PricingPage() {
   const [plan, setPlan] = useState<PaymentPlan | null>(null);
   const [loading, setLoading] = useState(true);
+  const [, setLocation] = useLocation();
 
   // Fetch payment plans
   useEffect(() => {
@@ -30,7 +32,6 @@ export function PricingPage() {
         setLoading(false);
       })
       .catch(error => {
-        console.error('Error fetching payment plans:', error);
         toast({
           title: "Error",
           description: "Failed to load pricing information",
@@ -66,7 +67,6 @@ export function PricingPage() {
       window.location.href = data.url;
     },
     onError: (error) => {
-      console.error('Checkout error:', error);
       toast({
         title: "Error",
         description: "Failed to start checkout process",
@@ -105,6 +105,18 @@ export function PricingPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Back Button */}
+      <div className="mb-6">
+        <Button
+          variant="outline"
+          onClick={() => setLocation('/')}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Dashboard
+        </Button>
+      </div>
+
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
           Unlock Full Access to NHS Waitlist

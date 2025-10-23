@@ -72,7 +72,7 @@ export function MoodTracker() {
 
   // Debug useEffect to track currentEntry changes
   useEffect(() => {
-    console.log('🔄 Current entry state changed:', {
+log('🔄 Current entry state changed:', {
       emotions: currentEntry.emotions,
       activities: currentEntry.activities,
       gratitude: currentEntry.gratitude
@@ -94,7 +94,7 @@ export function MoodTracker() {
   // Reload entry data when entries array changes (after successful save)
   useEffect(() => {
     if (entries.length > 0 && selectedDate) {
-      console.log('📋 Entries array changed, reloading entry for selected date');
+log('📋 Entries array changed, reloading entry for selected date');
       loadEntryForDate(selectedDate);
     }
   }, [entries]);
@@ -122,10 +122,10 @@ export function MoodTracker() {
       return await response.json();
     },
     onSuccess: (data) => {
-      console.log('✅ Create mood entry successful:', data);
-      console.log('✅ Created entry emotions:', data.emotions);
-      console.log('✅ Created entry activities:', data.activities);
-      console.log('✅ Created entry gratitude:', data.gratitude);
+log('✅ Create mood entry successful:', data);
+log('✅ Created entry emotions:', data.emotions);
+log('✅ Created entry activities:', data.activities);
+log('✅ Created entry gratitude:', data.gratitude);
       
       setCurrentEntryId(data.id);
       
@@ -156,7 +156,7 @@ export function MoodTracker() {
       refetchEntries();
     },
     onError: (error: any) => {
-      console.error("Failed to create mood entry:", error);
+error("Failed to create mood entry:", error);
       toast({
         title: "Save Failed",
         description: `Failed to save mood entry: ${error.message}`,
@@ -188,10 +188,10 @@ export function MoodTracker() {
       return await response.json();
     },
     onSuccess: (data) => {
-      console.log('✅ Update mood entry successful:', data);
-      console.log('✅ Updated entry emotions:', data.emotions);
-      console.log('✅ Updated entry activities:', data.activities);
-      console.log('✅ Updated entry gratitude:', data.gratitude);
+log('✅ Update mood entry successful:', data);
+log('✅ Updated entry emotions:', data.emotions);
+log('✅ Updated entry activities:', data.activities);
+log('✅ Updated entry gratitude:', data.gratitude);
       
       // Update the current entry state with the data returned from server
       setCurrentEntry(prev => ({
@@ -220,7 +220,7 @@ export function MoodTracker() {
       refetchEntries();
     },
     onError: (error: any) => {
-      console.error("Failed to update mood entry:", error);
+error("Failed to update mood entry:", error);
       toast({
         title: "Update Failed",
         description: `Failed to update mood entry: ${error.message}`,
@@ -296,12 +296,12 @@ export function MoodTracker() {
   };
 
   const updateGratitudeItem = (index: number, value: string) => {
-    console.log('🙏 Updating gratitude item:', { index, value });
-    console.log('🙏 Current gratitude before:', currentEntry.gratitude);
+log('🙏 Updating gratitude item:', { index, value });
+log('🙏 Current gratitude before:', currentEntry.gratitude);
     
     setCurrentEntry(prev => {
       const newGratitude = prev.gratitude?.map((item, i) => i === index ? value : item) || [];
-      console.log('🙏 New gratitude array:', newGratitude);
+log('🙏 New gratitude array:', newGratitude);
       return {
         ...prev,
         gratitude: newGratitude
@@ -341,7 +341,7 @@ export function MoodTracker() {
       return;
     }
 
-    console.log('💾 Saving mood entry with current state:', {
+log('💾 Saving mood entry with current state:', {
       emotions: currentEntry.emotions,
       activities: currentEntry.activities,
       gratitude: currentEntry.gratitude,
@@ -364,7 +364,7 @@ export function MoodTracker() {
       notes: currentEntry.notes || ""
     };
 
-    console.log('💾 Prepared save data:', saveData);
+log('💾 Prepared save data:', saveData);
 
     if (currentEntryId) {
       // Update existing entry
@@ -397,8 +397,8 @@ export function MoodTracker() {
     const existing = entries.find(e => e.entryDate === dateString);
     setIsProgrammaticLoad(true);
     if (existing) {
-      console.log('📖 Loading existing entry for date:', dateString);
-      console.log('📖 Existing entry data:', {
+log('📖 Loading existing entry for date:', dateString);
+log('📖 Existing entry data:', {
         emotions: existing.emotions,
         activities: existing.activities,
         gratitude: existing.gratitude
@@ -505,7 +505,7 @@ export function MoodTracker() {
         description: "Your mood tracker report has been downloaded as a PDF.",
       });
     } catch (error) {
-      console.error("Error generating PDF:", error);
+error("Error generating PDF:", error);
       toast({
         title: "Export Failed",
         description: "Failed to generate PDF report. Please try again.",

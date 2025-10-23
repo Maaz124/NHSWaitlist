@@ -373,7 +373,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
 
   const exportNhsPrep = () => {
     try {
-      console.log("Starting NHS Prep PDF generation...");
+log("Starting NHS Prep PDF generation...");
       
       const prepData = {
         documentPrep,
@@ -389,14 +389,14 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
         version: "1.0"
       };
 
-      console.log("NHS Prep data prepared:", prepData);
+log("NHS Prep data prepared:", prepData);
       
       const doc = generateNhsPrepReport(prepData);
       doc.save(`nhs-transition-preparation-${new Date().toISOString().split('T')[0]}.pdf`);
       
-      console.log("NHS Prep PDF generated and saved successfully");
+log("NHS Prep PDF generated and saved successfully");
     } catch (error) {
-      console.error("Error generating NHS Prep PDF:", error);
+error("Error generating NHS Prep PDF:", error);
       alert(`Error generating PDF: ${error.message}. Please try again.`);
     }
   };

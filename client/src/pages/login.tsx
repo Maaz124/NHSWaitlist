@@ -16,7 +16,6 @@ export default function Login() {
     setIsSubmitting(true);
     
     try {
-      console.log("Attempting login...");
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -26,16 +25,13 @@ export default function Login() {
       
       if (!res.ok) {
         const errorText = await res.text();
-        console.error("Login failed:", errorText);
         throw new Error(errorText);
       }
       
       const data = await res.json();
-      console.log("Login response:", data);
       const userId = data.user?.id;
       
       if (!userId) {
-        console.error("No user ID in response");
         alert("Login failed. Please try again.");
         setIsSubmitting(false);
         return;
@@ -43,7 +39,6 @@ export default function Login() {
       
       // Check if user has completed onboarding
       try {
-        console.log("Checking onboarding status for user:", userId);
         const onboardingRes = await fetch(`/api/onboarding/${userId}`, { 
           credentials: "include",
           headers: {
@@ -54,10 +49,8 @@ export default function Login() {
         
         if (onboardingRes.ok) {
           const onboardingData = await onboardingRes.json();
-          console.log("Onboarding check response:", onboardingData);
           
           if (onboardingData?.response) {
-            console.log("User has completed onboarding, redirecting to dashboard");
             setIsSubmitting(false);
             // Small delay to ensure state updates are processed
             setTimeout(() => {
@@ -67,7 +60,6 @@ export default function Login() {
             }, 100);
             return;
           } else {
-            console.log("User hasn't completed onboarding, redirecting to onboarding");
             setIsSubmitting(false);
             // Small delay to ensure state updates are processed
             setTimeout(() => {
@@ -78,7 +70,6 @@ export default function Login() {
             return;
           }
         } else {
-          console.log("Couldn't check onboarding status, redirecting to onboarding");
           setIsSubmitting(false);
           setTimeout(() => {
             setLocation("/onboarding");
@@ -88,7 +79,6 @@ export default function Login() {
           return;
         }
       } catch (error) {
-        console.error("Error checking onboarding status:", error);
         setIsSubmitting(false);
         setTimeout(() => {
           setLocation("/onboarding");
@@ -99,7 +89,6 @@ export default function Login() {
       }
       
     } catch (err: any) {
-      console.error("Login error:", err);
       alert("Login failed. Please check your email and password.");
       setIsSubmitting(false);
     }

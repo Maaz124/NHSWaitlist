@@ -146,7 +146,7 @@ export function ToolkitBuilder({ initialData, onDataChange, onSave, onGetCurrent
   // Auto-save when data changes
   useEffect(() => {
     if (onDataChange) {
-      console.log('🔧 Toolkit Builder data changed:', toolkit);
+log('🔧 Toolkit Builder data changed:', toolkit);
       onDataChange(toolkit);
     }
   }, [toolkit, onDataChange]);
@@ -469,7 +469,7 @@ export function ToolkitBuilder({ initialData, onDataChange, onSave, onGetCurrent
       <div className="flex justify-center">
         <Button 
           onClick={() => {
-            console.log('🔘 Manual save button clicked');
+log('🔘 Manual save button clicked');
             if (onSave) {
               onSave(toolkit);
             }

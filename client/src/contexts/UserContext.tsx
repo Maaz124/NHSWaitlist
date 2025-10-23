@@ -56,7 +56,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         credentials: 'include',
       });
     } catch (error) {
-      console.error('Logout error:', error);
     } finally {
       setUser(null);
     }

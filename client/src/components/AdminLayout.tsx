@@ -30,7 +30,6 @@ export default function AdminLayout() {
           setLocation('/admin/login');
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
         setLocation('/admin/login');
       } finally {
         setLoading(false);
@@ -47,7 +46,6 @@ export default function AdminLayout() {
       });
       setLocation('/admin/login');
     } catch (error) {
-      console.error('Logout failed:', error);
       setLocation('/admin/login');
     }
   };

@@ -80,10 +80,10 @@ export function SleepGuideComprehensive() {
     queryKey: [`/api/sleep-assessment/${user?.id}`],
     queryFn: async () => {
       if (!user?.id) return null;
-      console.log('🔍 Fetching sleep assessment for user:', user.id);
+log('🔍 Fetching sleep assessment for user:', user.id);
       const response = await apiRequest('GET', `/api/sleep-assessment/${user.id}`);
       const data = await response.json();
-      console.log('📥 Raw API response:', JSON.stringify(data, null, 2));
+log('📥 Raw API response:', JSON.stringify(data, null, 2));
       return data;
     },
     enabled: !!user?.id,
@@ -110,19 +110,19 @@ export function SleepGuideComprehensive() {
       try {
         return JSON.parse(text);
       } catch (error) {
-        console.error('Failed to parse JSON response:', text);
+error('Failed to parse JSON response:', text);
         throw new Error('Invalid JSON response from server');
       }
     },
     onSuccess: (data) => {
-      console.log('✅ Sleep assessment saved successfully:', JSON.stringify(data, null, 2));
+log('✅ Sleep assessment saved successfully:', JSON.stringify(data, null, 2));
       toast({
         title: "Saved Successfully",
         description: "Your sleep assessment has been saved.",
       });
     },
     onError: (error: any) => {
-      console.error('❌ Failed to save sleep assessment:', error);
+error('❌ Failed to save sleep assessment:', error);
       toast({
         title: "Save Failed",
         description: "Failed to save your progress. Please try again.",
@@ -134,12 +134,12 @@ export function SleepGuideComprehensive() {
   // Load existing data when component mounts or data is fetched
   useEffect(() => {
     if (existingAssessment) {
-      console.log('📥 Loading existing sleep assessment data:', existingAssessment);
-      console.log('📥 completedSections from DB:', existingAssessment.completedSections);
-      console.log('📥 personalPlan from DB:', existingAssessment.personalPlan);
-      console.log('📥 personalPlan length from DB:', existingAssessment.personalPlan?.length);
-      console.log('🆔 Cache bust timestamp:', new Date().toISOString());
-      console.log('🚀 NEW CODE VERSION LOADED - Check this timestamp!');
+log('📥 Loading existing sleep assessment data:', existingAssessment);
+log('📥 completedSections from DB:', existingAssessment.completedSections);
+log('📥 personalPlan from DB:', existingAssessment.personalPlan);
+log('📥 personalPlan length from DB:', existingAssessment.personalPlan?.length);
+log('🆔 Cache bust timestamp:', new Date().toISOString());
+log('🚀 NEW CODE VERSION LOADED - Check this timestamp!');
       
       setCompletedSections(existingAssessment.completedSections || []);
       setSleepAssessment(existingAssessment.sleepAssessment || {
@@ -158,7 +158,7 @@ export function SleepGuideComprehensive() {
       setPersonalNotes(existingAssessment.personalNotes || {});
       setAdditionalNotes(existingAssessment.additionalNotes || "");
       
-      console.log('📥 Loaded data into state:', JSON.stringify({
+log('📥 Loaded data into state:', JSON.stringify({
         completedSections: existingAssessment.completedSections,
         personalPlan: existingAssessment.personalPlan,
         personalPlanLength: existingAssessment.personalPlan?.length,
@@ -172,7 +172,7 @@ export function SleepGuideComprehensive() {
   // Manual save function - only called when user clicks Next or Complete
   const manualSave = () => {
     if (!user?.id || updateAssessmentMutation.isPending) {
-      console.log('⏸️ Save skipped - user not authenticated or mutation pending');
+log('⏸️ Save skipped - user not authenticated or mutation pending');
       return;
     }
     
@@ -189,14 +189,14 @@ export function SleepGuideComprehensive() {
       }
     };
 
-    console.log('💾 Manual save triggered:', dataToSave);
-    console.log('💾 sleepAssessment being saved:', sleepAssessment);
-    console.log('💾 sleepAssessment.bedTime:', sleepAssessment.bedTime);
-    console.log('💾 sleepAssessment.sleepQuality:', sleepAssessment.sleepQuality);
-    console.log('💾 personalNotes being saved:', personalNotes);
-    console.log('💾 personalNotes[section0]:', personalNotes['section0']);
-    console.log('💾 personalNotes[section3]:', personalNotes['section3']);
-    console.log('💾 Full dataToSave structure:', JSON.stringify(dataToSave, null, 2));
+log('💾 Manual save triggered:', dataToSave);
+log('💾 sleepAssessment being saved:', sleepAssessment);
+log('💾 sleepAssessment.bedTime:', sleepAssessment.bedTime);
+log('💾 sleepAssessment.sleepQuality:', sleepAssessment.sleepQuality);
+log('💾 personalNotes being saved:', personalNotes);
+log('💾 personalNotes[section0]:', personalNotes['section0']);
+log('💾 personalNotes[section3]:', personalNotes['section3']);
+log('💾 Full dataToSave structure:', JSON.stringify(dataToSave, null, 2));
     updateAssessmentMutation.mutate(dataToSave);
   };
 
@@ -218,12 +218,12 @@ export function SleepGuideComprehensive() {
 
   // Calculate progress based on actual content completion
   const calculateProgress = () => {
-    console.log('🔄 Progress calculation - completedSections:', completedSections);
-    console.log('🔄 Progress calculation - completedSections.length:', completedSections.length);
-    console.log('🔄 Progress calculation - personalPlan.length:', personalPlan.length);
+log('🔄 Progress calculation - completedSections:', completedSections);
+log('🔄 Progress calculation - completedSections.length:', completedSections.length);
+log('🔄 Progress calculation - personalPlan.length:', personalPlan.length);
     
     if (completedSections.length === 4) {
-      console.log('✅ All 4 sections completed - returning 100%');
+log('✅ All 4 sections completed - returning 100%');
       return 100;
     }
 
@@ -232,7 +232,7 @@ export function SleepGuideComprehensive() {
 
     if (completedSections.includes(0)) {
       completedContent += 1;
-      console.log('✅ Section 0 completed');
+log('✅ Section 0 completed');
     }
     
     const section1Content = (sleepAssessment.bedTime && sleepAssessment.bedTime.trim().length > 0) || 
@@ -244,22 +244,22 @@ export function SleepGuideComprehensive() {
     
     if (section1Content) {
       completedContent += 1;
-      console.log('✅ Section 1 content completed');
+log('✅ Section 1 content completed');
     }
     
     if (completedSections.includes(2)) {
       completedContent += 1;
-      console.log('✅ Section 2 completed');
+log('✅ Section 2 completed');
     }
     
     const section3Content = completedSections.includes(3) || personalPlan.length > 0;
     if (section3Content) {
       completedContent += 1;
-      console.log('✅ Section 3 content completed');
+log('✅ Section 3 content completed');
     }
 
     const progress = Math.round((completedContent / totalContent) * 100);
-    console.log('📊 Progress calculation result:', completedContent, '/', totalContent, '=', progress + '%');
+log('📊 Progress calculation result:', completedContent, '/', totalContent, '=', progress + '%');
     return progress;
   };
 
@@ -269,12 +269,12 @@ export function SleepGuideComprehensive() {
 
   // Debug progress calculation when state changes
   useEffect(() => {
-    console.log('🔄 State changed - recalculating progress...');
-    console.log('🔄 Current completedSections:', completedSections);
-    console.log('🔄 Current personalPlan:', personalPlan);
-    console.log('🔄 Current personalPlan.length:', personalPlan.length);
+log('🔄 State changed - recalculating progress...');
+log('🔄 Current completedSections:', completedSections);
+log('🔄 Current personalPlan:', personalPlan);
+log('🔄 Current personalPlan.length:', personalPlan.length);
     const currentProgress = calculateProgress();
-    console.log('🔄 Current progress percentage:', currentProgress + '%');
+log('🔄 Current progress percentage:', currentProgress + '%');
   }, [completedSections, personalPlan, sleepAssessment, additionalNotes]);
 
   const completedSectionsCount = useMemo(() => {
@@ -449,7 +449,7 @@ export function SleepGuideComprehensive() {
                     type="time"
                     value={sleepAssessment.bedTime || ''}
                     onChange={(e) => {
-                      console.log('🛏️ Bedtime changed:', e.target.value);
+log('🛏️ Bedtime changed:', e.target.value);
                       setSleepAssessment(prev => ({...prev, bedTime: e.target.value}));
                     }}
                     className="mt-1"
@@ -461,7 +461,7 @@ export function SleepGuideComprehensive() {
                     type="time"
                     value={sleepAssessment.wakeTime || ''}
                     onChange={(e) => {
-                      console.log('☀️ Wake time changed:', e.target.value);
+log('☀️ Wake time changed:', e.target.value);
                       setSleepAssessment(prev => ({...prev, wakeTime: e.target.value}));
                     }}
                     className="mt-1"
@@ -515,7 +515,7 @@ export function SleepGuideComprehensive() {
                     <Slider
                       value={[sleepAssessment.sleepQuality || 5]}
                       onValueChange={(value) => {
-                        console.log('😴 Sleep quality changed:', value[0]);
+log('😴 Sleep quality changed:', value[0]);
                         setSleepAssessment(prev => ({...prev, sleepQuality: value[0]}));
                       }}
                       max={10}
@@ -1180,7 +1180,7 @@ export function SleepGuideComprehensive() {
               placeholder="Write your commitment to improving your sleep. What are your specific goals for the next 2 weeks? How will you remind yourself to practice these techniques?"
               value={personalNotes['section3'] || ''}
               onChange={(e) => {
-                console.log('📝 Personal Sleep Action Plan text changed:', e.target.value);
+log('📝 Personal Sleep Action Plan text changed:', e.target.value);
                 setPersonalNotes(prev => ({...prev, section3: e.target.value}));
               }}
               className="min-h-[100px]"
@@ -1234,7 +1234,7 @@ export function SleepGuideComprehensive() {
               variant="outline" 
               size="sm" 
               onClick={() => {
-                console.log('🔍 Current state before test:', {
+log('🔍 Current state before test:', {
                   sleepAssessment,
                   personalPlan,
                   personalNotes,
@@ -1248,7 +1248,7 @@ export function SleepGuideComprehensive() {
                   sleepLatency: 20,
                   daytimeEnergy: 6
                 }));
-                console.log('🧪 Test data set');
+log('🧪 Test data set');
               }}
               className="ml-2"
             >

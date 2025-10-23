@@ -30,14 +30,12 @@ export default function Signup() {
       if (!res.ok) throw new Error(await res.text());
       
       const data = await res.json();
-      console.log("Signup successful:", data);
       
       // Redirect directly to onboarding after successful signup
       setLocation("/onboarding");
       // Fallback hard navigation to ensure route change
       window.location.href = "/onboarding";
     } catch (err) {
-      console.error("Signup error:", err);
       alert("Signup failed. Please try again.");
     } finally {
       setIsSubmitting(false);

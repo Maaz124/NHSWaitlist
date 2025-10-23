@@ -37,13 +37,9 @@ export default function Dashboard() {
     const payment = urlParams.get('payment');
     
     if (payment === 'success') {
-      console.log('🎉 Payment success detected!');
-      
       // Update user's payment status directly
       const updatePaymentStatus = async () => {
         try {
-          console.log('🔄 Updating payment status for user:', user?.id);
-          
           // Call the simple update-status endpoint to update the database
           const response = await fetch('/api/payments/update-status', {
             method: 'POST',
@@ -54,7 +50,6 @@ export default function Dashboard() {
           });
 
           if (response.ok) {
-            console.log('✅ Payment status updated successfully');
             // Show success modal
             setShowPaymentSuccess(true);
             // Clean up URL
@@ -64,13 +59,11 @@ export default function Dashboard() {
               window.location.reload();
             }, 2000);
           } else {
-            console.error('❌ Failed to update payment status:', response.status);
             // Still show success modal even if database update fails
             setShowPaymentSuccess(true);
             window.history.replaceState({}, '', '/');
           }
         } catch (error) {
-          console.error('❌ Error updating payment status:', error);
           // Still show success modal even if there's an error
           setShowPaymentSuccess(true);
           window.history.replaceState({}, '', '/');
@@ -87,18 +80,12 @@ export default function Dashboard() {
     }
   }, [user?.id]);
 
-  // Redirect if not authenticated or onboarding not completed
+  // Check if user has completed onboarding (only if authenticated)
   useEffect(() => {
     if (userLoading) return; // Still loading
-    if (!isAuthenticated) {
-      setLocation("/login");
-      return;
-    }
     
-    // Note: Users can freely use the dashboard, payment check only happens when clicking anxiety modules
-    
-    // Check if user has completed onboarding
-    if (user?.id) {
+    // Only check onboarding if user is authenticated
+    if (isAuthenticated && user?.id) {
       const checkOnboarding = async () => {
         try {
           const res = await fetch(`/api/onboarding/${user.id}`, { 
@@ -116,7 +103,7 @@ export default function Dashboard() {
             }
           }
         } catch (error) {
-          console.error("Error checking onboarding status:", error);
+          // Error checking onboarding status
         }
       };
       checkOnboarding();
@@ -151,7 +138,7 @@ export default function Dashboard() {
       const response = await fetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
+        body: JSON.stringify({ userId: user?.id }),
       });
       
       if (!response.ok) throw new Error("Failed to generate report");
@@ -164,20 +151,11 @@ export default function Dashboard() {
     }
   };
 
-  // Show loading state while checking authentication
+  // Show loading state only while checking user data
   if (userLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">Loading...</div>
-      </div>
-    );
-  }
-
-  // Show loading state if not authenticated (redirect will happen)
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">Redirecting...</div>
       </div>
     );
   }
@@ -204,7 +182,11 @@ export default function Dashboard() {
   };
 
   const handleModuleClick = (weekNumber: number) => {
-    // If user hasn't paid, redirect to pricing
+    // Require both login and payment for accessing modules
+    if (!isAuthenticated) {
+      setLocation('/login');
+      return;
+    }
     if (!(user as any)?.hasPaid) {
       setLocation('/pricing');
       return;
@@ -261,7 +243,7 @@ export default function Dashboard() {
             </div>
             <div className="relative p-8 md:p-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 drop-shadow-sm">
-                Welcome back, {user.firstName}
+                Welcome back{user?.firstName ? `, ${user.firstName}` : ''}
               </h2>
               <p className="text-lg text-foreground/90 mb-6 max-w-2xl font-medium">
                 Continue your journey toward better mental health. You're making progress every day, and we're here to support you.
@@ -337,9 +319,11 @@ export default function Dashboard() {
           </div>
 
           {/* Payment Status */}
-          <div className="mb-8">
-            <PaymentStatus user={user} />
-          </div>
+          {user && (
+            <div className="mb-8">
+              <PaymentStatus user={user} />
+            </div>
+          )}
 
           {/* Progress Overview */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

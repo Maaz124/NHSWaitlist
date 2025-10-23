@@ -98,12 +98,12 @@ export function AnxietyGuideComprehensive() {
       return response.json();
     },
     onSuccess: (data) => {
-      console.log('✅ Anxiety guide saved successfully:', data);
+log('✅ Anxiety guide saved successfully:', data);
       setIsAutoSaving(false);
       // Don't automatically refetch to prevent loops
     },
     onError: (error: any) => {
-      console.error('❌ Failed to save anxiety guide data:', error);
+error('❌ Failed to save anxiety guide data:', error);
       setIsAutoSaving(false);
       toast({
         title: "Save Failed",
@@ -116,7 +116,7 @@ export function AnxietyGuideComprehensive() {
   // Load existing data when component mounts or data is fetched
   useEffect(() => {
     if (existingGuide) {
-      console.log('📥 Loading existing guide data:', existingGuide);
+log('📥 Loading existing guide data:', existingGuide);
       setCompletedSections(existingGuide.completedSections || []);
       setPersonalNotes(existingGuide.personalNotes || {});
       setQuizAnswers(existingGuide.quizAnswers || {});
@@ -136,7 +136,7 @@ export function AnxietyGuideComprehensive() {
         longTermGoals: "",
         warningSigns: ""
       });
-      console.log('📥 Loaded data into state:', {
+log('📥 Loaded data into state:', {
         actionPlanData: existingGuide.actionPlanData,
         symptomTrackingWorksheet: existingGuide.symptomTrackingWorksheet,
         personalManagementPlan: existingGuide.personalManagementPlan
@@ -148,7 +148,7 @@ export function AnxietyGuideComprehensive() {
   const autoSave = () => {
     if (!user?.id || isAutoSaving || updateGuideMutation.isPending) return;
     
-    console.log('🔄 Auto-save triggered with data:', {
+log('🔄 Auto-save triggered with data:', {
       actionPlanData,
       symptomTrackingWorksheet,
       personalManagementPlan,
@@ -174,7 +174,7 @@ export function AnxietyGuideComprehensive() {
       }
     };
 
-    console.log('💾 Saving data:', dataToSave);
+log('💾 Saving data:', dataToSave);
     updateGuideMutation.mutate(dataToSave);
   };
 
@@ -948,7 +948,7 @@ export function AnxietyGuideComprehensive() {
     }
 
     const percentage = Math.round((completedContent / totalContent) * 100);
-    console.log('📊 Progress calculation:', {
+log('📊 Progress calculation:', {
       completedContent,
       totalContent,
       percentage,

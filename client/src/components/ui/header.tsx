@@ -50,6 +50,18 @@ export function Header({ user }: HeaderProps) {
           <div className="flex items-center space-x-4">
             <CrisisButton />
             
+            {/* Show login button if not authenticated and not on login/signup pages */}
+            {!activeUser && location !== "/login" && location !== "/signup" && (
+              <Button 
+                variant="outline" 
+                onClick={() => setLocation("/login")}
+                className="flex items-center space-x-2"
+              >
+                <User className="w-4 h-4" />
+                <span>Login</span>
+              </Button>
+            )}
+            
             {/* Only show user profile dropdown if user is logged in and not on login/signup page */}
             {activeUser && activeUser.email && location !== "/login" && location !== "/signup" && (
               <DropdownMenu>

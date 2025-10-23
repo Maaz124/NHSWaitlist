@@ -80,7 +80,6 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
     queryKey: ["/api/weekly-thought-records", user?.id, moduleId],
     enabled: !!user?.id && !!moduleId,
     queryFn: async () => {
-      console.log('🔍 Fetching weekly thought records for userId:', user?.id, 'moduleId:', moduleId);
       const response = await fetch(`/api/weekly-thought-records/${user?.id}?moduleId=${moduleId}`, {
         credentials: "include",
       });
@@ -90,7 +89,6 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
       }
       
       const data = await response.json();
-      console.log('📥 Weekly thought records fetched:', data);
       return data;
     }
   });
@@ -104,7 +102,6 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
       );
       const mostRecentRecord = sortedRecords[0];
       
-      console.log('🔄 Auto-loading most recent thought record:', mostRecentRecord);
       loadRecord(mostRecentRecord);
     }
   }, [savedWeeklyThoughtRecords, currentRecordId]);
@@ -112,7 +109,6 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
   // Create weekly thought record mutation
   const createWeeklyThoughtRecordMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Creating weekly thought record with data:", data);
       try {
         const response = await fetch("/api/weekly-thought-records", {
           method: "POST",
@@ -123,11 +119,9 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
           body: JSON.stringify(data),
         });
         
-        console.log("Create weekly response status:", response.status);
         
         if (!response.ok) {
           const text = await response.text();
-          console.error("Response text:", text);
           if (response.status === 401) {
             throw new Error("Authentication required. Please log in again.");
           }
@@ -136,12 +130,10 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
         
         return await response.json();
       } catch (error: any) {
-        console.error("Network error:", error);
         throw error;
       }
     },
     onSuccess: (data) => {
-      console.log("Weekly thought record created successfully:", data);
       setCurrentRecordId(data.id);
       refetchWeeklyThoughtRecords();
       toast({
@@ -150,7 +142,6 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
       });
     },
     onError: (error: any) => {
-      console.error("Failed to create weekly thought record:", error);
       toast({
         title: "Save Failed",
         description: `Failed to save thought record: ${error.message}`,
@@ -162,7 +153,6 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
   // Update weekly thought record mutation
   const updateWeeklyThoughtRecordMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      console.log("Updating weekly thought record:", id, updates);
       try {
         const response = await fetch(`/api/weekly-thought-records/${id}`, {
           method: "PATCH",
@@ -173,11 +163,9 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
           body: JSON.stringify(updates),
         });
         
-        console.log("Update weekly response status:", response.status);
         
         if (!response.ok) {
           const text = await response.text();
-          console.error("Response text:", text);
           if (response.status === 401) {
             throw new Error("Authentication required. Please log in again.");
           }
@@ -186,19 +174,16 @@ export function WeeklyThoughtRecord({ moduleId, weekNumber }: WeeklyThoughtRecor
         
         return await response.json();
       } catch (error: any) {
-        console.error("Network error:", error);
         throw error;
       }
     },
     onSuccess: (data) => {
-      console.log("Weekly thought record updated successfully:", data);
       toast({
         title: "Record Updated",
         description: "Your thought record has been updated successfully.",
       });
     },
     onError: (error: any) => {
-      console.error("Failed to update weekly thought record:", error);
       toast({
         title: "Update Failed",
         description: `Failed to update thought record: ${error.message}`,

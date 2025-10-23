@@ -77,10 +77,10 @@ export function LifestyleGuideComprehensive() {
     queryKey: [`/api/lifestyle-assessment/${user?.id}`],
     queryFn: async () => {
       if (!user?.id) return null;
-      console.log('🔍 Fetching lifestyle assessment for user:', user.id);
+log('🔍 Fetching lifestyle assessment for user:', user.id);
       const response = await apiRequest('GET', `/api/lifestyle-assessment/${user.id}`);
       const data = await response.json();
-      console.log('📥 Raw API response:', JSON.stringify(data, null, 2));
+log('📥 Raw API response:', JSON.stringify(data, null, 2));
       return data;
     },
     enabled: !!user?.id,
@@ -91,7 +91,7 @@ export function LifestyleGuideComprehensive() {
     mutationFn: async (dataToSave: any) => {
       if (!user?.id) throw new Error('User not authenticated');
       
-      console.log('💾 Saving lifestyle assessment data:', dataToSave);
+log('💾 Saving lifestyle assessment data:', dataToSave);
       const response = await apiRequest('PATCH', `/api/lifestyle-assessment/${user.id}`, dataToSave);
       
       // Handle empty response
@@ -104,21 +104,21 @@ export function LifestyleGuideComprehensive() {
         try {
           return JSON.parse(text);
         } catch (e) {
-          console.log('⚠️ Non-JSON response:', text);
+log('⚠️ Non-JSON response:', text);
           return { success: true };
         }
       }
       return { success: true };
     },
     onSuccess: () => {
-      console.log('✅ Lifestyle assessment saved successfully');
+log('✅ Lifestyle assessment saved successfully');
       toast({
         title: "Saved Successfully",
         description: "Your lifestyle assessment has been saved.",
       });
     },
     onError: (error) => {
-      console.error('❌ Failed to save lifestyle assessment:', error);
+error('❌ Failed to save lifestyle assessment:', error);
       toast({
         title: "Save Failed",
         description: "Failed to save your progress. Please try again.",
@@ -130,12 +130,12 @@ export function LifestyleGuideComprehensive() {
   // Load existing data when component mounts or data is fetched
   useEffect(() => {
     if (existingAssessment) {
-      console.log('📥 Loading existing lifestyle assessment data:', existingAssessment);
-      console.log('📥 completedSections from DB:', existingAssessment.completedSections);
-      console.log('📥 personalGoals from DB:', existingAssessment.personalGoals);
-      console.log('📥 personalGoals length from DB:', existingAssessment.personalGoals?.length);
-      console.log('🆔 Cache bust timestamp:', new Date().toISOString());
-      console.log('🚀 NEW CODE VERSION LOADED - Check this timestamp!');
+log('📥 Loading existing lifestyle assessment data:', existingAssessment);
+log('📥 completedSections from DB:', existingAssessment.completedSections);
+log('📥 personalGoals from DB:', existingAssessment.personalGoals);
+log('📥 personalGoals length from DB:', existingAssessment.personalGoals?.length);
+log('🆔 Cache bust timestamp:', new Date().toISOString());
+log('🚀 NEW CODE VERSION LOADED - Check this timestamp!');
       
       setCompletedSections(existingAssessment.completedSections || []);
       setAssessment(existingAssessment.assessment || {
@@ -157,7 +157,7 @@ export function LifestyleGuideComprehensive() {
       setPersonalGoals(existingAssessment.personalGoals || []);
       setPersonalNotes(existingAssessment.personalNotes || {});
       
-      console.log('📥 Loaded data into state:', JSON.stringify({
+log('📥 Loaded data into state:', JSON.stringify({
         completedSections: existingAssessment.completedSections,
         personalGoals: existingAssessment.personalGoals,
         personalGoalsLength: existingAssessment.personalGoals?.length,
@@ -170,7 +170,7 @@ export function LifestyleGuideComprehensive() {
   // Manual save function - only called when user clicks Next or Complete
   const manualSave = () => {
     if (!user?.id || updateAssessmentMutation.isPending) {
-      console.log('⏸️ Save skipped - user not authenticated or mutation pending');
+log('⏸️ Save skipped - user not authenticated or mutation pending');
       return;
     }
     
@@ -186,22 +186,22 @@ export function LifestyleGuideComprehensive() {
       }
     };
 
-    console.log('💾 Manual save triggered:', dataToSave);
-    console.log('💾 assessment being saved:', assessment);
-    console.log('💾 assessment.exerciseFrequency:', assessment.exerciseFrequency);
-    console.log('💾 assessment.dietQuality:', assessment.dietQuality);
-    console.log('💾 assessment.eatingHabits:', assessment.eatingHabits);
-    console.log('💾 assessment.eatingHabits length:', assessment.eatingHabits?.length);
-    console.log('💾 assessment.nutritionChallenges:', assessment.nutritionChallenges);
-    console.log('💾 assessment.nutritionChallenges length:', assessment.nutritionChallenges?.length);
-    console.log('💾 assessment.socialSupport:', assessment.socialSupport);
-    console.log('💾 assessment.socialSupport length:', assessment.socialSupport?.length);
-    console.log('💾 assessment.socialChallenges:', assessment.socialChallenges);
-    console.log('💾 assessment.socialChallenges length:', assessment.socialChallenges?.length);
-    console.log('💾 personalGoals being saved:', personalGoals);
-    console.log('💾 personalNotes being saved:', personalNotes);
-    console.log('💾 personalNotes[section0]:', personalNotes['section0']);
-    console.log('💾 Full dataToSave structure:', JSON.stringify(dataToSave, null, 2));
+log('💾 Manual save triggered:', dataToSave);
+log('💾 assessment being saved:', assessment);
+log('💾 assessment.exerciseFrequency:', assessment.exerciseFrequency);
+log('💾 assessment.dietQuality:', assessment.dietQuality);
+log('💾 assessment.eatingHabits:', assessment.eatingHabits);
+log('💾 assessment.eatingHabits length:', assessment.eatingHabits?.length);
+log('💾 assessment.nutritionChallenges:', assessment.nutritionChallenges);
+log('💾 assessment.nutritionChallenges length:', assessment.nutritionChallenges?.length);
+log('💾 assessment.socialSupport:', assessment.socialSupport);
+log('💾 assessment.socialSupport length:', assessment.socialSupport?.length);
+log('💾 assessment.socialChallenges:', assessment.socialChallenges);
+log('💾 assessment.socialChallenges length:', assessment.socialChallenges?.length);
+log('💾 personalGoals being saved:', personalGoals);
+log('💾 personalNotes being saved:', personalNotes);
+log('💾 personalNotes[section0]:', personalNotes['section0']);
+log('💾 Full dataToSave structure:', JSON.stringify(dataToSave, null, 2));
     updateAssessmentMutation.mutate(dataToSave);
   };
 
@@ -209,13 +209,13 @@ export function LifestyleGuideComprehensive() {
     if (!completedSections.includes(sectionId)) {
       const newCompletedSections = [...completedSections, sectionId];
       setCompletedSections(newCompletedSections);
-      console.log('✅ Section marked complete:', sectionId);
+log('✅ Section marked complete:', sectionId);
     }
   };
 
   const markAllSectionsComplete = () => {
     setCompletedSections([0, 1, 2, 3]);
-    console.log('🎉 All sections marked complete!');
+log('🎉 All sections marked complete!');
     toast({
       title: "🎉 Congratulations!",
       description: "You've completed the Lifestyle & Mental Health guide!",
@@ -224,12 +224,12 @@ export function LifestyleGuideComprehensive() {
 
   // Calculate progress based on actual content completion
   const calculateProgress = () => {
-    console.log('🔄 Progress calculation - completedSections:', completedSections);
-    console.log('🔄 Progress calculation - completedSections.length:', completedSections.length);
-    console.log('🔄 Progress calculation - personalGoals.length:', personalGoals.length);
+log('🔄 Progress calculation - completedSections:', completedSections);
+log('🔄 Progress calculation - completedSections.length:', completedSections.length);
+log('🔄 Progress calculation - personalGoals.length:', personalGoals.length);
     
     if (completedSections.length === 4) {
-      console.log('✅ All 4 sections completed - returning 100%');
+log('✅ All 4 sections completed - returning 100%');
       return 100;
     }
 
@@ -238,7 +238,7 @@ export function LifestyleGuideComprehensive() {
 
     if (completedSections.includes(0)) {
       completedContent += 1;
-      console.log('✅ Section 0 completed');
+log('✅ Section 0 completed');
     }
     
     const section1Content = (assessment.exerciseFrequency > 0) || 
@@ -258,22 +258,22 @@ export function LifestyleGuideComprehensive() {
     
     if (section1Content) {
       completedContent += 1;
-      console.log('✅ Section 1 content completed');
+log('✅ Section 1 content completed');
     }
     
     if (completedSections.includes(2)) {
       completedContent += 1;
-      console.log('✅ Section 2 completed');
+log('✅ Section 2 completed');
     }
     
     const section3Content = completedSections.includes(3) || personalGoals.length > 0;
     if (section3Content) {
       completedContent += 1;
-      console.log('✅ Section 3 content completed');
+log('✅ Section 3 content completed');
     }
 
     const progress = Math.round((completedContent / totalContent) * 100);
-    console.log('📊 Progress calculation result:', completedContent, '/', totalContent, '=', progress + '%');
+log('📊 Progress calculation result:', completedContent, '/', totalContent, '=', progress + '%');
     return progress;
   };
 
@@ -597,12 +597,12 @@ export function LifestyleGuideComprehensive() {
                           id={`eating-${index}`}
                           checked={assessment.eatingHabits && assessment.eatingHabits.includes(habit)}
                           onCheckedChange={(checked) => {
-                            console.log('🍎 Eating habit checkbox changed:', habit, checked);
-                            console.log('🍎 Current eatingHabits before update:', assessment.eatingHabits);
+log('🍎 Eating habit checkbox changed:', habit, checked);
+log('🍎 Current eatingHabits before update:', assessment.eatingHabits);
                             if (checked) {
                               setAssessment(prev => {
                                 const newHabits = [...(prev.eatingHabits || []), habit];
-                                console.log('🍎 New eatingHabits after adding:', newHabits);
+log('🍎 New eatingHabits after adding:', newHabits);
                                 return {
                                   ...prev, 
                                   eatingHabits: newHabits
@@ -611,7 +611,7 @@ export function LifestyleGuideComprehensive() {
                             } else {
                               setAssessment(prev => {
                                 const newHabits = (prev.eatingHabits || []).filter(h => h !== habit);
-                                console.log('🍎 New eatingHabits after removing:', newHabits);
+log('🍎 New eatingHabits after removing:', newHabits);
                                 return {
                                   ...prev,
                                   eatingHabits: newHabits
@@ -707,12 +707,12 @@ export function LifestyleGuideComprehensive() {
                           id={`support-${index}`}
                           checked={assessment.socialSupport && assessment.socialSupport.includes(support)}
                           onCheckedChange={(checked) => {
-                            console.log('👥 Social support checkbox changed:', support, checked);
-                            console.log('👥 Current socialSupport before update:', assessment.socialSupport);
+log('👥 Social support checkbox changed:', support, checked);
+log('👥 Current socialSupport before update:', assessment.socialSupport);
                             if (checked) {
                               setAssessment(prev => {
                                 const newSupport = [...(prev.socialSupport || []), support];
-                                console.log('👥 New socialSupport after adding:', newSupport);
+log('👥 New socialSupport after adding:', newSupport);
                                 return {
                                   ...prev, 
                                   socialSupport: newSupport
@@ -721,7 +721,7 @@ export function LifestyleGuideComprehensive() {
                             } else {
                               setAssessment(prev => {
                                 const newSupport = (prev.socialSupport || []).filter(s => s !== support);
-                                console.log('👥 New socialSupport after removing:', newSupport);
+log('👥 New socialSupport after removing:', newSupport);
                                 return {
                                   ...prev,
                                   socialSupport: newSupport

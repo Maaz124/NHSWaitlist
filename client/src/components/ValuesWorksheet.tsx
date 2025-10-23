@@ -102,7 +102,7 @@ export function ValuesWorksheet({ initialData, onDataChange, onSave, onGetCurren
   // Auto-save when data changes
   useEffect(() => {
     if (onDataChange) {
-      console.log('🔍 Values Worksheet data changed:', valuesData);
+log('🔍 Values Worksheet data changed:', valuesData);
       onDataChange(valuesData);
     }
   }, [valuesData, onDataChange]);

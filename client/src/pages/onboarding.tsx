@@ -137,16 +137,13 @@ export default function Onboarding() {
               });
               if (onboardingRes.ok && isMounted) {
                 const onboardingData = await onboardingRes.json();
-                console.log("Onboarding check response:", onboardingData);
                 if (onboardingData?.response) {
-                  console.log("User has completed onboarding, redirecting to dashboard");
                   // User has already completed onboarding, redirect to dashboard
                   setLocation("/");
                   return;
                 }
               }
             } catch (error) {
-              console.log("Onboarding check error:", error);
             }
           }
         }
@@ -203,11 +200,9 @@ export default function Onboarding() {
       return response.json();
     },
     onSuccess: (data) => {
-      console.log("Onboarding submitted successfully:", data);
       setLocation("/");
     },
     onError: (error: any) => {
-      console.error("Onboarding submission error:", error);
       if (error?.message?.includes("already completed")) {
         setLocation("/");
       } else {

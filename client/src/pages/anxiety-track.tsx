@@ -75,7 +75,6 @@ export default function AnxietyTrack() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard", user?.id] });
     },
       onError: (error: any) => {
-        console.error("Failed to update module:", error);
         alert(`Failed to update module: ${error.message}`);
       },
     });
@@ -627,7 +626,11 @@ export default function AnxietyTrack() {
                                   size="sm" 
                                   data-testid={`button-enter-module-${module.weekNumber}`}
                                   onClick={() => {
-                                    // If user hasn't paid, redirect to pricing
+                                    // Require both login and payment for accessing modules
+                                    if (!isAuthenticated) {
+                                      setLocation('/login');
+                                      return;
+                                    }
                                     if (!(user as any)?.hasPaid) {
                                       setLocation('/pricing');
                                       return;

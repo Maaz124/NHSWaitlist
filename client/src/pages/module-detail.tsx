@@ -107,23 +107,18 @@ export default function ModuleDetail() {
 
   const updateModuleMutation = useMutation({
     mutationFn: async ({ moduleId, updates }: { moduleId: string; updates: any }) => {
-      console.log('🚀 updateModuleMutation called with:', { moduleId, updates });
       const response = await apiRequest("PATCH", `/api/modules/${moduleId}`, updates);
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('❌ Module update failed:', errorData);
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
       const result = await response.json();
-      console.log('✅ Module update successful:', result);
       return result;
     },
     onSuccess: (data) => {
-      console.log('✅ updateModuleMutation onSuccess:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/modules", user?.id] });
     },
     onError: (error: any) => {
-      console.error('❌ updateModuleMutation onError:', error);
       alert(`Failed to update module: ${error.message}`);
     },
   });
@@ -2020,7 +2015,6 @@ You're ready for this next phase of your mental health journey. Trust in the pro
     
     // Special handling for personal-toolkit: ensure any current toolkit data is saved
     if (activityId === 'personal-toolkit' && newCompletionStatus) {
-      console.log('🎯 Marking personal-toolkit as complete - ensuring data is saved');
       
       // Get the current toolkit data from the component if available
       let toolkitData = module.userProgress?.['personal-toolkit']?.worksheetData;
@@ -2028,12 +2022,10 @@ You're ready for this next phase of your mental health journey. Trust in the pro
       // If we have a data getter from the component, use the most current data
       if (toolkitDataGetter) {
         const currentToolkitData = toolkitDataGetter();
-        console.log('💾 Getting current toolkit data from component:', currentToolkitData);
         toolkitData = currentToolkitData;
       }
       
       if (toolkitData) {
-        console.log('💾 Toolkit data found, ensuring it\'s saved before completion');
         updatedUserProgress['personal-toolkit'] = {
           ...updatedUserProgress['personal-toolkit'],
           worksheetData: toolkitData,
@@ -2044,7 +2036,6 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
     // Special handling for relapse-prevention-plan: ensure any current relapse data is saved
     if (activityId === 'relapse-prevention-plan' && newCompletionStatus) {
-      console.log('🎯 Marking relapse-prevention-plan as complete - ensuring data is saved');
       
       // Get the current relapse data from the component if available
       let relapseData = module.userProgress?.['relapse-prevention-plan']?.worksheetData;
@@ -2052,13 +2043,11 @@ You're ready for this next phase of your mental health journey. Trust in the pro
       // If we have a data getter from the component, use the most current data
       if (relapseDataGetter) {
         const currentRelapseData = relapseDataGetter();
-        console.log('💾 Getting current relapse data from component:', currentRelapseData);
         relapseData = currentRelapseData;
       }
       
       // If we have relapse data, ensure it's saved before completion
       if (relapseData) {
-        console.log('💾 Relapse data found, ensuring it\'s saved before completion');
         updatedUserProgress['relapse-prevention-plan'] = {
           ...updatedUserProgress['relapse-prevention-plan'],
           worksheetData: relapseData,
@@ -2069,7 +2058,6 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
     // Special handling for nhs-transition-prep: ensure any current NHS data is saved
     if (activityId === 'nhs-transition-prep' && newCompletionStatus) {
-      console.log('🎯 Marking nhs-transition-prep as complete - ensuring data is saved');
       
       // Get the current NHS data from the component if available
       let nhsData = module.userProgress?.['nhs-transition-prep']?.worksheetData;
@@ -2077,13 +2065,11 @@ You're ready for this next phase of your mental health journey. Trust in the pro
       // If we have a data getter from the component, use the most current data
       if (nhsDataGetter) {
         const currentNhsData = nhsDataGetter();
-        console.log('💾 Getting current NHS data from component:', currentNhsData);
         nhsData = currentNhsData;
       }
       
       // If we have NHS data, ensure it's saved before completion
       if (nhsData) {
-        console.log('💾 NHS data found, ensuring it\'s saved before completion');
         updatedUserProgress['nhs-transition-prep'] = {
           ...updatedUserProgress['nhs-transition-prep'],
           worksheetData: nhsData,
@@ -2094,7 +2080,6 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
     // Special handling for values-assessment: ensure any current values data is saved
     if (activityId === 'values-assessment' && newCompletionStatus) {
-      console.log('🎯 Marking values-assessment as complete - ensuring data is saved');
       
       // Get the current values data from the component if available
       let valuesData = module.userProgress?.['values-assessment']?.worksheetData;
@@ -2102,13 +2087,11 @@ You're ready for this next phase of your mental health journey. Trust in the pro
       // If we have a data getter from the component, use the most current data
       if (valuesDataGetter) {
         const currentValuesData = valuesDataGetter();
-        console.log('💾 Getting current values data from component:', currentValuesData);
         valuesData = currentValuesData;
       }
       
       // If we have values data, ensure it's saved before completion
       if (valuesData) {
-        console.log('💾 Values data found, ensuring it\'s saved before completion');
         updatedUserProgress['values-assessment'] = {
           ...updatedUserProgress['values-assessment'],
           worksheetData: valuesData,
@@ -2138,7 +2121,6 @@ You're ready for this next phase of your mental health journey. Trust in the pro
       userProgress: updatedUserProgress
     };
     
-    console.log('🎯 Activity completion update:', { activityId, newCompletionStatus, updates });
     
     // Save to backend
     updateModuleMutation.mutate({
@@ -2429,12 +2411,10 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                             <ValuesWorksheet 
                               initialData={module?.userProgress?.['values-assessment']?.worksheetData}
                               onGetCurrentData={(getData) => {
-                                console.log('📋 Values Worksheet data getter registered');
                                 setValuesDataGetter(() => getData);
                               }}
                               onDataChange={(data) => {
                                 // Auto-save worksheet data when it changes
-                                console.log('💾 Values Worksheet onDataChange called with:', data);
                                 if (module) {
                                   const updatedUserProgress = {
                                     ...(module.userProgress || {}),
@@ -2445,12 +2425,10 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                     }
                                   };
                                   
-                                  console.log('💾 Updated userProgress structure:', updatedUserProgress);
                                   
                                   // Debounce the save to avoid too many API calls
                                   clearTimeout((window as any).valuesWorksheetSaveTimeout);
                                   (window as any).valuesWorksheetSaveTimeout = setTimeout(() => {
-                                    console.log('💾 Saving Values Worksheet data to module:', module.id);
                                     updateModuleMutation.mutate({
                                       moduleId: module.id,
                                       updates: { userProgress: updatedUserProgress },
@@ -2496,11 +2474,9 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                             <ToolkitBuilder 
                               initialData={module?.userProgress?.['personal-toolkit']?.worksheetData}
                               onGetCurrentData={(getData) => {
-                                console.log('📋 Toolkit Builder data getter registered');
                                 setToolkitDataGetter(() => getData);
                               }}
                               onSave={(data) => {
-                                console.log('🔘 Manual save triggered for Toolkit Builder');
                                 if (module) {
                                   const updatedUserProgress = {
                                     ...(module.userProgress || {}),
@@ -2511,7 +2487,6 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                     }
                                   };
                                   
-                                  console.log('🔘 Manual save - Updated userProgress:', updatedUserProgress);
                                   
                                   updateModuleMutation.mutate({
                                     moduleId: module.id,
@@ -2521,7 +2496,6 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                               }}
                               onDataChange={(data) => {
                                 // Auto-save worksheet data when it changes
-                                console.log('💾 Toolkit Builder onDataChange called with:', data);
                                 if (module) {
                                   const updatedUserProgress = {
                                     ...(module.userProgress || {}),
@@ -2532,20 +2506,15 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                     }
                                   };
                                   
-                                  console.log('💾 Updated userProgress structure for toolkit:', updatedUserProgress);
                                   
                                   // Debounce the save to avoid too many API calls
-                                  console.log('⏰ Clearing previous timeout and setting new one...');
                                   clearTimeout((window as any).toolkitBuilderSaveTimeout);
                                   (window as any).toolkitBuilderSaveTimeout = setTimeout(() => {
-                                    console.log('💾 Saving Toolkit Builder data to module:', module.id);
-                                    console.log('💾 Final data being saved:', updatedUserProgress);
                                     updateModuleMutation.mutate({
                                       moduleId: module.id,
                                       updates: { userProgress: updatedUserProgress },
                                     });
                                   }, 1000);
-                                  console.log('⏰ Timeout set, will save in 1000ms');
                                 }
                               }}
                             />
@@ -2557,7 +2526,6 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                             <RelapsePlanner 
                               initialData={module?.userProgress?.['relapse-prevention-plan']?.worksheetData}
                               onGetCurrentData={(getData) => {
-                                console.log('📋 Relapse Planner data getter registered');
                                 setRelapseDataGetter(() => getData);
                               }}
                               onDataChange={(data) => {
@@ -2599,7 +2567,6 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                             <NhsPrepGuide 
                               initialData={module?.userProgress?.['nhs-transition-prep']?.worksheetData}
                               onGetCurrentData={(getData) => {
-                                console.log('📋 NHS Prep Guide data getter registered');
                                 setNhsDataGetter(() => getData);
                               }}
                               onDataChange={(data) => {

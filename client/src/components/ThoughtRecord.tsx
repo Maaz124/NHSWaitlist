@@ -79,7 +79,7 @@ export function ThoughtRecord() {
   // Create thought record mutation
   const createThoughtRecordMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Creating thought record with data:", data);
+log("Creating thought record with data:", data);
       try {
         const response = await fetch("/api/thought-records", {
           method: "POST",
@@ -90,11 +90,11 @@ export function ThoughtRecord() {
           body: JSON.stringify(data),
         });
         
-        console.log("Create response status:", response.status);
+log("Create response status:", response.status);
         
         if (!response.ok) {
           const text = await response.text();
-          console.error("Response text:", text);
+error("Response text:", text);
           if (response.status === 401) {
             throw new Error("Authentication required. Please log in again.");
           }
@@ -103,12 +103,12 @@ export function ThoughtRecord() {
         
         return await response.json();
       } catch (error: any) {
-        console.error("Network error:", error);
+error("Network error:", error);
         throw error;
       }
     },
     onSuccess: (data) => {
-      console.log("Thought record created successfully:", data);
+log("Thought record created successfully:", data);
       setCurrentRecordId(data.id);
       refetchThoughtRecords();
       toast({
@@ -117,7 +117,7 @@ export function ThoughtRecord() {
       });
     },
     onError: (error: any) => {
-      console.error("Failed to create thought record:", error);
+error("Failed to create thought record:", error);
       toast({
         title: "Save Failed",
         description: `Failed to save thought record: ${error.message}`,
@@ -129,7 +129,7 @@ export function ThoughtRecord() {
   // Update thought record mutation
   const updateThoughtRecordMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      console.log("Updating thought record:", id, updates);
+log("Updating thought record:", id, updates);
       try {
         const response = await fetch(`/api/thought-records/${id}`, {
           method: "PATCH",
@@ -140,11 +140,11 @@ export function ThoughtRecord() {
           body: JSON.stringify(updates),
         });
         
-        console.log("Update response status:", response.status);
+log("Update response status:", response.status);
         
         if (!response.ok) {
           const text = await response.text();
-          console.error("Response text:", text);
+error("Response text:", text);
           if (response.status === 401) {
             throw new Error("Authentication required. Please log in again.");
           }
@@ -153,19 +153,19 @@ export function ThoughtRecord() {
         
         return await response.json();
       } catch (error: any) {
-        console.error("Network error:", error);
+error("Network error:", error);
         throw error;
       }
     },
     onSuccess: (data) => {
-      console.log("Thought record updated successfully:", data);
+log("Thought record updated successfully:", data);
       toast({
         title: "Record Updated",
         description: "Your thought record has been updated successfully.",
       });
     },
     onError: (error: any) => {
-      console.error("Failed to update thought record:", error);
+error("Failed to update thought record:", error);
       toast({
         title: "Update Failed",
         description: `Failed to update thought record: ${error.message}`,
