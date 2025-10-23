@@ -953,6 +953,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Can only verify your own payments" });
       }
 
+      // Check if user already has a manual payment verification to prevent duplicates
+      const existingTransactions = await storage.getPaymentTransactions(targetUserId);
+      const existingManualPayment = existingTransactions.find(t => 
+        t.description === description && 
+        t.paymentMethod === 'manual' && 
+        t.status === 'succeeded'
+      );
+
+      if (existingManualPayment) {
+        return res.status(400).json({ 
+          error: "Manual payment verification already exists for this user",
+          existingTransaction: existingManualPayment
+        });
+      }
+
       // Create a manual payment transaction
       const transaction = await storage.createPaymentTransaction({
         userId: targetUserId,

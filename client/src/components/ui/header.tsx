@@ -34,10 +34,18 @@ export function Header({ user }: HeaderProps) {
   const initials = activeUser ? `${activeUser.firstName?.[0] || ""}${activeUser.lastName?.[0] || ""}` || "U" : "U";
 
   return (
-    <header className="bg-card border-b border-border sticky top-0 z-50">
+    <header 
+      className="bg-card border-b border-border sticky top-0 z-50"
+      data-testid="main-header"
+      data-component="header"
+      role="banner"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-3">
+          <div 
+            className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setLocation("/")}
+          >
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Heart className="text-primary-foreground w-4 h-4" />
             </div>

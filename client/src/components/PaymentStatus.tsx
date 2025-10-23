@@ -123,6 +123,19 @@ export function PaymentStatus({ user }: { user: User }) {
                 <div className="space-y-2">
                   {transactions
                     .filter((t: PaymentTransaction) => t.status === 'succeeded')
+                    .reduce((unique: PaymentTransaction[], transaction: PaymentTransaction) => {
+                      // Remove duplicates based on transaction ID, description, amount, and date
+                      const isDuplicate = unique.find(t => 
+                        t.id === transaction.id || 
+                        (t.description === transaction.description && 
+                         t.amount === transaction.amount && 
+                         Math.abs(new Date(t.createdAt).getTime() - new Date(transaction.createdAt).getTime()) < 1000) // Within 1 second
+                      );
+                      if (!isDuplicate) {
+                        unique.push(transaction);
+                      }
+                      return unique;
+                    }, [])
                     .map((transaction: PaymentTransaction) => (
                       <div
                         key={transaction.id}
