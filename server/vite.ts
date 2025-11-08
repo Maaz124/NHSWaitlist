@@ -69,19 +69,50 @@ export async function setupVite(app: Express, server: Server) {
 // Production
 // --------------------
 export function serveStatic(app: Express) {
-  const clientDistPath = path.join(process.cwd(), "client", "dist");
-  const publicPath = path.join(process.cwd(), "server", "public");
+  // Vite builds to dist/public (as configured in vite.config.ts)
+  const distPath = path.resolve(__dirname, "../dist/public");
 
-  // Serve React SPA
-  app.use(express.static(clientDistPath));
-
-  // Serve public files
-  if (fs.existsSync(publicPath)) {
-    app.use(express.static(publicPath));
+  if (!fs.existsSync(distPath)) {
+    const errorMsg = `Build directory not found: ${distPath}. Make sure to run 'npm run build' before starting the server.`;
+    log(errorMsg);
+    throw new Error(errorMsg);
   }
 
-  // Catch-all SPA
-  app.use("*", (_req, res) => {
-    res.sendFile(path.join(clientDistPath, "index.html"));
+  log(`Serving static files from: ${distPath}`);
+
+  // Serve static files from dist/public
+  app.use(express.static(distPath, {
+    index: false, // Don't serve index.html for directory requests
+    setHeaders: (res, filePath) => {
+      // Set proper content types
+      if (filePath.endsWith(".svg")) {
+        res.setHeader("Content-Type", "image/svg+xml");
+      } else if (filePath.endsWith(".xml")) {
+        res.setHeader("Content-Type", "application/xml");
+      } else if (filePath.endsWith(".txt")) {
+        res.setHeader("Content-Type", "text/plain");
+      } else if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) {
+        res.setHeader("Content-Type", "image/jpeg");
+      } else if (filePath.endsWith(".png")) {
+        res.setHeader("Content-Type", "image/png");
+      }
+    },
+  }));
+
+  // Catch-all: serve index.html for SPA routing (skip API routes)
+  app.get("*", (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith("/api/")) {
+      return next();
+    }
+    
+    // Serve index.html for all non-API routes (SPA routing)
+    const indexHtmlPath = path.join(distPath, "index.html");
+    if (fs.existsSync(indexHtmlPath)) {
+      res.sendFile(indexHtmlPath);
+    } else {
+      log(`Error: index.html not found at ${indexHtmlPath}`);
+      res.status(404).send("index.html not found. Make sure the build completed successfully.");
+    }
   });
 }
