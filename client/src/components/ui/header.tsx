@@ -2,6 +2,7 @@ import { Heart, ChevronDown, User } from "lucide-react";
 import { CrisisButton } from "./crisis-banner";
 import { Button } from "./button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./dropdown-menu";
+import { LanguageSwitcher } from "./language-switcher";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -56,6 +57,7 @@ export function Header({ user }: HeaderProps) {
           </div>
           
           <div className="flex items-center space-x-4">
+            <LanguageSwitcher />
             <CrisisButton />
             
             {/* Show login button if not authenticated and not on login/signup pages */}

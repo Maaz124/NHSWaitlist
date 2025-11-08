@@ -104,3 +104,21 @@
 .tab-content.active {
   display: block;
 }
+
+/* Hide Google Translate banner and elements */
+.goog-te-banner-frame,
+.goog-te-balloon-frame {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+
+/* Hide the Google Translate select dropdown but keep it functional */
+.goog-te-combo {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+  pointer-events: none;
+}
