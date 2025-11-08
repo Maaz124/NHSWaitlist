@@ -69,11 +69,48 @@ export async function setupVite(app: Express, server: Server) {
 // Production
 // --------------------
 export function serveStatic(app: Express) {
-  // Vite builds to dist/public (as configured in vite.config.ts)
-  const distPath = path.resolve(__dirname, "../dist/public");
+  // Try multiple possible paths (works on both Windows and Linux)
+  const possiblePaths = [
+    path.resolve(__dirname, "../dist/public"), // Relative to compiled server file
+    path.join(process.cwd(), "dist", "public"), // From current working directory
+    path.resolve(process.cwd(), "dist", "public"), // Absolute from cwd
+  ];
 
-  if (!fs.existsSync(distPath)) {
-    const errorMsg = `Build directory not found: ${distPath}. Make sure to run 'npm run build' before starting the server.`;
+  let distPath: string | null = null;
+  
+  for (const testPath of possiblePaths) {
+    if (fs.existsSync(testPath)) {
+      distPath = testPath;
+      log(`Found build directory at: ${distPath}`);
+      break;
+    } else {
+      log(`Checked path (not found): ${testPath}`);
+    }
+  }
+
+  if (!distPath) {
+    // List what actually exists for debugging
+    const cwd = process.cwd();
+    const distDir = path.join(cwd, "dist");
+    const parentDist = path.resolve(__dirname, "..", "dist");
+    
+    log(`Current working directory: ${cwd}`);
+    log(`__dirname: ${__dirname}`);
+    log(`Looking for dist/public in: ${distDir}`);
+    
+    if (fs.existsSync(distDir)) {
+      const distContents = fs.readdirSync(distDir);
+      log(`Contents of dist directory: ${distContents.join(", ")}`);
+    } else {
+      log(`dist directory does not exist at: ${distDir}`);
+    }
+    
+    if (fs.existsSync(parentDist)) {
+      const parentContents = fs.readdirSync(parentDist);
+      log(`Contents of parent dist directory: ${parentContents.join(", ")}`);
+    }
+    
+    const errorMsg = `Build directory not found. Checked paths: ${possiblePaths.join(", ")}. Make sure 'npm run build' completed successfully.`;
     log(errorMsg);
     throw new Error(errorMsg);
   }

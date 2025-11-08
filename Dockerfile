@@ -24,6 +24,9 @@ COPY . .
 # Build the application
 RUN npm run build
 
+# Verify build output exists
+RUN ls -la /app/dist/ && ls -la /app/dist/public/ || (echo "Build failed - dist/public not found" && exit 1)
+
 # Production stage
 FROM base AS runner
 WORKDIR /app
@@ -42,6 +45,9 @@ COPY server ./server
 COPY shared ./shared
 COPY tsconfig.json ./
 COPY vite.config.ts ./
+
+# Verify the build was copied correctly (before changing user)
+RUN ls -la /app/dist/ && ls -la /app/dist/public/ && test -f /app/dist/public/index.html || (echo "ERROR: Build files not found! Expected /app/dist/public/index.html" && ls -la /app/ && exit 1)
 
 # Change ownership to non-root user
 RUN chown -R nextjs:nodejs /app
