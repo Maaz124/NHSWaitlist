@@ -220,7 +220,68 @@ export default function Dashboard() {
   const dashboard = (dashboardData as any)?.dashboardData || {};
   const modules = (modulesData as any)?.modules || [];
 
-  const nextCheckInDate = new Date(dashboard.nextCheckInDue);
+  // Static module data for display when user is not logged in
+  const staticModules = [
+    {
+      id: 'static-1',
+      weekNumber: 1,
+      title: 'Understanding Anxiety',
+      description: 'Learn what anxiety is, how it affects your body and mind, and why it happens. Build your foundation for recovery.',
+      estimatedMinutes: 45,
+      activitiesTotal: 4,
+      isLocked: false,
+    },
+    {
+      id: 'static-2',
+      weekNumber: 2,
+      title: 'Breathing & Relaxation',
+      description: 'Master practical breathing techniques and progressive muscle relaxation to manage physical anxiety symptoms.',
+      estimatedMinutes: 38,
+      activitiesTotal: 5,
+      isLocked: false,
+    },
+    {
+      id: 'static-3',
+      weekNumber: 3,
+      title: 'Cognitive Strategies',
+      description: 'Learn to identify and challenge anxious thoughts with cognitive behavioral techniques.',
+      estimatedMinutes: 40,
+      activitiesTotal: 3,
+      isLocked: false,
+    },
+    {
+      id: 'static-4',
+      weekNumber: 4,
+      title: 'Mindfulness & Grounding',
+      description: 'Develop mindfulness skills and grounding techniques to stay present during anxious moments.',
+      estimatedMinutes: 35,
+      activitiesTotal: 4,
+      isLocked: false,
+    },
+    {
+      id: 'static-5',
+      weekNumber: 5,
+      title: 'Behavioral Activation',
+      description: 'Build healthy routines and gradually expose yourself to anxiety-provoking situations in a safe way.',
+      estimatedMinutes: 42,
+      activitiesTotal: 4,
+      isLocked: false,
+    },
+    {
+      id: 'static-6',
+      weekNumber: 6,
+      title: 'Relapse Prevention',
+      description: 'Develop strategies to maintain your progress and prevent anxiety from returning.',
+      estimatedMinutes: 40,
+      activitiesTotal: 4,
+      isLocked: false,
+    },
+  ];
+
+  // Use static modules if user is not authenticated, otherwise use real modules
+  const displayModules = isAuthenticated && modules.length > 0 ? modules : staticModules;
+
+  const nextCheckInDate = dashboard.nextCheckInDue ? new Date(dashboard.nextCheckInDue) : new Date();
   const isCheckInDue = nextCheckInDate <= new Date();
 
   return (
@@ -334,34 +395,64 @@ export default function Dashboard() {
                   6-Week Anxiety Support Progress
                 </h3>
                 
-                <div className="flex items-center justify-center mb-6">
-                  <ProgressRing percentage={dashboard.completionRate || 0} />
-                </div>
+                {isAuthenticated ? (
+                  <div className="flex items-center justify-center mb-6">
+                    <ProgressRing percentage={dashboard.completionRate || 0} />
+                  </div>
+                ) : (
+                  <div className="text-center mb-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Explore our comprehensive 6-week program designed to help you manage anxiety and improve your mental wellbeing.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Sign in to track your progress and unlock full access to all modules.
+                    </p>
+                  </div>
+                )}
 
                 <div className="space-y-3">
-                  {modules.map((module: any) => {
+                  {displayModules.map((module: any) => {
                     const isCompleted = module.completedAt;
-                    const isInProgress = !module.isLocked && !isCompleted;
+                    const isInProgress = isAuthenticated && !module.isLocked && !isCompleted;
                     const progressPercentage = module.estimatedMinutes > 0 ? 
                       Math.round((module.minutesCompleted / module.estimatedMinutes) * 100) : 0;
+
+                    // Determine button text and action based on auth and payment status
+                    let buttonText = '';
+                    let showButton = false;
+                    
+                    if (!isAuthenticated) {
+                      buttonText = 'Login First';
+                      showButton = true;
+                    } else if (!(user as any)?.hasPaid) {
+                      buttonText = 'Unlock';
+                      showButton = true;
+                    } else if (isCompleted) {
+                      buttonText = 'Review';
+                      showButton = true;
+                    } else if (isInProgress) {
+                      buttonText = 'Continue';
+                      showButton = true;
+                    }
 
                     return (
                       <div 
                         key={module.id}
                         className={cn(
-                          "flex items-center p-3 rounded-md cursor-pointer hover:bg-accent/5 transition-colors",
-                          isCompleted && "bg-accent/10",
-                          isInProgress && "bg-primary/10 border-l-4 border-primary",
-                          module.isLocked && "bg-muted opacity-60"
+                          "flex items-center p-3 rounded-md transition-colors",
+                          isAuthenticated && (isCompleted && "bg-accent/10 cursor-pointer hover:bg-accent/15"),
+                          isAuthenticated && (isInProgress && "bg-primary/10 border-l-4 border-primary cursor-pointer hover:bg-primary/15"),
+                          isAuthenticated && (module.isLocked && "bg-muted opacity-60"),
+                          !isAuthenticated && "cursor-pointer hover:bg-accent/5"
                         )}
                         onClick={() => handleModuleClick(module.weekNumber)}
                       >
                         <div className="mr-3">
-                          {isCompleted ? (
+                          {isAuthenticated && isCompleted ? (
                             <div className="w-6 h-6 bg-accent rounded-full flex items-center justify-center">
                               <div className="w-3 h-3 bg-accent-foreground rounded-full" />
                             </div>
-                          ) : isInProgress ? (
+                          ) : isAuthenticated && isInProgress ? (
                             <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                               <div className="w-2 h-2 bg-primary-foreground rounded-full" />
                             </div>
@@ -376,11 +467,15 @@ export default function Dashboard() {
                             Week {module.weekNumber}: {module.title}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {isCompleted ? `Completed • ${module.minutesCompleted} min` :
-                             isInProgress ? `In Progress • ${module.minutesCompleted}/${module.estimatedMinutes} min` :
-                             `Locked • Complete week ${module.weekNumber - 1} first`}
+                            {isAuthenticated ? (
+                              isCompleted ? `Completed • ${module.minutesCompleted} min` :
+                              isInProgress ? `In Progress • ${module.minutesCompleted}/${module.estimatedMinutes} min` :
+                              `Locked • Complete week ${module.weekNumber - 1} first`
+                            ) : (
+                              `${module.estimatedMinutes} min • ${module.activitiesTotal} activities`
+                            )}
                           </p>
-                          {isInProgress && (
+                          {isAuthenticated && isInProgress && (
                             <div className="w-full bg-secondary rounded-full h-1 mt-2">
                               <div 
                                 className="bg-primary h-1 rounded-full transition-all duration-300"
@@ -389,13 +484,13 @@ export default function Dashboard() {
                             </div>
                           )}
                         </div>
-                        {(isCompleted || isInProgress) && (
+                        {showButton && (
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            data-testid={`button-${isCompleted ? 'review' : 'continue'}-module-${module.weekNumber}`}
+                            data-testid={`button-${buttonText.toLowerCase().replace(' ', '-')}-module-${module.weekNumber}`}
                           >
-                            {isCompleted ? "Review" : "Continue"}
+                            {buttonText}
                           </Button>
                         )}
                       </div>

@@ -107,7 +107,8 @@
 
 /* Hide Google Translate banner and elements */
 .goog-te-banner-frame,
-.goog-te-balloon-frame {
+.goog-te-balloon-frame,
+.skiptranslate {
   display: none !important;
 }
 
