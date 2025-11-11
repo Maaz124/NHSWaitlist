@@ -15,7 +15,7 @@ const copyStaticFiles = () => {
       const clientDir = path.resolve(__dirname, "client");
       const publicDir = path.resolve(__dirname, "public");
       const outDir = path.resolve(__dirname, "dist/public");
-      const staticFiles = ["favicon.svg", "og-image.png", "robots.txt", "sitemap.xml"];
+      const staticFiles = ["favicon.svg", "logo.svg", "og-image.png", "robots.txt", "sitemap.xml"];
       
       staticFiles.forEach((file) => {
         const dest = path.join(outDir, file);
