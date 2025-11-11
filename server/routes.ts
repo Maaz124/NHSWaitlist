@@ -44,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userData = insertUserSchema.parse(req.body);
       const existingUser = await storage.getUserByEmail(userData.email);
       if (existingUser) {
-        return res.status(400).json({ error: "User already exists" });
+        return res.status(400).json({ error: "An account with this email already exists" });
       }
       
       // Hash the password before storing
@@ -59,7 +59,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password, ...userWithoutPassword } = user;
       res.json({ user: userWithoutPassword });
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      // Handle Zod validation errors
+      if (error.name === "ZodError" && error.errors && Array.isArray(error.errors)) {
+        const firstError = error.errors[0];
+        const field = firstError.path?.[0] || "field";
+        const message = firstError.message || "Invalid input";
+        // Format field name to be more user-friendly
+        const fieldName = field === "firstName" ? "First name" :
+                         field === "lastName" ? "Last name" :
+                         field === "phoneNumber" ? "Phone number" :
+                         field === "nhsNumber" ? "NHS number" :
+                         field.charAt(0).toUpperCase() + field.slice(1);
+        return res.status(400).json({ error: `${fieldName}: ${message}` });
+      }
+      // For other errors, return the error message
+      res.status(400).json({ error: error.message || "Signup failed. Please check your input and try again." });
     }
   });
 
@@ -70,7 +84,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!password) return res.status(400).json({ error: "Password is required" });
       
       const user = await storage.getUserByEmail(email);
-      if (!user) return res.status(401).json({ error: "Invalid email or password" });
+      if (!user) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
       
       // Verify the password
       const isValidPassword = await bcrypt.compare(password, user.password);
@@ -84,7 +100,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password: _, ...userWithoutPassword } = user;
       res.json({ user: userWithoutPassword });
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      // Return generic error message for login failures
+      res.status(400).json({ error: "Invalid email or password" });
     }
   });
 

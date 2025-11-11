@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLocation, Link } from "wouter";
 
 export default function Signup() {
@@ -15,11 +16,14 @@ export default function Signup() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [nhsNumber, setNhsNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const user = { firstName: "", lastName: "", email: "" } as any;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError("");
+    
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
@@ -27,7 +31,19 @@ export default function Signup() {
         credentials: "include",
         body: JSON.stringify({ firstName, lastName, email, password, phoneNumber, nhsNumber }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      
+      if (!res.ok) {
+        try {
+          const errorData = await res.json();
+          // Use server error message or fallback to generic message
+          setError(errorData.error || "Signup failed. Please try again.");
+        } catch {
+          // If response is not JSON, use generic error
+          setError("Signup failed. Please try again.");
+        }
+        setIsSubmitting(false);
+        return;
+      }
       
       const data = await res.json();
       
@@ -35,9 +51,8 @@ export default function Signup() {
       setLocation("/onboarding");
       // Fallback hard navigation to ensure route change
       window.location.href = "/onboarding";
-    } catch (err) {
-      alert("Signup failed. Please try again.");
-    } finally {
+    } catch (err: any) {
+      setError("An error occurred. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -51,29 +66,84 @@ export default function Signup() {
             <CardContent className="p-6">
               <h1 className="text-2xl font-semibold mb-4">Create your account</h1>
               <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
                 <div>
                   <Label htmlFor="firstName">First name</Label>
-                  <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                  <Input 
+                    id="firstName" 
+                    value={firstName} 
+                    onChange={(e) => {
+                      setFirstName(e.target.value);
+                      if (error) setError("");
+                    }} 
+                    required 
+                    disabled={isSubmitting}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="lastName">Last name</Label>
-                  <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                  <Input 
+                    id="lastName" 
+                    value={lastName} 
+                    onChange={(e) => {
+                      setLastName(e.target.value);
+                      if (error) setError("");
+                    }} 
+                    required 
+                    disabled={isSubmitting}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={email} 
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (error) setError("");
+                    }} 
+                    required 
+                    disabled={isSubmitting}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    value={password} 
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (error) setError("");
+                    }} 
+                    required 
+                    disabled={isSubmitting}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="phone">Phone Number (optional)</Label>
-                  <Input id="phone" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+44 7xxx xxx xxx" />
+                  <Input 
+                    id="phone" 
+                    type="tel" 
+                    value={phoneNumber} 
+                    onChange={(e) => setPhoneNumber(e.target.value)} 
+                    placeholder="+44 7xxx xxx xxx" 
+                    disabled={isSubmitting}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="nhs">NHS Number (optional)</Label>
-                  <Input id="nhs" value={nhsNumber} onChange={(e) => setNhsNumber(e.target.value)} />
+                  <Input 
+                    id="nhs" 
+                    value={nhsNumber} 
+                    onChange={(e) => setNhsNumber(e.target.value)} 
+                    disabled={isSubmitting}
+                  />
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? "Creating account..." : "Sign up"}

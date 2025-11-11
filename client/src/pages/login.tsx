@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLocation, Link } from "wouter";
 
 export default function Login() {
@@ -11,9 +12,12 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError("");
     
     try {
       const res = await fetch("/api/auth/login", {
@@ -24,15 +28,23 @@ export default function Login() {
       });
       
       if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText);
+        try {
+          const errorData = await res.json();
+          // Use server error message or fallback to generic message
+          setError(errorData.error || "Invalid email or password");
+        } catch {
+          // If response is not JSON, use generic error
+          setError("Invalid email or password");
+        }
+        setIsSubmitting(false);
+        return;
       }
       
       const data = await res.json();
       const userId = data.user?.id;
       
       if (!userId) {
-        alert("Login failed. Please try again.");
+        setError("Login failed. Please try again.");
         setIsSubmitting(false);
         return;
       }
@@ -89,7 +101,7 @@ export default function Login() {
       }
       
     } catch (err: any) {
-      alert("Login failed. Please check your email and password.");
+      setError("An error occurred. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -103,13 +115,38 @@ export default function Login() {
             <CardContent className="p-6">
               <h1 className="text-2xl font-semibold mb-4">Log in</h1>
               <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
                 <div>
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={email} 
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (error) setError("");
+                    }} 
+                    required 
+                    disabled={isSubmitting}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    value={password} 
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (error) setError("");
+                    }} 
+                    required 
+                    disabled={isSubmitting}
+                  />
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? "Logging in..." : "Log in"}
