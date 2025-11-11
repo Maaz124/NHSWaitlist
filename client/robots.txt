@@ -1,3 +1,5 @@
 User-agent: *
 Allow: /
+# Disallow admin pages from being crawled and indexed
+Disallow: /admin/
 Sitemap: https://www.waitlistcompanion.com/sitemap.xml

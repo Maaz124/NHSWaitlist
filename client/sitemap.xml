@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+  Sitemap for Waitlist Companion
+  Note: Admin routes (/admin/*) are intentionally excluded from this sitemap
+  and blocked in robots.txt to prevent search engine indexing
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.waitlistcompanion.com/</loc>
