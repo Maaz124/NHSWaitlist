@@ -10,7 +10,11 @@ import { useEffect, useState, useRef } from "react";
 
 type Language = "en" | "ar";
 
-export function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  fullWidth?: boolean;
+}
+
+export function LanguageSwitcher({ fullWidth = false }: LanguageSwitcherProps) {
   const [currentLanguage, setCurrentLanguage] = useState<Language>("en");
   const manualChangeRef = useRef(false);
   const lastManualLanguageRef = useRef<Language | null>(null);
@@ -323,11 +327,11 @@ export function LanguageSwitcher() {
         <Button
           variant="ghost"
           size="sm"
-          className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+          className={`flex items-center space-x-2 text-muted-foreground hover:text-foreground ${fullWidth ? 'w-full justify-start' : ''}`}
           aria-label="Select language"
         >
           <Globe className="w-4 h-4" />
-          <span className="hidden sm:inline">
+          <span className="whitespace-nowrap">
             {currentLanguage === "en" ? "English" : "العربية"}
           </span>
         </Button>

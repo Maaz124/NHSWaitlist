@@ -1,4 +1,4 @@
-import { Heart, Shield, Phone, Mail, ExternalLink } from "lucide-react";
+import { Shield, Phone, Mail, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 
 export function Footer() {
@@ -28,8 +28,11 @@ export function Footer() {
           {/* About Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Heart className="w-5 h-5 text-primary" />
-              <h3 className="font-semibold text-foreground">Waitlist Companion™</h3>
+              <img 
+                src="/logo.svg" 
+                alt="Waitlist Companion Logo" 
+                className="h-20 w-auto"
+              />
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Providing interim mental health support while you wait for NHS services. 

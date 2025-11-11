@@ -121,9 +121,7 @@ export function Header({ user }: HeaderProps) {
   // Mobile menu content
   const mobileMenuContent = (
     <div className="flex flex-col space-y-4 mt-6">
-      <div className="flex justify-start">
-        <LanguageSwitcher />
-      </div>
+      <LanguageSwitcher fullWidth />
       <Separator />
       <div className="flex justify-start">
         <CrisisButton />
@@ -212,20 +210,16 @@ export function Header({ user }: HeaderProps) {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo and Brand */}
+          {/* Logo */}
           <div 
-            className="flex items-center space-x-2 md:space-x-3 cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+            className="flex items-center cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0 h-full"
             onClick={() => setLocation("/")}
           >
             <img 
               src="/logo.svg" 
               alt="Waitlist Companion Logo" 
-              className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0"
+              className="h-[50%] md:h-[70%] w-auto"
             />
-            <div className="min-w-0">
-              <h1 className="font-semibold text-base md:text-lg text-foreground truncate">Waitlist Companion™</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Interim Care Support</p>
-            </div>
           </div>
           
           {/* Desktop Menu */}
