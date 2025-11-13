@@ -281,68 +281,85 @@
               }
             }, 300);
             
-            // Listen for language changes - but DON'T prevent propagation
-            // Instead, let Google Translate process it, then immediately fix the cookie
-            selectElement.addEventListener('change', function(e) {
-              // Wait a tiny bit for Google Translate to process the change
-              setTimeout(function() {
-                var selectedLang = selectElement.value;
-                var selectedOption = selectElement.options[selectElement.selectedIndex];
-                var selectedIndex = selectElement.selectedIndex;
-                
-                // Check if we're currently in Arabic mode (before the change)
-                var cookies = document.cookie.split(';');
-                var isCurrentlyArabic = false;
-                for (var i = 0; i < cookies.length; i++) {
-                  var cookie = cookies[i].trim();
-                  if (cookie.indexOf('googtrans=') === 0) {
-                    var value = cookie.substring('googtrans='.length);
-                    if (value.indexOf('/ar') >= 0 || value.indexOf('/en/ar') >= 0) {
-                      isCurrentlyArabic = true;
-                      break;
-                    }
-                  }
+            // Check current state BEFORE the change event
+            var wasInArabic = false;
+            var cookiesBeforeChange = document.cookie.split(';');
+            for (var checkIdx = 0; checkIdx < cookiesBeforeChange.length; checkIdx++) {
+              var cookieBefore = cookiesBeforeChange[checkIdx].trim();
+              if (cookieBefore.indexOf('googtrans=') === 0) {
+                var valueBefore = cookieBefore.substring('googtrans='.length);
+                if (valueBefore.indexOf('/ar') >= 0 || valueBefore.indexOf('/en/ar') >= 0) {
+                  wasInArabic = true;
+                  break;
                 }
+              }
+            }
+            
+            // Listen for language changes - check IMMEDIATELY when it happens
+            selectElement.addEventListener('change', function(e) {
+              // Check IMMEDIATELY, don't wait
+              var selectedLang = this.value;
+              var selectedOption = this.options[this.selectedIndex];
+              var selectedIndex = this.selectedIndex;
+              
+              // Detect if English is selected (check multiple ways)
+              var isEnglishSelected = selectedIndex === 0 || 
+                                      selectedLang === '' || 
+                                      selectedLang === null ||
+                                      selectedLang === undefined ||
+                                      selectedLang === 'auto' ||
+                                      (selectedOption && (
+                                        selectedOption.text.toLowerCase().indexOf('english') >= 0 ||
+                                        selectedOption.text.toLowerCase().indexOf('select') >= 0 ||
+                                        selectedOption.value === '' ||
+                                        selectedOption.value === null
+                                      ));
+              
+              // If we were in Arabic and English is selected, handle it immediately
+              if (wasInArabic && isEnglishSelected) {
+                // Clear cookies IMMEDIATELY
+                clearGoogleTranslateCookies();
+                setEnglishCookie();
                 
-                // If we were in Arabic mode, check if English was selected
-                // English is typically the first option (index 0) or has empty value
-                var isEnglishSelected = selectedIndex === 0 || 
-                                        selectedLang === '' || 
-                                        selectedLang === null ||
-                                        selectedLang === undefined ||
-                                        (selectedOption && (
-                                          selectedOption.text.toLowerCase().indexOf('english') >= 0 ||
-                                          selectedOption.text.toLowerCase().indexOf('select') >= 0
-                                        ));
-                
-                // If we were in Arabic and English is now selected, force clear cookie
-                if (isCurrentlyArabic || isEnglishSelected) {
-                  // Clear all cookies and set English
-                  clearGoogleTranslateCookies();
-                  setEnglishCookie();
-                  
-                  // Check again after a moment - if still Arabic, reload
-                  setTimeout(function() {
-                    var finalCookies = document.cookie.split(';');
-                    var stillArabic = false;
-                    for (var j = 0; j < finalCookies.length; j++) {
-                      var finalCookie = finalCookies[j].trim();
-                      if (finalCookie.indexOf('googtrans=') === 0) {
-                        var finalValue = finalCookie.substring('googtrans='.length);
-                        if (finalValue.indexOf('/ar') >= 0 || finalValue.indexOf('/en/ar') >= 0) {
-                          stillArabic = true;
-                          break;
-                        }
+                // Also monitor and block any Arabic cookie that Google Translate tries to set
+                var cookieBlocker = setInterval(function() {
+                  var currentCookies = document.cookie.split(';');
+                  for (var i = 0; i < currentCookies.length; i++) {
+                    var cookie = currentCookies[i].trim();
+                    if (cookie.indexOf('googtrans=') === 0) {
+                      var value = cookie.substring('googtrans='.length);
+                      if (value.indexOf('/ar') >= 0 || value.indexOf('/en/ar') >= 0) {
+                        // Arabic cookie detected, clear it immediately
+                        clearGoogleTranslateCookies();
+                        setEnglishCookie();
                       }
                     }
-                    
-                    // If still in Arabic mode, force reload
-                    if (stillArabic || (isEnglishSelected && isCurrentlyArabic)) {
-                      window.location.replace(window.location.href.split('#')[0].split('?')[0]);
+                  }
+                }, 50); // Check every 50ms
+                
+                // Stop blocker after 2 seconds and reload
+                setTimeout(function() {
+                  clearInterval(cookieBlocker);
+                  // Final check - reload if still Arabic
+                  var finalCheck = document.cookie.split(';');
+                  var hasArabic = false;
+                  for (var j = 0; j < finalCheck.length; j++) {
+                    var finalCookie = finalCheck[j].trim();
+                    if (finalCookie.indexOf('googtrans=') === 0) {
+                      var finalValue = finalCookie.substring('googtrans='.length);
+                      if (finalValue.indexOf('/ar') >= 0) {
+                        hasArabic = true;
+                        break;
+                      }
                     }
-                  }, 300);
-                }
-              }, 100); // Small delay to let Google Translate process first
+                  }
+                  // Always reload to ensure clean state
+                  window.location.replace(window.location.href.split('#')[0].split('?')[0]);
+                }, 500);
+              } else {
+                // Update state for next time
+                wasInArabic = selectedLang && (selectedLang.indexOf('ar') >= 0);
+              }
             });
           }
         });
@@ -368,7 +385,7 @@
                     var selectEl = document.querySelector('.goog-te-combo');
                     if (selectEl && selectEl.selectedIndex === 0) {
                       clearGoogleTranslateCookies();
-                      document.cookie = 'googtrans=/en/en; path=/; max-age=86400;';
+                      setEnglishCookie();
                       setTimeout(function() {
                         var checkCookies = document.cookie.split(';');
                         var stillHasArabic = false;
@@ -393,58 +410,62 @@
               }
             }, 300);
             
-            selectElement.addEventListener('change', function(e) {
-              setTimeout(function() {
-                var selectedLang = selectElement.value;
-                var selectedOption = selectElement.options[selectElement.selectedIndex];
-                var selectedIndex = selectElement.selectedIndex;
-                
-                var cookies = document.cookie.split(';');
-                var isCurrentlyArabic = false;
-                for (var i = 0; i < cookies.length; i++) {
-                  var cookie = cookies[i].trim();
-                  if (cookie.indexOf('googtrans=') === 0) {
-                    var value = cookie.substring('googtrans='.length);
-                    if (value.indexOf('/ar') >= 0 || value.indexOf('/en/ar') >= 0) {
-                      isCurrentlyArabic = true;
-                      break;
-                    }
-                  }
+            // Check if currently in Arabic before change
+            var wasInArabic2 = false;
+            var cookiesCheck = document.cookie.split(';');
+            for (var cIdx = 0; cIdx < cookiesCheck.length; cIdx++) {
+              var cookieCheck = cookiesCheck[cIdx].trim();
+              if (cookieCheck.indexOf('googtrans=') === 0) {
+                var valueCheck = cookieCheck.substring('googtrans='.length);
+                if (valueCheck.indexOf('/ar') >= 0 || valueCheck.indexOf('/en/ar') >= 0) {
+                  wasInArabic2 = true;
+                  break;
                 }
+              }
+            }
+            
+            selectElement.addEventListener('change', function(e) {
+              var selectedLang = this.value;
+              var selectedOption = this.options[this.selectedIndex];
+              var selectedIndex = this.selectedIndex;
+              
+              var isEnglishSelected = selectedIndex === 0 || 
+                                      selectedLang === '' || 
+                                      selectedLang === null ||
+                                      selectedLang === undefined ||
+                                      selectedLang === 'auto' ||
+                                      (selectedOption && (
+                                        selectedOption.text.toLowerCase().indexOf('english') >= 0 ||
+                                        selectedOption.text.toLowerCase().indexOf('select') >= 0 ||
+                                        selectedOption.value === '' ||
+                                        selectedOption.value === null
+                                      ));
+              
+              if (wasInArabic2 && isEnglishSelected) {
+                clearGoogleTranslateCookies();
+                setEnglishCookie();
                 
-                var isEnglishSelected = selectedIndex === 0 || 
-                                        selectedLang === '' || 
-                                        selectedLang === null ||
-                                        selectedLang === undefined ||
-                                        (selectedOption && (
-                                          selectedOption.text.toLowerCase().indexOf('english') >= 0 ||
-                                          selectedOption.text.toLowerCase().indexOf('select') >= 0
-                                        ));
-                
-                if (isCurrentlyArabic || isEnglishSelected) {
-                  clearGoogleTranslateCookies();
-                  document.cookie = 'googtrans=/en/en; path=/; max-age=86400;';
-                  
-                  setTimeout(function() {
-                    var finalCookies = document.cookie.split(';');
-                    var stillArabic = false;
-                    for (var j = 0; j < finalCookies.length; j++) {
-                      var finalCookie = finalCookies[j].trim();
-                      if (finalCookie.indexOf('googtrans=') === 0) {
-                        var finalValue = finalCookie.substring('googtrans='.length);
-                        if (finalValue.indexOf('/ar') >= 0 || finalValue.indexOf('/en/ar') >= 0) {
-                          stillArabic = true;
-                          break;
-                        }
+                var cookieBlocker2 = setInterval(function() {
+                  var currentCookies = document.cookie.split(';');
+                  for (var i = 0; i < currentCookies.length; i++) {
+                    var cookie = currentCookies[i].trim();
+                    if (cookie.indexOf('googtrans=') === 0) {
+                      var value = cookie.substring('googtrans='.length);
+                      if (value.indexOf('/ar') >= 0 || value.indexOf('/en/ar') >= 0) {
+                        clearGoogleTranslateCookies();
+                        setEnglishCookie();
                       }
                     }
-                    
-                    if (stillArabic || (isEnglishSelected && isCurrentlyArabic)) {
-                      window.location.replace(window.location.href.split('#')[0].split('?')[0]);
-                    }
-                  }, 300);
-                }
-              }, 100);
+                  }
+                }, 50);
+                
+                setTimeout(function() {
+                  clearInterval(cookieBlocker2);
+                  window.location.replace(window.location.href.split('#')[0].split('?')[0]);
+                }, 500);
+              } else {
+                wasInArabic2 = selectedLang && (selectedLang.indexOf('ar') >= 0);
+              }
             });
           }
         }, 500);
