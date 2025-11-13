@@ -904,7 +904,7 @@ export default function Dashboard() {
                   <FileText className="w-5 h-5 text-muted-foreground mr-4" />
                   <div className="flex-1">
                     <p className="font-medium text-card-foreground">Export progress report</p>
-                    <p className="text-sm text-muted-foreground">Ready for NHS handoff</p>
+                    <p className="text-sm text-muted-foreground">Ready for Waitlist Companion handoff</p>
                   </div>
                     {/* PDF export removed */}
                 </div>

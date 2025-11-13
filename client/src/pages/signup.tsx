@@ -137,7 +137,7 @@ export default function Signup() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="nhs">NHS Number (optional)</Label>
+                  <Label htmlFor="nhs">Health Service Number (optional)</Label>
                   <Input 
                     id="nhs" 
                     value={nhsNumber} 

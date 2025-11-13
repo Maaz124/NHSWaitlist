@@ -857,7 +857,7 @@ log('💾 Saving data:', dataToSave);
                     </div>
                     <div className="p-3 bg-white rounded border">
                       <p className="font-medium">Your GP</p>
-                      <p>For referral to NHS psychological therapies</p>
+                      <p>For referral to psychological therapies</p>
                     </div>
                   </div>
                 </div>

@@ -60,7 +60,7 @@ export default function AdminLogin() {
           </div>
           <h1 className="text-2xl font-bold text-foreground">Admin Portal</h1>
           <p className="text-muted-foreground mt-2">
-            NHS Waitlist Management System
+          Waitlist Companion Management System
           </p>
         </div>
 

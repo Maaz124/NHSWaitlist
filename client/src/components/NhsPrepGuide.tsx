@@ -379,8 +379,8 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
               <Heart className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <CardTitle className="text-2xl">NHS Mental Health Services Preparation</CardTitle>
-              <p className="text-muted-foreground">Complete preparation guide for your transition to NHS care</p>
+              <CardTitle className="text-2xl">Specialist Mental Health Services Preparation</CardTitle>
+              <p className="text-muted-foreground">Complete preparation guide for your transition to specialist care</p>
             </div>
           </div>
         </CardHeader>
@@ -388,7 +388,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{calculateOverallReadiness()}%</div>
-              <div className="text-sm text-muted-foreground">NHS Readiness Score</div>
+              <div className="text-sm text-muted-foreground">Specialist Care Readiness Score</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">{getCompletenessPercentage()}%</div>
@@ -405,7 +405,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
           <div className="bg-blue-50 p-4 rounded-lg">
             <p className="text-sm text-blue-800">
               💡 <strong>You're not starting from scratch:</strong> You're building on 6 weeks of skill development, 
-              self-awareness, and proven anxiety management strategies. Approach NHS services with confidence!
+              self-awareness, and proven anxiety management strategies. Approach specialist services with confidence!
             </p>
           </div>
         </CardContent>
@@ -430,7 +430,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
                 Documents and Information to Bring
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Prepare the essential documents and information for your NHS assessment
+                Prepare the essential documents and information for your assessment appointment
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -581,7 +581,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
                 Your 6-Week Program Summary
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Create a comprehensive summary of your program experience to share with NHS services
+                Create a comprehensive summary of your program experience to share with your next care team
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -757,7 +757,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
                 Assessment Preparation
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Prepare the information you'll need to share during your NHS assessment
+                Prepare the information you'll need to share during your assessment interview
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -868,15 +868,15 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
             </CardContent>
           </Card>
 
-          {/* NHS Readiness Assessment */}
+          {/* Specialist Care Readiness Assessment */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5" />
-                NHS Transition Readiness
+                Specialist Service Transition Readiness
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Rate your readiness for NHS mental health services (1-10 scale)
+                Rate your readiness for specialist mental health services (1-10 scale)
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -928,7 +928,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
 
                 <div>
                   <Label className="text-sm font-medium">
-                    Transitioning to NHS mental health services: {nhsReadiness.transitionReadiness}/10
+                    Transitioning to specialist mental health services: {nhsReadiness.transitionReadiness}/10
                   </Label>
                   <input
                     type="range"
@@ -972,7 +972,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
               <div className="bg-blue-50 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Award className="w-5 h-5 text-blue-600" />
-                  <h4 className="font-semibold text-blue-800">Overall NHS Readiness Score</h4>
+                  <h4 className="font-semibold text-blue-800">Overall Specialist Care Readiness Score</h4>
                 </div>
                 <div className="text-3xl font-bold text-blue-600">{calculateOverallReadiness()}%</div>
                 <Progress value={calculateOverallReadiness()} className="mt-2" />
@@ -1169,7 +1169,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
                 <Label htmlFor="progress-monitoring">How you'll monitor and document your progress</Label>
                 <Textarea
                   id="progress-monitoring"
-                  placeholder="Describe how you'll track your progress and prepare updates for your first NHS appointment..."
+                  placeholder="Describe how you'll track your progress and prepare updates for your first specialist appointment..."
                   value={ongoingPrep.progressMonitoring}
                   onChange={(e) => setOngoingPrep(prev => ({ ...prev, progressMonitoring: e.target.value }))}
                   className="mt-1"
@@ -1218,10 +1218,10 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
               </div>
 
               <div>
-                <Label htmlFor="concerns">Concerns or anxiety about NHS services</Label>
+                <Label htmlFor="concerns">Concerns or anxiety about specialist services</Label>
                 <Textarea
                   id="concerns"
-                  placeholder="What concerns do you have about NHS mental health services? How can these be addressed?"
+                  placeholder="What concerns do you have about specialist mental health services? How can these be addressed?"
                   value={advocacyPrep.concerns}
                   onChange={(e) => setAdvocacyPrep(prev => ({ ...prev, concerns: e.target.value }))}
                   className="mt-1"
@@ -1285,7 +1285,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
               </div>
 
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold mb-2 text-blue-800">Your Rights in NHS Mental Health Services</h4>
+                <h4 className="font-semibold mb-2 text-blue-800">Your Rights in Specialist Mental Health Services</h4>
                 <div className="space-y-2 text-sm text-blue-700">
                   <div className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -1319,7 +1319,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ArrowRight className="w-5 h-5 text-green-500" />
-            You're Ready for NHS Mental Health Services!
+            You're Ready for Specialist Mental Health Services!
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -1330,7 +1330,7 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{calculateOverallReadiness()}%</div>
-              <div className="text-sm text-muted-foreground">NHS Readiness</div>
+              <div className="text-sm text-muted-foreground">Specialist Care Readiness</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">

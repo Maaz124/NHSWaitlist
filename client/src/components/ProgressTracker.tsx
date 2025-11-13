@@ -80,7 +80,7 @@ export function ProgressTracker({ initialData, onDataChange, onSave }: ProgressT
     { area: "Using anxiety management tools independently", rating: 7, confidence: "" },
     { area: "Handling setbacks without professional support", rating: 6, confidence: "" },
     { area: "Maintaining progress during stressful periods", rating: 6, confidence: "" },
-    { area: "Transitioning to NHS mental health services", rating: 8, confidence: "" },
+    { area: "Transitioning to mental health services", rating: 8, confidence: "" },
     { area: "Continuing your anxiety management journey", rating: 8, confidence: "" }
   ]);
 

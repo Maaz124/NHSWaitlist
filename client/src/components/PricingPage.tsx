@@ -119,7 +119,7 @@ export function PricingPage() {
 
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Unlock Full Access to NHS Waitlist
+          Unlock Full Access to Waitlist Companion
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Get complete access to all our anxiety management modules, tools, and resources with a one-time payment.

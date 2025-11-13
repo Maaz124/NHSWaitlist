@@ -981,12 +981,12 @@ Based on the evidence, how much do you believe the original prediction now?
         ]
       },
       6: {
-        title: "Relapse Prevention & NHS Transition",
-        description: "Create your personal toolkit for maintaining progress and preparing for NHS transition",
+        title: "Relapse Prevention & Waitlist Companion Transition",
+        description: "Create your personal toolkit for maintaining progress and preparing for Waitlist Companion transition",
         objectives: [
           "Develop a personalized anxiety management toolkit",
           "Create a relapse prevention plan",
-          "Prepare for NHS mental health services transition",
+          "Prepare for Waitlist Companion mental health services transition",
           "Build long-term resilience strategies"
         ],
         activities: [
@@ -1072,7 +1072,7 @@ Rate your readiness in each area (1-10):
 • Using anxiety management tools independently: ___/10
 • Handling setbacks without professional support: ___/10
 • Maintaining progress during stressful periods: ___/10
-• Transitioning to NHS mental health services: ___/10
+• Transitioning to Waitlist Companion mental health services: ___/10
 • Continuing your anxiety management journey: ___/10
 
 **Part 5: Key Insights & Wisdom**
@@ -1306,7 +1306,7 @@ When I notice 3+ warning signs:
 **Crisis Resources:**
 • Crisis Text Line: Text HOME to 741741
 • Samaritans: 116 123 (free, 24/7)
-• NHS 111 for urgent but non-emergency help
+• Waitlist Companion 111 for urgent but non-emergency help
 • 999 for immediate emergency situations
 
 **Self-Help Resources:**
@@ -1632,7 +1632,7 @@ Seek professional help when:
 **UK Crisis Contacts:**
 • **Samaritans:** 116 123 (free, 24/7)
 • **Crisis Text Line:** Text SHOUT to 85258
-• **NHS 111:** For urgent but non-emergency help
+• **NHS 111:** Urgent but non-emergency help
 • **999:** For immediate emergency situations
 
 **Mental Health Helplines:**
@@ -1648,7 +1648,7 @@ Seek professional help when:
 • **Mental Health Foundation:** mentalhealth.org.uk
 
 **Apps for Support:**
-• **SilverCloud:** NHS-approved therapy platform
+• **SilverCloud:** Digital therapy platform used across UK services
 • **Sanvello:** Anxiety and mood tracking
 • **Headspace:** Mindfulness and meditation
 • **Calm:** Sleep and relaxation
@@ -1697,14 +1697,14 @@ Seek professional help when:
           {
             id: "nhs-transition-prep",
             type: "reading" as const,
-            title: "Preparing for NHS Mental Health Services",
-            description: "Get ready for your transition to NHS care with confidence",
+            title: "Preparing for Waitlist Companion Mental Health Services",
+            description: "Get ready for your transition to Waitlist Companion care with confidence",
             estimatedMinutes: 15,
             isCompleted: false,
             content: {
-              text: `As you transition to NHS mental health services, you're in a much stronger position than when you started this program. Here's your comprehensive guide to making the most of NHS care:
+              text: `As you transition to Waitlist Companion mental health services, you're in a much stronger position than when you started this program. Here's your comprehensive guide to making the most of Waitlist Companion care:
 
-**Section 1: Understanding NHS Mental Health Services**
+**Section 1: Understanding Waitlist Companion Mental Health Services**
 
 **Primary Mental Health Team (PMHT):**
 • Often the first point of contact for mental health support
@@ -1877,9 +1877,9 @@ Create a one-page summary including:
 □ Keep track of your anxiety levels and triggers
 □ Note what techniques are working well
 □ Document any new challenges or successes
-□ Prepare updates for your first NHS appointment
+□ Prepare updates for your first Waitlist Companion appointment
 
-**Section 8: Making the Most of NHS Treatment**
+**Section 8: Making the Most of Waitlist Companion Treatment**
 
 **Be an Active Participant:**
 • Come prepared to sessions with questions and updates
@@ -1929,8 +1929,8 @@ Create a one-page summary including:
 □ Feeling unsafe or out of control
 
 **How to Access Crisis Support:**
-• **NHS 111:** For urgent but non-emergency mental health needs
-• **Crisis Team:** Contact through your GP or NHS 111
+• **Waitlist Companion 111:** For urgent but non-emergency mental health needs
+• **Crisis Team:** Contact through your GP or Waitlist Companion 111
 • **A&E:** For immediate emergencies
 • **Samaritans:** 116 123 for emotional support anytime
 
@@ -1940,7 +1940,7 @@ Create a one-page summary including:
 • Plan who to contact and when
 • Know where your nearest crisis services are located
 
-**Section 11: Long-Term Success with NHS Services**
+**Section 11: Long-Term Success with Specialist Services**
 
 **Building a Good Relationship with Your Mental Health Team:**
 • Be honest and open about your experiences
@@ -1974,9 +1974,9 @@ You're building on a strong foundation of:
 3. Prepare your list of questions
 4. Continue practicing your anxiety management skills
 5. Stay connected with your support network
-6. Approach NHS services with confidence in what you've already achieved
+6. Approach your future care team with confidence in what you've already achieved
 
-You're ready for this next phase of your mental health journey. Trust in the progress you've made and the skills you've developed. NHS services will build on this strong foundation to support your continued growth and recovery.`
+You're ready for this next phase of your mental health journey. Trust in the progress you've made and the skills you've developed. Specialist services will build on this strong foundation to support your continued growth and recovery.`
             }
           }
         ]

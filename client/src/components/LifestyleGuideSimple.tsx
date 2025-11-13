@@ -256,7 +256,7 @@ export function LifestyleGuideSimple() {
                   </ul>
                 </div>
                 <div>
-                  <h5 className="font-medium text-yellow-700 mb-2">NHS Services</h5>
+                  <h5 className="font-medium text-yellow-700 mb-2">Health Services</h5>
                   <ul className="text-yellow-600 text-sm space-y-1">
                     <li>• GP consultation</li>
                     <li>• IAPT services</li>

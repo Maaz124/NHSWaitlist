@@ -279,7 +279,7 @@ export default function Resources() {
                   >
                     <div className="w-full min-w-0">
                       <p className="font-medium text-left break-words">Understanding Anxiety</p>
-                      <p className="text-sm text-muted-foreground text-left break-words overflow-wrap-anywhere">NHS-approved interactive guide with quizzes</p>
+                      <p className="text-sm text-muted-foreground text-left break-words overflow-wrap-anywhere">Clinically reviewed interactive guide with quizzes</p>
                     </div>
                   </Button>
                   
@@ -327,7 +327,7 @@ export default function Resources() {
                       Report Ready
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Your progress data is ready for NHS handoff when your appointment becomes available.
+                      Your progress data is ready to share with your future care team when your appointment becomes available.
                     </p>
                   </div>
                   

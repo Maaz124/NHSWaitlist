@@ -1426,11 +1426,11 @@ log('👥 New socialSupport after removing:', newSupport);
                   <div className="space-y-3">
                     <div className="p-3 bg-white rounded border border-yellow-200">
                       <p className="font-medium text-yellow-800">Movement Tracking</p>
-                      <p className="text-yellow-700 text-sm">NHS Couch to 5K, Strava, phone step counter</p>
+                      <p className="text-yellow-700 text-sm">Couch to 5K, Strava, phone step counter</p>
                     </div>
                     <div className="p-3 bg-white rounded border border-yellow-200">
                       <p className="font-medium text-yellow-800">Nutrition Support</p>
-                      <p className="text-yellow-700 text-sm">MyFitnessPal, NHS Eatwell Guide, meal planning apps</p>
+                      <p className="text-yellow-700 text-sm">MyFitnessPal, Eatwell Guide, meal planning apps</p>
                     </div>
                     <div className="p-3 bg-white rounded border border-yellow-200">
                       <p className="font-medium text-yellow-800">Social Connection</p>
@@ -1442,7 +1442,7 @@ log('👥 New socialSupport after removing:', newSupport);
                   <h4 className="font-semibold text-yellow-800 mb-3">Professional Support</h4>
                   <div className="space-y-3">
                     <div className="p-3 bg-white rounded border border-yellow-200">
-                      <p className="font-medium text-yellow-800">GP & NHS Services</p>
+                      <p className="font-medium text-yellow-800">GP & Health Services</p>
                       <p className="text-yellow-700 text-sm">Discuss lifestyle changes, referrals to specialists</p>
                     </div>
                     <div className="p-3 bg-white rounded border border-yellow-200">

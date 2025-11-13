@@ -979,7 +979,7 @@ export function RelapsePlanner({ initialData, onDataChange, onSave, onGetCurrent
                 <div className="space-y-1 text-sm text-red-700">
                   <div>• <strong>Samaritans:</strong> 116 123 (free, 24/7)</div>
                   <div>• <strong>Crisis Text Line:</strong> Text SHOUT to 85258</div>
-                  <div>• <strong>NHS 111:</strong> For urgent but non-emergency help</div>
+                  <div>• <strong>Waitlist Companion 111:</strong> For urgent but non-emergency help</div>
                   <div>• <strong>999:</strong> For immediate emergency situations</div>
                   <div>• <strong>Mind Info Line:</strong> 0300 123 3393</div>
                   <div>• <strong>Anxiety UK:</strong> 03444 775 774</div>

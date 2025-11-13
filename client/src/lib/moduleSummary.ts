@@ -218,12 +218,12 @@ const MODULE_SUMMARIES: Record<number, ModuleSummary> = {
   },
   6: {
     weekNumber: 6,
-    title: "Relapse Prevention & NHS Transition",
-    description: "Create your personal toolkit and prepare for the NHS transition.",
+    title: "Relapse Prevention & Care Transition",
+    description: "Create your personal toolkit and get ready to work with specialist services.",
     objectives: [
       "Develop a personalized anxiety management toolkit",
       "Create a relapse prevention plan",
-      "Prepare for NHS mental health services transition",
+      "Prepare for your next stage of specialist support",
       "Build long-term resilience strategies"
     ],
     activities: [
@@ -250,8 +250,8 @@ const MODULE_SUMMARIES: Record<number, ModuleSummary> = {
       },
       {
         id: "nhs-transition-prep",
-        title: "NHS Transition Preparation",
-        description: "Organize information and questions for your upcoming NHS care.",
+        title: "Specialist Care Preparation",
+        description: "Organize information and questions for your upcoming care team.",
         type: "worksheet",
         estimatedMinutes: 18
       }

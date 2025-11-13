@@ -35,7 +35,7 @@ export function Footer() {
               />
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Providing interim mental health support while you wait for NHS services. 
+              Providing interim mental health support while you wait for health services. 
               Evidence-based tools and resources to help you manage anxiety and improve wellbeing.
             </p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -116,8 +116,8 @@ export function Footer() {
                 please contact emergency services (999) or go to your nearest emergency department immediately.
               </p>
               <p>
-                <strong>NHS Transition:</strong> Continue to pursue your NHS referral and attend all scheduled appointments. 
-                This platform is intended to provide support while you wait for formal NHS mental health services.
+                <strong>Waitlist Companion Transition:</strong> Continue to pursue your Waitlist Companion referral and attend all scheduled appointments. 
+                This platform is intended to provide support while you wait for formal Waitlist Companion mental health services.
               </p>
             </div>
           </div>
@@ -144,7 +144,7 @@ export function Footer() {
           <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">
             <p className="mb-1">
               <strong>Regulatory Information:</strong> This platform complies with UK healthcare data protection standards and GDPR requirements. 
-              All user data is handled in accordance with NHS Digital guidance for digital health services.
+              All user data is handled in accordance with Waitlist Companion Digital guidance for digital health services.
             </p>
             <p>
               Not regulated as a medical device. Content developed in consultation with mental health professionals and based on NICE guidelines for anxiety management.

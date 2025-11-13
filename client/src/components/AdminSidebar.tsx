@@ -51,7 +51,7 @@ export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
           </div>
           <div>
             <h2 className="text-lg font-semibold">Admin Panel</h2>
-            <p className="text-xs text-muted-foreground">NHS Waitlist</p>
+            <p className="text-xs text-muted-foreground">Waitlist Companion</p>
           </div>
         </div>
 

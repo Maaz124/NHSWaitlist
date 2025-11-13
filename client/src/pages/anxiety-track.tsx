@@ -270,7 +270,7 @@ export default function AnxietyTrack() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-3">6-Week Anxiety Support Track</h1>
             <p className="text-lg text-muted-foreground mb-4">
-              Evidence-based modules designed to help you manage anxiety while waiting for NHS support
+              Evidence-based modules designed to help you manage anxiety while waiting for Waitlist Companion support
             </p>
             
             {/* Key Stats */}

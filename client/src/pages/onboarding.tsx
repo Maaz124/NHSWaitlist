@@ -314,7 +314,7 @@ export default function Onboarding() {
                   name="nhsNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>NHS Number (Optional)</FormLabel>
+                      <FormLabel>Health Service Number (Optional)</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="123 456 7890" data-testid="input-nhs-number" />
                       </FormControl>

@@ -317,7 +317,7 @@ export default function Settings() {
               <p className="text-xs text-muted-foreground">Powered by rethink.org</p>
               <div className="text-xs text-muted-foreground">
                 <Download className="inline w-3 h-3 mr-1" />
-                NHS Data Compliant
+                UK Health Data Compliant
               </div>
             </div>
           </div>

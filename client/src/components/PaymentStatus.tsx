@@ -112,7 +112,7 @@ export function PaymentStatus({ user }: { user: User }) {
               <div>
                 <h3 className="font-semibold text-green-800">Full Access Active</h3>
                 <p className="text-green-600 text-sm">
-                  You have complete access to all NHS Waitlist features!
+                  You have complete access to all Waitlist Companion features!
                 </p>
               </div>
             </div>
