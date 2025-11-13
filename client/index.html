@@ -150,38 +150,28 @@
         document.cookie = 'googtrans=/en/en; path=/;';
       }
 
-      // Set default language to English on first load
+      // Set default language to English on first load (only if no cookie exists)
       function setDefaultLanguage() {
         // Check if there's a language preference cookie
         var cookies = document.cookie.split(';');
-        var hasNonEnglish = false;
+        var hasCookie = false;
         
         for (var i = 0; i < cookies.length; i++) {
           var cookie = cookies[i].trim();
           if (cookie.indexOf('googtrans=') === 0) {
-            var value = cookie.substring('googtrans='.length);
-            // If cookie is set to Arabic or something other than English
-            if (value !== '' && value !== '/en/en' && value.indexOf('/ar') >= 0) {
-              hasNonEnglish = true;
-              break;
-            }
+            hasCookie = true;
+            break;
           }
         }
         
-        // If there's an Arabic translation cookie, clear it
-        if (hasNonEnglish) {
-          clearGoogleTranslateCookies();
-        } else {
-          // Set default to English if no cookie exists
+        // Only set default to English if no cookie exists
+        if (!hasCookie) {
           document.cookie = 'googtrans=/en/en; path=/;';
         }
       }
 
       function googleTranslateElementInit() {
-        // Clear any Arabic cookies before initializing
-        clearGoogleTranslateCookies();
-        
-        // Set default to English before initializing
+        // Set default to English before initializing (only if no cookie exists)
         setDefaultLanguage();
         
         new google.translate.TranslateElement({
@@ -190,21 +180,6 @@
           layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
           autoDisplay: false
         }, 'google_translate_element');
-
-        // Monitor the select element to ensure it starts with English
-        setTimeout(function() {
-          var selectElement = document.querySelector('.goog-te-combo');
-          if (selectElement) {
-            // If it's set to Arabic, reset to English
-            if (selectElement.value && selectElement.value.indexOf('ar') >= 0) {
-              clearGoogleTranslateCookies();
-              selectElement.value = '';
-              // Trigger a change event to reset
-              var event = new Event('change', { bubbles: true });
-              selectElement.dispatchEvent(event);
-            }
-          }
-        }, 1000);
 
         // Use MutationObserver to detect when Google Translate adds elements
         var observer = new MutationObserver(function(mutations) {
@@ -309,42 +284,12 @@
         }, 500);
       }
 
-      // Set default language on page load and periodically check
+      // Set default language on page load (only if no cookie exists)
       window.addEventListener('DOMContentLoaded', function() {
-        clearGoogleTranslateCookies();
         setDefaultLanguage();
-        
-        // Periodically check if Arabic cookie has been set (every 2 seconds for first 10 seconds)
-        var checkCount = 0;
-        var checkInterval = setInterval(function() {
-          checkCount++;
-          var cookies = document.cookie.split(';');
-          for (var i = 0; i < cookies.length; i++) {
-            var cookie = cookies[i].trim();
-            if (cookie.indexOf('googtrans=') === 0) {
-              var value = cookie.substring('googtrans='.length);
-              // If Arabic is detected, clear it
-              if (value.indexOf('/ar') >= 0) {
-                clearGoogleTranslateCookies();
-                // Reload if Arabic was set on page load
-                if (checkCount <= 2) {
-                  setTimeout(function() {
-                    window.location.href = window.location.href.split('#')[0];
-                  }, 500);
-                }
-                clearInterval(checkInterval);
-                break;
-              }
-            }
-          }
-          if (checkCount >= 5) {
-            clearInterval(checkInterval);
-          }
-        }, 2000);
       });
       
       // Also run immediately
-      clearGoogleTranslateCookies();
       setDefaultLanguage();
     </script>
     <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
