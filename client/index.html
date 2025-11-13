@@ -122,32 +122,65 @@
     <script type="module" src="/src/main.tsx"></script>
     <!-- Google Translate -->
     <script type="text/javascript">
+      // Aggressively clear Google Translate cookies from all possible paths
+      function clearGoogleTranslateCookies() {
+        var paths = ['/', '/en', ''];
+        var domains = ['', window.location.hostname, '.' + window.location.hostname];
+        var expires = 'expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+        
+        // Clear from all path and domain combinations
+        for (var i = 0; i < paths.length; i++) {
+          for (var j = 0; j < domains.length; j++) {
+            var domainStr = domains[j] ? 'domain=' + domains[j] + ';' : '';
+            var pathStr = paths[i] ? 'path=' + paths[i] + ';' : '';
+            // Clear the cookie
+            document.cookie = 'googtrans=;' + expires + domainStr + pathStr;
+          }
+        }
+        
+        // Also clear localStorage and sessionStorage if Google Translate uses them
+        try {
+          localStorage.removeItem('googtrans');
+          localStorage.removeItem('google_translate_lang');
+          sessionStorage.removeItem('googtrans');
+          sessionStorage.removeItem('google_translate_lang');
+        } catch(e) {}
+        
+        // Set default to English
+        document.cookie = 'googtrans=/en/en; path=/;';
+      }
+
       // Set default language to English on first load
       function setDefaultLanguage() {
         // Check if there's a language preference cookie
         var cookies = document.cookie.split(';');
-        var hasGoogTrans = false;
+        var hasNonEnglish = false;
+        
         for (var i = 0; i < cookies.length; i++) {
           var cookie = cookies[i].trim();
           if (cookie.indexOf('googtrans=') === 0) {
-            hasGoogTrans = true;
             var value = cookie.substring('googtrans='.length);
-            // If cookie is set to Arabic or something other than English, clear it
-            if (value !== '' && value !== '/en/en') {
-              // Clear the cookie to reset to English
-              document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-              document.cookie = 'googtrans=/en/en; path=/;';
+            // If cookie is set to Arabic or something other than English
+            if (value !== '' && value !== '/en/en' && value.indexOf('/ar') >= 0) {
+              hasNonEnglish = true;
+              break;
             }
-            break;
           }
         }
-        // If no cookie exists, set default to English
-        if (!hasGoogTrans) {
+        
+        // If there's an Arabic translation cookie, clear it
+        if (hasNonEnglish) {
+          clearGoogleTranslateCookies();
+        } else {
+          // Set default to English if no cookie exists
           document.cookie = 'googtrans=/en/en; path=/;';
         }
       }
 
       function googleTranslateElementInit() {
+        // Clear any Arabic cookies before initializing
+        clearGoogleTranslateCookies();
+        
         // Set default to English before initializing
         setDefaultLanguage();
         
@@ -157,6 +190,21 @@
           layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
           autoDisplay: false
         }, 'google_translate_element');
+
+        // Monitor the select element to ensure it starts with English
+        setTimeout(function() {
+          var selectElement = document.querySelector('.goog-te-combo');
+          if (selectElement) {
+            // If it's set to Arabic, reset to English
+            if (selectElement.value && selectElement.value.indexOf('ar') >= 0) {
+              clearGoogleTranslateCookies();
+              selectElement.value = '';
+              // Trigger a change event to reset
+              var event = new Event('change', { bubbles: true });
+              selectElement.dispatchEvent(event);
+            }
+          }
+        }, 1000);
 
         // Use MutationObserver to detect when Google Translate adds elements
         var observer = new MutationObserver(function(mutations) {
@@ -171,11 +219,11 @@
               
               // When English is selected (empty value means original page language)
               if (selectedLang === '' || selectedLang === 'en' || selectedLang === 'auto') {
-                // Set cookie to English
-                document.cookie = 'googtrans=/en/en; path=/;';
+                // Aggressively clear all Google Translate cookies first
+                clearGoogleTranslateCookies();
                 
-                // Function to remove all translation elements
-                function removeTranslation() {
+                // Function to remove all translation elements and reload
+                function removeTranslationAndReload() {
                   // Remove all Google Translate iframe overlays
                   var frames = document.querySelectorAll('iframe[src*="translate.google.com"]');
                   frames.forEach(function(frame) {
@@ -198,21 +246,17 @@
                     skipLink.style.display = 'none';
                   }
                   
-                  // Remove all elements with translation classes
-                  var translatedElements = document.querySelectorAll('.goog-text-highlight, .notranslate');
-                  translatedElements.forEach(function(el) {
-                    el.classList.remove('goog-text-highlight');
-                  });
+                  // Clear cookies one more time before reload
+                  clearGoogleTranslateCookies();
                   
-                  // Force refresh the page to completely remove translation
-                  // This is the most reliable way to ensure clean state
+                  // Force reload with cleared cookies - this ensures clean state
                   setTimeout(function() {
-                    window.location.reload();
-                  }, 200);
+                    window.location.href = window.location.href.split('#')[0];
+                  }, 100);
                 }
                 
                 // Wait a bit for Google Translate to process, then remove translation
-                setTimeout(removeTranslation, 100);
+                setTimeout(removeTranslationAndReload, 50);
               }
             });
           }
@@ -232,8 +276,10 @@
             selectElement.addEventListener('change', function(e) {
               var selectedLang = this.value;
               if (selectedLang === '' || selectedLang === 'en' || selectedLang === 'auto') {
-                document.cookie = 'googtrans=/en/en; path=/;';
-                function removeTranslation() {
+                // Aggressively clear all Google Translate cookies first
+                clearGoogleTranslateCookies();
+                
+                function removeTranslationAndReload() {
                   var frames = document.querySelectorAll('iframe[src*="translate.google.com"]');
                   frames.forEach(function(frame) {
                     if (frame.id !== 'google_translate_element') {
@@ -250,23 +296,55 @@
                   if (skipLink) {
                     skipLink.style.display = 'none';
                   }
-                  var translatedElements = document.querySelectorAll('.goog-text-highlight, .notranslate');
-                  translatedElements.forEach(function(el) {
-                    el.classList.remove('goog-text-highlight');
-                  });
+                  // Clear cookies one more time before reload
+                  clearGoogleTranslateCookies();
                   setTimeout(function() {
-                    window.location.reload();
-                  }, 200);
+                    window.location.href = window.location.href.split('#')[0];
+                  }, 100);
                 }
-                setTimeout(removeTranslation, 100);
+                setTimeout(removeTranslationAndReload, 50);
               }
             });
           }
         }, 500);
       }
 
-      // Set default language on page load
-      window.addEventListener('DOMContentLoaded', setDefaultLanguage);
+      // Set default language on page load and periodically check
+      window.addEventListener('DOMContentLoaded', function() {
+        clearGoogleTranslateCookies();
+        setDefaultLanguage();
+        
+        // Periodically check if Arabic cookie has been set (every 2 seconds for first 10 seconds)
+        var checkCount = 0;
+        var checkInterval = setInterval(function() {
+          checkCount++;
+          var cookies = document.cookie.split(';');
+          for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.indexOf('googtrans=') === 0) {
+              var value = cookie.substring('googtrans='.length);
+              // If Arabic is detected, clear it
+              if (value.indexOf('/ar') >= 0) {
+                clearGoogleTranslateCookies();
+                // Reload if Arabic was set on page load
+                if (checkCount <= 2) {
+                  setTimeout(function() {
+                    window.location.href = window.location.href.split('#')[0];
+                  }, 500);
+                }
+                clearInterval(checkInterval);
+                break;
+              }
+            }
+          }
+          if (checkCount >= 5) {
+            clearInterval(checkInterval);
+          }
+        }, 2000);
+      });
+      
+      // Also run immediately
+      clearGoogleTranslateCookies();
       setDefaultLanguage();
     </script>
     <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
