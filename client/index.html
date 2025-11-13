@@ -188,52 +188,56 @@
           if (selectElement && !selectElement.hasAttribute('data-listener-added')) {
             selectElement.setAttribute('data-listener-added', 'true');
             
-            // Listen for language changes
+            // Listen for language changes - use capture phase to intercept early
             selectElement.addEventListener('change', function(e) {
+              // Get the selected value and text
               var selectedLang = this.value;
+              var selectedOption = this.options[this.selectedIndex];
+              var selectedText = selectedOption ? selectedOption.text.toLowerCase() : '';
               
-              // When English is selected (empty value means original page language)
-              if (selectedLang === '' || selectedLang === 'en' || selectedLang === 'auto') {
-                // Aggressively clear all Google Translate cookies first
-                clearGoogleTranslateCookies();
-                
-                // Function to remove all translation elements and reload
-                function removeTranslationAndReload() {
-                  // Remove all Google Translate iframe overlays
-                  var frames = document.querySelectorAll('iframe[src*="translate.google.com"]');
-                  frames.forEach(function(frame) {
-                    if (frame.id !== 'google_translate_element') {
-                      try {
-                        frame.style.display = 'none';
-                        frame.remove();
-                      } catch(e) {}
-                    }
-                  });
-                  
-                  // Remove translation wrapper classes
-                  document.body.classList.remove('translated-ltr', 'translated-rtl');
-                  document.documentElement.classList.remove('translated-ltr', 'translated-rtl');
-                  document.documentElement.setAttribute('lang', 'en');
-                  
-                  // Hide skip translation link
-                  var skipLink = document.querySelector('.skiptranslate');
-                  if (skipLink) {
-                    skipLink.style.display = 'none';
+              // Check if English is selected - check value, text, or if it's the first option
+              var isEnglishSelected = selectedLang === '' || 
+                                      selectedLang === 'en' || 
+                                      selectedLang === null ||
+                                      selectedLang === undefined ||
+                                      selectedText.indexOf('english') >= 0 ||
+                                      selectedText.indexOf('الإنجليزية') < 0; // Not Arabic text
+              
+              // Also check current cookie state to see if we're in Arabic
+              var cookies = document.cookie.split(';');
+              var isCurrentlyArabic = false;
+              for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.indexOf('googtrans=') === 0) {
+                  var value = cookie.substring('googtrans='.length);
+                  if (value.indexOf('/ar') >= 0 || value.indexOf('/en/ar') >= 0) {
+                    isCurrentlyArabic = true;
+                    break;
                   }
-                  
-                  // Clear cookies one more time before reload
-                  clearGoogleTranslateCookies();
-                  
-                  // Force reload with cleared cookies - this ensures clean state
-                  setTimeout(function() {
-                    window.location.href = window.location.href.split('#')[0];
-                  }, 100);
+                }
+              }
+              
+              // If we're currently in Arabic mode and English is selected, reset
+              if (isCurrentlyArabic && isEnglishSelected) {
+                // Stop propagation immediately
+                if (e.stopImmediatePropagation) {
+                  e.stopImmediatePropagation();
+                }
+                if (e.preventDefault) {
+                  e.preventDefault();
                 }
                 
-                // Wait a bit for Google Translate to process, then remove translation
-                setTimeout(removeTranslationAndReload, 50);
+                // Clear all cookies aggressively
+                clearGoogleTranslateCookies();
+                
+                // Set English cookie with max age
+                document.cookie = 'googtrans=/en/en; path=/; max-age=86400;';
+                
+                // Force reload immediately - don't wait for Google Translate
+                window.location.replace(window.location.href.split('#')[0].split('?')[0]);
+                return false;
               }
-            });
+            }, true); // Use capture phase to intercept before Google Translate
           }
         });
 
@@ -250,36 +254,45 @@
             selectElement.setAttribute('data-listener-added', 'true');
             selectElement.addEventListener('change', function(e) {
               var selectedLang = this.value;
-              if (selectedLang === '' || selectedLang === 'en' || selectedLang === 'auto') {
-                // Aggressively clear all Google Translate cookies first
-                clearGoogleTranslateCookies();
-                
-                function removeTranslationAndReload() {
-                  var frames = document.querySelectorAll('iframe[src*="translate.google.com"]');
-                  frames.forEach(function(frame) {
-                    if (frame.id !== 'google_translate_element') {
-                      try {
-                        frame.style.display = 'none';
-                        frame.remove();
-                      } catch(e) {}
-                    }
-                  });
-                  document.body.classList.remove('translated-ltr', 'translated-rtl');
-                  document.documentElement.classList.remove('translated-ltr', 'translated-rtl');
-                  document.documentElement.setAttribute('lang', 'en');
-                  var skipLink = document.querySelector('.skiptranslate');
-                  if (skipLink) {
-                    skipLink.style.display = 'none';
+              var selectedOption = this.options[this.selectedIndex];
+              var selectedText = selectedOption ? selectedOption.text.toLowerCase() : '';
+              
+              var isEnglishSelected = selectedLang === '' || 
+                                      selectedLang === 'en' || 
+                                      selectedLang === null ||
+                                      selectedLang === undefined ||
+                                      selectedText.indexOf('english') >= 0 ||
+                                      selectedText.indexOf('الإنجليزية') < 0;
+              
+              var cookies = document.cookie.split(';');
+              var isCurrentlyArabic = false;
+              for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.indexOf('googtrans=') === 0) {
+                  var value = cookie.substring('googtrans='.length);
+                  if (value.indexOf('/ar') >= 0 || value.indexOf('/en/ar') >= 0) {
+                    isCurrentlyArabic = true;
+                    break;
                   }
-                  // Clear cookies one more time before reload
-                  clearGoogleTranslateCookies();
-                  setTimeout(function() {
-                    window.location.href = window.location.href.split('#')[0];
-                  }, 100);
                 }
-                setTimeout(removeTranslationAndReload, 50);
               }
-            });
+              
+              if (isCurrentlyArabic && isEnglishSelected) {
+                if (e.stopImmediatePropagation) {
+                  e.stopImmediatePropagation();
+                }
+                if (e.preventDefault) {
+                  e.preventDefault();
+                }
+                
+                clearGoogleTranslateCookies();
+                document.cookie = 'googtrans=/en/en; path=/; max-age=86400;';
+                
+                // Use replace instead of href to avoid adding to history
+                window.location.replace(window.location.href.split('#')[0].split('?')[0]);
+                return false;
+              }
+            }, true);
           }
         }, 500);
       }
