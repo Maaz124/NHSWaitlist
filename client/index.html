@@ -122,32 +122,83 @@
     <script type="module" src="/src/main.tsx"></script>
     <!-- Google Translate -->
     <script type="text/javascript">
-      // Aggressively clear Google Translate cookies from all possible paths
+      // Aggressively clear Google Translate cookies from all possible paths and security settings
       function clearGoogleTranslateCookies() {
-        var paths = ['/', '/en', ''];
-        var domains = ['', window.location.hostname, '.' + window.location.hostname];
-        var expires = 'expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+        var paths = ['/', '/en', '', '/index.html'];
+        var hostname = window.location.hostname;
+        var domains = [
+          '',  // No domain (default)
+          hostname,  // Exact hostname
+          '.' + hostname,  // With dot prefix
+          hostname.split('.').slice(-2).join('.'),  // Parent domain if subdomain
+          '.' + hostname.split('.').slice(-2).join('.')  // Parent with dot
+        ];
         
-        // Clear from all path and domain combinations
+        // Remove duplicates
+        domains = domains.filter(function(value, index, self) {
+          return self.indexOf(value) === index;
+        });
+        
+        var expires = 'expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+        var secureFlag = window.location.protocol === 'https:' ? 'Secure;' : '';
+        
+        // Clear from all path, domain, and security combinations
         for (var i = 0; i < paths.length; i++) {
           for (var j = 0; j < domains.length; j++) {
             var domainStr = domains[j] ? 'domain=' + domains[j] + ';' : '';
             var pathStr = paths[i] ? 'path=' + paths[i] + ';' : '';
-            // Clear the cookie
-            document.cookie = 'googtrans=;' + expires + domainStr + pathStr;
+            
+            // Clear without secure flag
+            document.cookie = 'googtrans=;' + expires + domainStr + pathStr + 'SameSite=Lax;';
+            document.cookie = 'googtrans=;' + expires + domainStr + pathStr + 'SameSite=Strict;';
+            document.cookie = 'googtrans=;' + expires + domainStr + pathStr + 'SameSite=None;';
+            
+            // Clear with secure flag (for HTTPS)
+            if (secureFlag) {
+              document.cookie = 'googtrans=;' + expires + domainStr + pathStr + secureFlag + 'SameSite=Lax;';
+              document.cookie = 'googtrans=;' + expires + domainStr + pathStr + secureFlag + 'SameSite=Strict;';
+              document.cookie = 'googtrans=;' + expires + domainStr + pathStr + secureFlag + 'SameSite=None;';
+            }
+            
+            // Also try clearing with different cookie names Google might use
+            document.cookie = 'googtrans=/en/ar;' + expires + domainStr + pathStr + 'SameSite=Lax;';
+            document.cookie = 'googtrans=/ar;' + expires + domainStr + pathStr + 'SameSite=Lax;';
           }
         }
         
         // Also clear localStorage and sessionStorage if Google Translate uses them
         try {
-          localStorage.removeItem('googtrans');
-          localStorage.removeItem('google_translate_lang');
-          sessionStorage.removeItem('googtrans');
-          sessionStorage.removeItem('google_translate_lang');
+          var keysToRemove = ['googtrans', 'google_translate_lang', 'gt_lang'];
+          keysToRemove.forEach(function(key) {
+            try {
+              localStorage.removeItem(key);
+              sessionStorage.removeItem(key);
+              // Clear all localStorage items that start with 'goog'
+              for (var k = 0; k < localStorage.length; k++) {
+                var storageKey = localStorage.key(k);
+                if (storageKey && storageKey.toLowerCase().indexOf('goog') >= 0) {
+                  localStorage.removeItem(storageKey);
+                }
+              }
+            } catch(e) {}
+          });
         } catch(e) {}
         
-        // Set default to English
-        document.cookie = 'googtrans=/en/en; path=/;';
+        // Set default to English with proper attributes
+        var cookieSettings = 'path=/; max-age=86400; SameSite=Lax;';
+        if (window.location.protocol === 'https:') {
+          cookieSettings += ' Secure;';
+        }
+        document.cookie = 'googtrans=/en/en;' + cookieSettings;
+      }
+
+      // Helper function to set English cookie with proper security settings
+      function setEnglishCookie() {
+        var cookieSettings = 'path=/; max-age=86400; SameSite=Lax;';
+        if (window.location.protocol === 'https:') {
+          cookieSettings += ' Secure;';
+        }
+        document.cookie = 'googtrans=/en/en;' + cookieSettings;
       }
 
       // Set default language to English on first load (only if no cookie exists)
@@ -166,7 +217,7 @@
         
         // Only set default to English if no cookie exists
         if (!hasCookie) {
-          document.cookie = 'googtrans=/en/en; path=/;';
+          setEnglishCookie();
         }
       }
 
@@ -203,7 +254,7 @@
                     if (selectEl && selectEl.selectedIndex === 0) {
                       // English is selected (first option) but Arabic cookie exists
                       clearGoogleTranslateCookies();
-                      document.cookie = 'googtrans=/en/en; path=/; max-age=86400;';
+                      setEnglishCookie();
                       setTimeout(function() {
                         // Check if still Arabic after clearing
                         var checkCookies = document.cookie.split(';');
@@ -268,7 +319,7 @@
                 if (isCurrentlyArabic || isEnglishSelected) {
                   // Clear all cookies and set English
                   clearGoogleTranslateCookies();
-                  document.cookie = 'googtrans=/en/en; path=/; max-age=86400;';
+                  setEnglishCookie();
                   
                   // Check again after a moment - if still Arabic, reload
                   setTimeout(function() {
@@ -418,7 +469,7 @@
                 if (selectEl && selectEl.selectedIndex === 0) {
                   // English is selected but Arabic cookie exists - clear it
                   clearGoogleTranslateCookies();
-                  document.cookie = 'googtrans=/en/en; path=/; max-age=86400;';
+                  setEnglishCookie();
                   window.location.reload();
                 }
                 break;
