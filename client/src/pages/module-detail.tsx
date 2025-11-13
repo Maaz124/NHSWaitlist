@@ -32,10 +32,13 @@ import {
   Target,
   Award,
   Timer,
-  Users
+  Users,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { generateModuleProgressPdf } from "@/lib/pdf-generator";
+import { getModuleSummary } from "@/lib/moduleSummary";
 
 interface ModuleActivity {
   id: string;
@@ -1984,6 +1987,99 @@ You're ready for this next phase of your mental health journey. Trust in the pro
   };
 
   const moduleContent = getModuleContentWithProgress(weekNumber, module || {});
+
+  const buildMergedUserProgress = () => {
+    const base: Record<string, any> = JSON.parse(JSON.stringify(module.userProgress || {}));
+
+    const mergeWorksheetData = (activityId: string, data: any) => {
+      if (!data) return;
+      base[activityId] = {
+        ...(base[activityId] || {}),
+        worksheetData: data,
+      };
+    };
+
+    Object.entries(worksheetData || {}).forEach(([activityId, data]) => {
+      mergeWorksheetData(activityId, data);
+    });
+
+    if (toolkitDataGetter) {
+      const toolkitData = toolkitDataGetter();
+      if (toolkitData) {
+        mergeWorksheetData("personal-toolkit", toolkitData);
+      }
+    }
+
+    if (relapseDataGetter) {
+      const relapseData = relapseDataGetter();
+      if (relapseData) {
+        mergeWorksheetData("relapse-prevention-plan", relapseData);
+      }
+    }
+
+    if (nhsDataGetter) {
+      const nhsPrepData = nhsDataGetter();
+      if (nhsPrepData) {
+        mergeWorksheetData("nhs-transition-prep", nhsPrepData);
+      }
+    }
+
+    if (valuesDataGetter) {
+      const valuesData = valuesDataGetter();
+      if (valuesData) {
+        mergeWorksheetData("values-assessment", valuesData);
+      }
+    }
+
+    if (reflections && Object.keys(reflections).length > 0) {
+      const grouped: Record<string, Record<string, string>> = {};
+      Object.entries(reflections).forEach(([key, value]) => {
+        const stringValue = value ?? "";
+        const lastDash = key.lastIndexOf("-");
+        const activityId = lastDash === -1 ? key : key.slice(0, lastDash);
+        if (!grouped[activityId]) {
+          grouped[activityId] = {};
+        }
+        grouped[activityId][key] = stringValue;
+      });
+
+      Object.entries(grouped).forEach(([activityId, data]) => {
+        base[activityId] = {
+          ...(base[activityId] || {}),
+          reflectionData: {
+            ...((base[activityId] && base[activityId].reflectionData) || {}),
+            ...data,
+          },
+        };
+      });
+    }
+
+    if (typeof notes === "string") {
+      base.moduleNotes = notes;
+    }
+
+    return base;
+  };
+
+  const handleModulePdfDownload = () => {
+    if (!user) return;
+
+    const summary = getModuleSummary(weekNumber);
+    const mergedProgress = buildMergedUserProgress();
+    const pdf = generateModuleProgressPdf({
+      user,
+      module: {
+        ...module,
+        userProgress: mergedProgress,
+      },
+      summary,
+      notes,
+    });
+
+    const fileName = `module-week-${weekNumber}-progress-${new Date().toISOString().split("T")[0]}.pdf`;
+    pdf.save(fileName);
+  };
+
   const activities: ModuleActivity[] = moduleContent.activities;
 
   const formatTime = (seconds: number) => {
@@ -2180,19 +2276,30 @@ You're ready for this next phase of your mental health journey. Trust in the pro
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           
           {/* Header */}
-          <div className="flex items-center gap-4 mb-6">
-            <Link href="/anxiety-track">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Track
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-semibold text-foreground">
-                Week {weekNumber}: {moduleContent.title}
-              </h1>
-              <p className="text-muted-foreground">{moduleContent.description}</p>
+          <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/anxiety-track">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Track
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-2xl font-semibold text-foreground">
+                  Week {weekNumber}: {moduleContent.title}
+                </h1>
+                <p className="text-muted-foreground">{moduleContent.description}</p>
+              </div>
             </div>
+            <Button
+              onClick={handleModulePdfDownload}
+              variant="outline"
+              className="w-full md:w-auto flex items-center gap-2"
+              data-testid="button-download-module-progress"
+            >
+              <Download className="w-4 h-4" />
+              Download Module Progress (PDF)
+            </Button>
           </div>
 
           {/* Progress & Timer */}

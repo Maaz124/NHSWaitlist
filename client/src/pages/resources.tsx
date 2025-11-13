@@ -5,7 +5,8 @@ import { CrisisBanner } from "@/components/ui/crisis-banner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Gavel, GraduationCap, FileText, Check, Download, ArrowLeft } from "lucide-react";
-import { generateProgressReport } from "@/lib/pdf-generator";
+import { generateAllModulesReportPdf } from "@/lib/pdf-generator";
+import { getModuleSummary } from "@/lib/moduleSummary";
 import { Footer } from "@/components/ui/footer";
 import { BreathingExercise } from "@/components/BreathingExercise";
 import { ThoughtRecord } from "@/components/ThoughtRecord";
@@ -38,31 +39,43 @@ export default function Resources() {
   
 
   const handleExportReport = async () => {
+    if (!user?.id) {
+      alert("Please log in to download your progress report.");
+      return;
+    }
+
     try {
-      
-      const response = await fetch("/api/reports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user?.id }),
+      const response = await fetch(`/api/modules/${user.id}`, {
+        credentials: "include",
       });
-      
-      
+
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Server error: ${response.status} - ${errorText}`);
+        throw new Error(`Failed to fetch modules: ${response.status} ${errorText}`);
       }
-      
-      const { report } = await response.json();
-      
-      if (!report || !report.reportData) {
-        throw new Error("Invalid report data received from server");
+
+      const data = await response.json();
+      const modules = Array.isArray(data?.modules) ? data.modules : [];
+
+      if (modules.length === 0) {
+        alert("No module data available yet. Work through your modules to generate a full report.");
+        return;
       }
-      
-      const doc = generateProgressReport(report.reportData);
-      doc.save("waitlist-companion-progress-report.pdf");
-      
+
+      const pdf = generateAllModulesReportPdf({
+        user,
+        modules: modules.map((module: any) => ({
+          module,
+          summary: getModuleSummary(module.weekNumber),
+          notes: typeof module.userProgress?.moduleNotes === "string" ? module.userProgress.moduleNotes : undefined,
+        })),
+      });
+
+      const fileName = `nhs-waitlist-companion-progress-${new Date().toISOString().split("T")[0]}.pdf`;
+      pdf.save(fileName);
     } catch (error) {
-      alert(`Error generating report: ${error.message}. Please try again.`);
+      console.error("Error generating consolidated module PDF:", error);
+      alert(error instanceof Error ? error.message : "Failed to generate the progress report. Please try again.");
     }
   };
 

@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import type { User, OnboardingResponse, WeeklyAssessment, AnxietyModule, MoodEntry } from '@shared/schema';
+import type { ModuleSummary, ModuleActivitySummary } from './moduleSummary';
 
 interface ReportData {
   user: User;
@@ -807,4 +808,401 @@ export function generateNhsPrepReport(data: NhsPrepData): jsPDF {
   } catch (error) {
     throw new Error(`NHS Prep PDF generation failed: ${error.message}`);
   }
+}
+
+// --- Module Progress Reporting Helpers ---
+
+type ModuleProgressPayload = {
+  user: User;
+  module: any;
+  summary: ModuleSummary;
+  notes?: string;
+};
+
+type ModuleCollectionPayload = {
+  user: User;
+  modules: Array<{
+    module: any;
+    summary: ModuleSummary;
+    notes?: string;
+  }>;
+};
+
+type PdfWriter = {
+  doc: jsPDF;
+  margin: number;
+  lineHeight: number;
+  pageHeight: number;
+  pageWidth: number;
+  getY: () => number;
+  setY: (value: number) => void;
+  ensureSpace: (height?: number) => void;
+  addGap: (height?: number) => void;
+  addText: (text: string, options?: { bold?: boolean; indent?: number; fontSize?: number }) => void;
+};
+
+const formatKey = (key: string) =>
+  key
+    .replace(/_/g, " ")
+    .replace(/-/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const formatValue = (value: any): string => {
+  if (value === null || value === undefined) return "";
+  if (value instanceof Date) return formatDateValue(value);
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "number") return value.toString();
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) {
+    if (value.every((entry) => typeof entry === "string" || typeof entry === "number")) {
+      return value.join(", ");
+    }
+    return JSON.stringify(value);
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return String(value);
+};
+
+const formatDateValue = (value: string | Date): string => {
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatActivityType = (type?: string) => {
+  if (!type) return "Activity";
+  switch (type) {
+    case "reading":
+      return "Reading";
+    case "worksheet":
+      return "Worksheet";
+    case "reflection":
+      return "Reflection";
+    case "exercise":
+      return "Exercise";
+    case "breathing":
+      return "Breathing";
+    case "assessment":
+      return "Assessment";
+    default:
+      return formatKey(type);
+  }
+};
+
+const createWriter = (doc: jsPDF): PdfWriter => {
+  const margin = 20;
+  const lineHeight = 6;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const usableHeight = doc.internal.pageSize.getHeight() - margin;
+  let y = margin;
+
+  const ensureSpace = (height = lineHeight) => {
+    if (y + height > usableHeight) {
+      doc.addPage();
+      y = margin;
+    }
+  };
+
+  const addGap = (height = lineHeight) => {
+    ensureSpace(height);
+    y += height;
+  };
+
+  const addText = (
+    text: string,
+    { bold = false, indent = 0, fontSize = 11 }: { bold?: boolean; indent?: number; fontSize?: number } = {}
+  ) => {
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.setFontSize(fontSize);
+    const indentOffset = indent * 4;
+    const maxWidth = pageWidth - margin - indentOffset;
+    const lines = doc.splitTextToSize(text, maxWidth);
+    const lineAdvance = fontSize > 11 ? lineHeight * (fontSize / 11) : lineHeight;
+
+    lines.forEach((line) => {
+      ensureSpace(lineAdvance);
+      doc.text(line, margin + indentOffset, y);
+      y += lineAdvance;
+    });
+  };
+
+  return {
+    doc,
+    margin,
+    lineHeight,
+    pageHeight: usableHeight,
+    pageWidth,
+    getY: () => y,
+    setY: (value: number) => {
+      y = value;
+    },
+    ensureSpace,
+    addGap,
+    addText,
+  };
+};
+
+const renderKeyValue = (writer: PdfWriter, data: any, indent = 0) => {
+  if (data === null || data === undefined) {
+    return;
+  }
+
+  if (typeof data !== "object" || data instanceof Date) {
+    writer.addText(formatValue(data), { indent });
+    return;
+  }
+
+  if (Array.isArray(data)) {
+    if (data.length === 0) {
+      writer.addText("None", { indent });
+      return;
+    }
+    data.forEach((entry, index) => {
+      if (typeof entry === "object" && entry !== null) {
+        writer.addText(`- Item ${index + 1}`, { indent });
+        renderKeyValue(writer, entry, indent + 1);
+      } else {
+        writer.addText(`- ${formatValue(entry)}`, { indent });
+      }
+    });
+    return;
+  }
+
+  const entries = Object.entries(data as Record<string, any>);
+  if (entries.length === 0) {
+    writer.addText("None", { indent });
+    return;
+  }
+
+  entries.forEach(([key, value]) => {
+    if (value === null || value === undefined) return;
+    if (typeof value === "string" && value.trim() === "") return;
+    if (Array.isArray(value) && value.length === 0) return;
+    if (typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0) return;
+
+    if (typeof value === "object" && value !== null) {
+      writer.addText(`${formatKey(key)}:`, { indent, bold: false });
+      renderKeyValue(writer, value, indent + 1);
+    } else {
+      writer.addText(`${formatKey(key)}: ${formatValue(value)}`, { indent });
+    }
+  });
+};
+
+const renderProgressDetails = (writer: PdfWriter, progress: any) => {
+  if (!progress || typeof progress !== "object") {
+    writer.addText("No user responses recorded yet.", { indent: 1 });
+    return;
+  }
+
+  const handled = new Set<string>();
+  if (typeof progress.completed !== "undefined") {
+    writer.addText(`Completed: ${progress.completed ? "Yes" : "No"}`, { indent: 1 });
+    handled.add("completed");
+  }
+  if (progress.completedAt) {
+    writer.addText(`Completed At: ${formatDateValue(progress.completedAt)}`, { indent: 1 });
+    handled.add("completedAt");
+  }
+  if (progress.lastUpdated) {
+    writer.addText(`Last Updated: ${formatDateValue(progress.lastUpdated)}`, { indent: 1 });
+    handled.add("lastUpdated");
+  }
+  if (progress.notes) {
+    writer.addText(`Notes: ${formatValue(progress.notes)}`, { indent: 1 });
+    handled.add("notes");
+  }
+
+  if (progress.reflectionData && Object.keys(progress.reflectionData).length > 0) {
+    writer.addText("Reflections:", { indent: 1, bold: true });
+    renderKeyValue(writer, progress.reflectionData, 2);
+    handled.add("reflectionData");
+  }
+
+  if (progress.worksheetData && Object.keys(progress.worksheetData).length > 0) {
+    writer.addText("Worksheet Responses:", { indent: 1, bold: true });
+    renderKeyValue(writer, progress.worksheetData, 2);
+    handled.add("worksheetData");
+  }
+
+  Object.entries(progress).forEach(([key, value]) => {
+    if (handled.has(key)) return;
+    if (value === null || value === undefined) return;
+    if (typeof value === "string" && value.trim() === "") return;
+    if (Array.isArray(value) && value.length === 0) return;
+    if (typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0) return;
+
+    if (typeof value === "object") {
+      writer.addText(`${formatKey(key)}:`, { indent: 1, bold: true });
+      renderKeyValue(writer, value, 2);
+    } else {
+      writer.addText(`${formatKey(key)}: ${formatValue(value)}`, { indent: 1 });
+    }
+  });
+};
+
+const renderModuleSection = (
+  writer: PdfWriter,
+  payload: { module: any; summary: ModuleSummary; notes?: string },
+  options: { includeObjectives?: boolean } = {}
+) => {
+  const { module, summary, notes } = payload;
+  const includeObjectives = options.includeObjectives !== false;
+  const userProgress = module?.userProgress || {};
+  const handledActivityKeys = new Set<string>();
+
+  writer.doc.setFont("helvetica", "bold");
+  writer.doc.setFontSize(14);
+  writer.ensureSpace(10);
+  writer.doc.text(`Week ${summary.weekNumber}: ${summary.title}`, writer.margin, writer.getY());
+  writer.setY(writer.getY() + writer.lineHeight);
+  writer.doc.setFont("helvetica", "normal");
+  writer.doc.setFontSize(11);
+
+  writer.addText(summary.description);
+
+  if (typeof module.estimatedMinutes !== "undefined") {
+    writer.addText(`Estimated Minutes: ${module.estimatedMinutes}`);
+  }
+  if (typeof module.activitiesCompleted !== "undefined") {
+    const totalActivities = summary.activities.length || module.activitiesTotal || "—";
+    writer.addText(`Activities Completed: ${module.activitiesCompleted}/${totalActivities}`);
+  }
+  if (typeof module.minutesCompleted !== "undefined") {
+    writer.addText(`Minutes Logged: ${module.minutesCompleted}`);
+  }
+  if (module.completedAt) {
+    writer.addText(`Module Completed: ${formatDateValue(module.completedAt)}`);
+  }
+  writer.addGap();
+
+  if (includeObjectives && summary.objectives.length > 0) {
+    writer.addText("Learning Objectives", { bold: true });
+    summary.objectives.forEach((objective) => {
+      writer.addText(`• ${objective}`, { indent: 1 });
+    });
+    writer.addGap();
+  }
+
+  summary.activities.forEach((activity: ModuleActivitySummary) => {
+    writer.addText(activity.title, { bold: true });
+    writer.addText(`Type: ${formatActivityType(activity.type)} • Estimated: ${activity.estimatedMinutes} min`, { indent: 1 });
+    if (activity.description) {
+      writer.addText(activity.description, { indent: 1 });
+    }
+
+    const progress = userProgress[activity.id];
+    handledActivityKeys.add(activity.id);
+
+    if (progress) {
+      renderProgressDetails(writer, progress);
+    } else {
+      writer.addText("No user responses recorded yet.", { indent: 1 });
+    }
+
+    writer.addGap();
+  });
+
+  const moduleNotes = typeof notes === "string" && notes.trim().length > 0
+    ? notes.trim()
+    : typeof userProgress.moduleNotes === "string"
+      ? userProgress.moduleNotes.trim()
+      : "";
+
+  const additionalKeys = Object.keys(userProgress).filter(
+    (key) => !handledActivityKeys.has(key) && key !== "moduleNotes"
+  );
+
+  if (additionalKeys.length > 0) {
+    writer.addText("Additional Data", { bold: true });
+    additionalKeys.forEach((key) => {
+      const value = userProgress[key];
+      if (value === null || value === undefined) {
+        return;
+      }
+      if (typeof value === "object" && Object.keys(value).length === 0) {
+        return;
+      }
+      if (typeof value === "string" && value.trim() === "") {
+        return;
+      }
+
+      writer.addText(formatKey(key), { indent: 1, bold: true });
+      if (typeof value === "object") {
+        renderKeyValue(writer, value, 2);
+      } else {
+        writer.addText(formatValue(value), { indent: 2 });
+      }
+    });
+    writer.addGap();
+  }
+
+  if (moduleNotes) {
+    writer.addText("Personal Notes", { bold: true });
+    writer.addText(moduleNotes, { indent: 1 });
+    writer.addGap();
+  }
+};
+
+const renderReportHeader = (writer: PdfWriter, user: User, title: string) => {
+  writer.doc.setFont("helvetica", "bold");
+  writer.doc.setFontSize(18);
+  writer.ensureSpace(12);
+  writer.doc.text(title, writer.margin, writer.getY());
+  writer.setY(writer.getY() + 10);
+
+  writer.doc.setFont("helvetica", "normal");
+  writer.doc.setFontSize(11);
+  writer.addText(`Generated: ${formatDateValue(new Date())}`);
+  writer.addGap();
+
+  writer.addText("User Information", { bold: true });
+  writer.addText(`Name: ${user.firstName} ${user.lastName}`, { indent: 1 });
+  writer.addText(`Email: ${user.email}`, { indent: 1 });
+  writer.addText(`User ID: ${user.id}`, { indent: 1 });
+  if (user.nhsNumber) {
+    writer.addText(`NHS Number: ${user.nhsNumber}`, { indent: 1 });
+  }
+  writer.addGap();
+};
+
+export function generateModuleProgressPdf(payload: ModuleProgressPayload): jsPDF {
+  const doc = new jsPDF();
+  const writer = createWriter(doc);
+
+  renderReportHeader(writer, payload.user, "Module Progress Report");
+  renderModuleSection(writer, { module: payload.module, summary: payload.summary, notes: payload.notes }, { includeObjectives: true });
+
+  return doc;
+}
+
+export function generateAllModulesReportPdf(payload: ModuleCollectionPayload): jsPDF {
+  const doc = new jsPDF();
+  const writer = createWriter(doc);
+
+  renderReportHeader(writer, payload.user, "Comprehensive Module Progress Report");
+  writer.addText(`Modules Included: ${payload.modules.length}`);
+  writer.addGap();
+
+  payload.modules.forEach((entry, index) => {
+    if (index > 0) {
+      doc.addPage();
+      writer.setY(writer.margin);
+    }
+    renderModuleSection(writer, entry, { includeObjectives: true });
+    writer.addGap();
+  });
+
+  return doc;
 }

@@ -16,7 +16,6 @@ import {
   MessageSquare,
   CheckCircle,
   Clock,
-  Download,
   Plus,
   X,
   Star,
@@ -26,7 +25,6 @@ import {
   Award,
   ArrowRight
 } from "lucide-react";
-import { generateNhsPrepReport } from "@/lib/pdf-generator";
 
 interface DocumentPrep {
   gpReferral: boolean;
@@ -369,36 +367,6 @@ export function NhsPrepGuide({ initialData, onDataChange, onSave, onGetCurrentDa
     if (nhsReadiness.confidence.trim()) completed++;
 
     return Math.round((completed / total) * 100);
-  };
-
-  const exportNhsPrep = () => {
-    try {
-log("Starting NHS Prep PDF generation...");
-      
-      const prepData = {
-        documentPrep,
-        programSummary,
-        assessmentPrep,
-        treatmentKnowledge,
-        ongoingPrep,
-        nhsReadiness,
-        advocacyPrep,
-        overallReadiness: calculateOverallReadiness(),
-        completeness: getCompletenessPercentage(),
-        createdDate: new Date().toISOString(),
-        version: "1.0"
-      };
-
-log("NHS Prep data prepared:", prepData);
-      
-      const doc = generateNhsPrepReport(prepData);
-      doc.save(`nhs-transition-preparation-${new Date().toISOString().split('T')[0]}.pdf`);
-      
-log("NHS Prep PDF generated and saved successfully");
-    } catch (error) {
-error("Error generating NHS Prep PDF:", error);
-      alert(`Error generating PDF: ${error.message}. Please try again.`);
-    }
   };
 
   return (
@@ -1402,12 +1370,7 @@ error("Error generating NHS Prep PDF:", error);
             </div>
           </div>
           
-          <div className="flex justify-center">
-            <Button onClick={exportNhsPrep} className="gap-2" size="lg">
-              <Download className="w-4 h-4" />
-              Export Your Complete NHS Preparation Guide
-            </Button>
-          </div>
+          {/* PDF export removed */}
         </CardContent>
       </Card>
     </div>

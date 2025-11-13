@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Shield, TrendingUp, Clock, Bell, GraduationCap, FileText, Wind, Smile, BarChart3, Headphones, Phone, MessageCircle, ExternalLink } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { generateProgressReport } from "@/lib/pdf-generator";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
 import heroImage from "@assets/generated_images/peaceful_mental_health_hero_ce9d4b3d.png";
@@ -131,25 +130,6 @@ export default function Dashboard() {
     queryKey: ["/api/modules", user?.id],
     enabled: !!user?.id,
   });
-
-  const handleExportReport = async () => {
-    if (!user?.id) return;
-    try {
-      const response = await fetch("/api/reports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user?.id }),
-      });
-      
-      if (!response.ok) throw new Error("Failed to generate report");
-      
-      const { report } = await response.json();
-      const doc = generateProgressReport(report.reportData);
-      doc.save("waitlist-companion-progress-report.pdf");
-    } catch (error) {
-      alert("Error generating report. Please try again.");
-    }
-  };
 
   // Show loading state only while checking user data
   if (userLoading) {
@@ -926,14 +906,7 @@ export default function Dashboard() {
                     <p className="font-medium text-card-foreground">Export progress report</p>
                     <p className="text-sm text-muted-foreground">Ready for NHS handoff</p>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={handleExportReport}
-                    data-testid="button-export-report"
-                  >
-                    Download PDF
-                  </Button>
+                    {/* PDF export removed */}
                 </div>
               </div>
             </CardContent>

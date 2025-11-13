@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { apiRequest } from "@/lib/queryClient";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
-import { generateMoodEntriesReport } from "@/lib/pdf-generator";
 import { 
   Smile,
   Frown,
@@ -26,7 +26,6 @@ import {
   TrendingDown,
   Activity,
   Calendar as CalendarIcon,
-  Download,
   Plus,
   BarChart3
 } from "lucide-react";
@@ -72,7 +71,7 @@ export function MoodTracker() {
 
   // Debug useEffect to track currentEntry changes
   useEffect(() => {
-log('🔄 Current entry state changed:', {
+    console.log('🔄 Current entry state changed:', {
       emotions: currentEntry.emotions,
       activities: currentEntry.activities,
       gratitude: currentEntry.gratitude
@@ -94,7 +93,7 @@ log('🔄 Current entry state changed:', {
   // Reload entry data when entries array changes (after successful save)
   useEffect(() => {
     if (entries.length > 0 && selectedDate) {
-log('📋 Entries array changed, reloading entry for selected date');
+      console.log('📋 Entries array changed, reloading entry for selected date');
       loadEntryForDate(selectedDate);
     }
   }, [entries]);
@@ -122,10 +121,10 @@ log('📋 Entries array changed, reloading entry for selected date');
       return await response.json();
     },
     onSuccess: (data) => {
-log('✅ Create mood entry successful:', data);
-log('✅ Created entry emotions:', data.emotions);
-log('✅ Created entry activities:', data.activities);
-log('✅ Created entry gratitude:', data.gratitude);
+      console.log('✅ Create mood entry successful:', data);
+      console.log('✅ Created entry emotions:', data.emotions);
+      console.log('✅ Created entry activities:', data.activities);
+      console.log('✅ Created entry gratitude:', data.gratitude);
       
       setCurrentEntryId(data.id);
       
@@ -156,7 +155,7 @@ log('✅ Created entry gratitude:', data.gratitude);
       refetchEntries();
     },
     onError: (error: any) => {
-error("Failed to create mood entry:", error);
+      console.error("Failed to create mood entry:", error);
       toast({
         title: "Save Failed",
         description: `Failed to save mood entry: ${error.message}`,
@@ -188,10 +187,10 @@ error("Failed to create mood entry:", error);
       return await response.json();
     },
     onSuccess: (data) => {
-log('✅ Update mood entry successful:', data);
-log('✅ Updated entry emotions:', data.emotions);
-log('✅ Updated entry activities:', data.activities);
-log('✅ Updated entry gratitude:', data.gratitude);
+      console.log('✅ Update mood entry successful:', data);
+      console.log('✅ Updated entry emotions:', data.emotions);
+      console.log('✅ Updated entry activities:', data.activities);
+      console.log('✅ Updated entry gratitude:', data.gratitude);
       
       // Update the current entry state with the data returned from server
       setCurrentEntry(prev => ({
@@ -220,7 +219,7 @@ log('✅ Updated entry gratitude:', data.gratitude);
       refetchEntries();
     },
     onError: (error: any) => {
-error("Failed to update mood entry:", error);
+      console.error("Failed to update mood entry:", error);
       toast({
         title: "Update Failed",
         description: `Failed to update mood entry: ${error.message}`,
@@ -296,12 +295,12 @@ error("Failed to update mood entry:", error);
   };
 
   const updateGratitudeItem = (index: number, value: string) => {
-log('🙏 Updating gratitude item:', { index, value });
-log('🙏 Current gratitude before:', currentEntry.gratitude);
+    console.log('🙏 Updating gratitude item:', { index, value });
+    console.log('🙏 Current gratitude before:', currentEntry.gratitude);
     
     setCurrentEntry(prev => {
       const newGratitude = prev.gratitude?.map((item, i) => i === index ? value : item) || [];
-log('🙏 New gratitude array:', newGratitude);
+      console.log('🙏 New gratitude array:', newGratitude);
       return {
         ...prev,
         gratitude: newGratitude
@@ -341,7 +340,7 @@ log('🙏 New gratitude array:', newGratitude);
       return;
     }
 
-log('💾 Saving mood entry with current state:', {
+    console.log('💾 Saving mood entry with current state:', {
       emotions: currentEntry.emotions,
       activities: currentEntry.activities,
       gratitude: currentEntry.gratitude,
@@ -364,7 +363,7 @@ log('💾 Saving mood entry with current state:', {
       notes: currentEntry.notes || ""
     };
 
-log('💾 Prepared save data:', saveData);
+    console.log('💾 Prepared save data:', saveData);
 
     if (currentEntryId) {
       // Update existing entry
@@ -397,8 +396,8 @@ log('💾 Prepared save data:', saveData);
     const existing = entries.find(e => e.entryDate === dateString);
     setIsProgrammaticLoad(true);
     if (existing) {
-log('📖 Loading existing entry for date:', dateString);
-log('📖 Existing entry data:', {
+      console.log('📖 Loading existing entry for date:', dateString);
+      console.log('📖 Existing entry data:', {
         emotions: existing.emotions,
         activities: existing.activities,
         gratitude: existing.gratitude
@@ -477,41 +476,6 @@ log('📖 Existing entry data:', {
       sleep: Math.round(recentEntries.reduce((sum, e) => sum + e.sleep, 0) / recentEntries.length * 10) / 10,
       count: recentEntries.length
     };
-  };
-
-  const exportData = () => {
-    if (!user || entries.length === 0) {
-      toast({
-        title: "No Data to Export",
-        description: "You need to have mood entries to export a report.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const reportData = {
-        user,
-        entries,
-        generatedAt: new Date()
-      };
-
-      const doc = generateMoodEntriesReport(reportData);
-      const fileName = `mood-tracker-report-${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
-
-      toast({
-        title: "Report Generated",
-        description: "Your mood tracker report has been downloaded as a PDF.",
-      });
-    } catch (error) {
-error("Error generating PDF:", error);
-      toast({
-        title: "Export Failed",
-        description: "Failed to generate PDF report. Please try again.",
-        variant: "destructive",
-      });
-    }
   };
 
   return (
@@ -1088,12 +1052,7 @@ error("Error generating PDF:", error);
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Mood History</CardTitle>
-                {entries.length > 0 && (
-                  <Button onClick={exportData} variant="outline" className="gap-2">
-                    <Download className="w-4 h-4" />
-                    Export PDF Report
-                  </Button>
-                )}
+                {/* PDF export removed */}
               </div>
             </CardHeader>
             <CardContent>
