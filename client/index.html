@@ -122,14 +122,152 @@
     <script type="module" src="/src/main.tsx"></script>
     <!-- Google Translate -->
     <script type="text/javascript">
+      // Set default language to English on first load
+      function setDefaultLanguage() {
+        // Check if there's a language preference cookie
+        var cookies = document.cookie.split(';');
+        var hasGoogTrans = false;
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          if (cookie.indexOf('googtrans=') === 0) {
+            hasGoogTrans = true;
+            var value = cookie.substring('googtrans='.length);
+            // If cookie is set to Arabic or something other than English, clear it
+            if (value !== '' && value !== '/en/en') {
+              // Clear the cookie to reset to English
+              document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+              document.cookie = 'googtrans=/en/en; path=/;';
+            }
+            break;
+          }
+        }
+        // If no cookie exists, set default to English
+        if (!hasGoogTrans) {
+          document.cookie = 'googtrans=/en/en; path=/;';
+        }
+      }
+
       function googleTranslateElementInit() {
+        // Set default to English before initializing
+        setDefaultLanguage();
+        
         new google.translate.TranslateElement({
           pageLanguage: 'en',
           includedLanguages: 'en,ar',
           layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
           autoDisplay: false
         }, 'google_translate_element');
+
+        // Use MutationObserver to detect when Google Translate adds elements
+        var observer = new MutationObserver(function(mutations) {
+          // Find the language selector dropdown
+          var selectElement = document.querySelector('.goog-te-combo');
+          if (selectElement && !selectElement.hasAttribute('data-listener-added')) {
+            selectElement.setAttribute('data-listener-added', 'true');
+            
+            // Listen for language changes
+            selectElement.addEventListener('change', function(e) {
+              var selectedLang = this.value;
+              
+              // When English is selected (empty value means original page language)
+              if (selectedLang === '' || selectedLang === 'en' || selectedLang === 'auto') {
+                // Set cookie to English
+                document.cookie = 'googtrans=/en/en; path=/;';
+                
+                // Function to remove all translation elements
+                function removeTranslation() {
+                  // Remove all Google Translate iframe overlays
+                  var frames = document.querySelectorAll('iframe[src*="translate.google.com"]');
+                  frames.forEach(function(frame) {
+                    if (frame.id !== 'google_translate_element') {
+                      try {
+                        frame.style.display = 'none';
+                        frame.remove();
+                      } catch(e) {}
+                    }
+                  });
+                  
+                  // Remove translation wrapper classes
+                  document.body.classList.remove('translated-ltr', 'translated-rtl');
+                  document.documentElement.classList.remove('translated-ltr', 'translated-rtl');
+                  document.documentElement.setAttribute('lang', 'en');
+                  
+                  // Hide skip translation link
+                  var skipLink = document.querySelector('.skiptranslate');
+                  if (skipLink) {
+                    skipLink.style.display = 'none';
+                  }
+                  
+                  // Remove all elements with translation classes
+                  var translatedElements = document.querySelectorAll('.goog-text-highlight, .notranslate');
+                  translatedElements.forEach(function(el) {
+                    el.classList.remove('goog-text-highlight');
+                  });
+                  
+                  // Force refresh the page to completely remove translation
+                  // This is the most reliable way to ensure clean state
+                  setTimeout(function() {
+                    window.location.reload();
+                  }, 200);
+                }
+                
+                // Wait a bit for Google Translate to process, then remove translation
+                setTimeout(removeTranslation, 100);
+              }
+            });
+          }
+        });
+
+        // Start observing the document for changes
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+
+        // Also check immediately in case the element already exists
+        setTimeout(function() {
+          var selectElement = document.querySelector('.goog-te-combo');
+          if (selectElement && !selectElement.hasAttribute('data-listener-added')) {
+            selectElement.setAttribute('data-listener-added', 'true');
+            selectElement.addEventListener('change', function(e) {
+              var selectedLang = this.value;
+              if (selectedLang === '' || selectedLang === 'en' || selectedLang === 'auto') {
+                document.cookie = 'googtrans=/en/en; path=/;';
+                function removeTranslation() {
+                  var frames = document.querySelectorAll('iframe[src*="translate.google.com"]');
+                  frames.forEach(function(frame) {
+                    if (frame.id !== 'google_translate_element') {
+                      try {
+                        frame.style.display = 'none';
+                        frame.remove();
+                      } catch(e) {}
+                    }
+                  });
+                  document.body.classList.remove('translated-ltr', 'translated-rtl');
+                  document.documentElement.classList.remove('translated-ltr', 'translated-rtl');
+                  document.documentElement.setAttribute('lang', 'en');
+                  var skipLink = document.querySelector('.skiptranslate');
+                  if (skipLink) {
+                    skipLink.style.display = 'none';
+                  }
+                  var translatedElements = document.querySelectorAll('.goog-text-highlight, .notranslate');
+                  translatedElements.forEach(function(el) {
+                    el.classList.remove('goog-text-highlight');
+                  });
+                  setTimeout(function() {
+                    window.location.reload();
+                  }, 200);
+                }
+                setTimeout(removeTranslation, 100);
+              }
+            });
+          }
+        }, 500);
       }
+
+      // Set default language on page load
+      window.addEventListener('DOMContentLoaded', setDefaultLanguage);
+      setDefaultLanguage();
     </script>
     <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
