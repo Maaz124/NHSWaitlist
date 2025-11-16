@@ -80,9 +80,17 @@ app.use(express.static(publicPath));
     throw err;
   });
 
-  if (app.get("env") === "development") {
+  // Ensure NODE_ENV is set correctly
+  const nodeEnv = process.env.NODE_ENV || app.get("env");
+  log(`Starting server in ${nodeEnv} mode`);
+  log(`NODE_ENV environment variable: ${process.env.NODE_ENV}`);
+  log(`app.get("env"): ${app.get("env")}`);
+  
+  if (nodeEnv === "development") {
+    log("Using development mode (Vite)");
     await setupVite(app, server);
   } else {
+    log("Using production mode (static files)");
     serveStatic(app);
   }
 
