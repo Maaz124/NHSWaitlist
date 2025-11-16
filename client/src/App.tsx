@@ -15,6 +15,9 @@ import Settings from "@/pages/settings";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import Pricing from "@/pages/pricing";
+import Privacy from "@/pages/privacy";
+import Terms from "@/pages/terms";
+import Accessibility from "@/pages/accessibility";
 import AdminLogin from "@/pages/admin-login";
 import AdminLayout from "@/components/AdminLayout";
 import DashboardOverview from "@/pages/admin/DashboardOverview";
@@ -45,6 +48,9 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/pricing" component={Pricing} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/accessibility" component={Accessibility} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={AdminLayout} />
       <Route path="/admin/users" component={AdminLayout} />
