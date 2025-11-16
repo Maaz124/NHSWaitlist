@@ -18,14 +18,17 @@ import { SleepGuideComprehensive } from "@/components/SleepGuideComprehensive";
 import { LifestyleGuideComprehensive } from "@/components/LifestyleGuideComprehensive";
 import { useUser } from "@/contexts/UserContext";
 import { useLocation } from "wouter";
+import { isSearchEngineBot } from "@/lib/bot-detection";
 
 export default function Resources() {
   const [, setLocation] = useLocation();
   const { user, isLoading: userLoading, isAuthenticated } = useUser();
   const [activeToolView, setActiveToolView] = useState<string | null>(null);
+  const [isBot] = useState(() => isSearchEngineBot());
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (only for regular users, not bots)
   useEffect(() => {
+    if (isBot) return; // Don't redirect bots - let them see the page for SEO
     if (userLoading) return; // Still loading
     if (!isAuthenticated) {
       setLocation("/login");
@@ -35,7 +38,7 @@ export default function Resources() {
     if (!(user as any)?.hasPaid) {
       setLocation('/pricing');
     }
-  }, [isAuthenticated, userLoading, setLocation]);
+  }, [isAuthenticated, userLoading, setLocation, isBot, user]);
   
 
   const handleExportReport = async () => {
@@ -101,6 +104,176 @@ export default function Resources() {
         return null;
     }
   };
+
+  // For bots, render SEO-friendly static content immediately
+  if (isBot) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <CrisisBanner />
+        <TabNavigation />
+        
+        <main className="flex-1 bg-background">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mb-8">
+              <h1 className="text-2xl font-semibold text-foreground mb-2">Support Resources</h1>
+              <p className="text-muted-foreground mb-6">
+                Interactive tools and evidence-based information to support your mental health journey while waiting for NHS services.
+              </p>
+              
+              {/* Emergency Contacts */}
+              <div className="bg-destructive/10 border border-destructive p-6 rounded-lg mb-8">
+                <h3 className="text-lg font-semibold text-destructive mb-4">
+                  <AlertTriangle className="w-5 h-5 mr-2 inline" />
+                  Emergency Support
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <p className="font-semibold text-destructive mb-1">Emergency Services</p>
+                    <p className="text-lg font-bold text-destructive">999</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold text-destructive mb-1">Samaritans</p>
+                    <p className="text-lg font-bold text-destructive">116 123</p>
+                    <p className="text-xs text-destructive/80">Free, 24/7</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold text-destructive mb-1">Crisis Text Line</p>
+                    <p className="text-lg font-bold text-destructive">Text SHOUT to 85258</p>
+                    <p className="text-xs text-destructive/80">Free, 24/7</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Resource Categories */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Self-Help Tools */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center mb-4">
+                      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Gavel className="w-8 h-8 text-primary" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-card-foreground">Self-Help Tools</h3>
+                    </div>
+                    
+                    <div className="space-y-3 text-sm text-muted-foreground">
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">Breathing Exercises</h4>
+                        <p>Interactive breathing techniques including 4-7-8 breathing, box breathing, and diaphragmatic breathing with guided timers.</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">Thought Record</h4>
+                        <p>CBT-based thought challenging tool to identify, examine, and reframe unhelpful thoughts and beliefs that contribute to anxiety.</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">Grounding Exercises</h4>
+                        <p>5-4-3-2-1 grounding technique and other mindfulness tools to help manage anxiety attacks and panic symptoms in the moment.</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">Mood Tracker</h4>
+                        <p>Daily mood tracking with insights and pattern recognition to help identify triggers and monitor your wellbeing over time.</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">Relaxation Tools</h4>
+                        <p>Progressive muscle relaxation, visualization exercises, and guided relaxation scripts to reduce stress and anxiety.</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Educational Content */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center mb-4">
+                      <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <GraduationCap className="w-8 h-8 text-accent" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-card-foreground">Educational Content</h3>
+                    </div>
+                    
+                    <div className="space-y-3 text-sm text-muted-foreground">
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">Understanding Anxiety</h4>
+                        <p>Comprehensive interactive guide to anxiety disorders, symptoms, causes, and treatment options. Includes quizzes and self-assessments based on clinical knowledge.</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">Sleep & Anxiety</h4>
+                        <p>Evidence-based information about the relationship between sleep and anxiety, including sleep hygiene tips, relaxation techniques, and personal sleep assessments.</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">Lifestyle Factors</h4>
+                        <p>How diet, exercise, stress management, and other lifestyle factors impact anxiety. Includes personalized action plans and 30-day wellbeing challenges.</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Clinical Handoff */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center mb-4">
+                      <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <FileText className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-card-foreground">Clinical Handoff</h3>
+                    </div>
+                    
+                    <div className="space-y-4 text-sm text-muted-foreground">
+                      <p>
+                        Download your complete progress report including assessment scores, module completion, 
+                        personal notes, and clinical recommendations. This PDF report is ready to share with 
+                        your NHS care team when your appointment becomes available.
+                      </p>
+                      
+                      <div className="bg-accent/10 p-4 rounded-md">
+                        <p className="text-accent font-medium mb-2">
+                          <Check className="w-4 h-4 mr-2 inline" />
+                          Report Ready
+                        </p>
+                        <p className="text-xs">
+                          Your progress data is automatically compiled and ready for clinical handoff to support 
+                          continuity of care when you transition to NHS services.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <Card className="mt-8">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">About Our Resources</h2>
+                  <p className="text-muted-foreground mb-4">
+                    Waitlist Companion provides a comprehensive suite of mental health resources designed to support 
+                    you while waiting for NHS services. All tools and content are evidence-based, aligned with NICE 
+                    guidelines, and developed in consultation with mental health professionals.
+                  </p>
+                  <p className="text-muted-foreground mb-4">
+                    Our interactive tools help you practice CBT techniques, manage anxiety symptoms, track your progress, 
+                    and build coping strategies. Educational content provides in-depth information about anxiety, sleep, 
+                    and lifestyle factors that impact mental health.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Note:</strong> These resources provide interim support and educational content. They do not 
+                    replace professional medical care or therapy. If you're experiencing a mental health emergency, 
+                    please contact 999 or Samaritans on 116 123 immediately.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   // Show loading state while checking authentication
   if (userLoading) {

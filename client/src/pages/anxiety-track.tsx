@@ -32,14 +32,17 @@ import { cn } from "@/lib/utils";
 import { Footer } from "@/components/ui/footer";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUser } from "@/contexts/UserContext";
+import { isSearchEngineBot } from "@/lib/bot-detection";
 
 export default function AnxietyTrack() {
   const [, setLocation] = useLocation();
   const [selectedTab, setSelectedTab] = useState("modules");
   const { user, isLoading: userLoading, isAuthenticated } = useUser();
+  const [isBot] = useState(() => isSearchEngineBot());
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (only for regular users, not bots)
   useEffect(() => {
+    if (isBot) return; // Don't redirect bots - let them see the page for SEO
     if (userLoading) return; // Still loading
     if (!isAuthenticated) {
         setLocation("/login");
@@ -49,7 +52,7 @@ export default function AnxietyTrack() {
     if (!(user as any)?.hasPaid) {
         setLocation('/pricing');
     }
-  }, [isAuthenticated, userLoading, setLocation]);
+  }, [isAuthenticated, userLoading, setLocation, isBot, user]);
 
   const { data: modulesData, isLoading } = useQuery({
     queryKey: ["/api/modules", user?.id],
@@ -172,6 +175,132 @@ export default function AnxietyTrack() {
     });
       }
   };
+
+  // For bots, render SEO-friendly static content immediately
+  if (isBot) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <CrisisBanner />
+        <TabNavigation />
+        
+        <main className="flex-1 bg-background">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-foreground mb-3">6-Week Anxiety Support Track</h1>
+              <p className="text-lg text-muted-foreground mb-4">
+                Evidence-based modules designed to help you manage anxiety while waiting for NHS mental health services. 
+                Our comprehensive anxiety management program includes CBT techniques, breathing exercises, thought records, 
+                and progressive relaxation methods aligned with NICE guidelines.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold mb-2">Week 1: Understanding Anxiety</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Learn about anxiety triggers, symptoms, and how anxiety affects your body and mind. 
+                      Build self-awareness through structured exercises and assessments.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Key Skills:</strong> Trigger identification, symptom recognition, body awareness
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold mb-2">Week 2: Breathing & Relaxation</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Master diaphragmatic breathing, progressive muscle relaxation, and quick calming techniques 
+                      proven to reduce anxiety in the moment.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Techniques:</strong> 4-7-8 breathing, box breathing, body scan relaxation
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold mb-2">Week 3: Cognitive Techniques</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Challenge anxious thoughts using CBT principles. Learn thought records, evidence examination, 
+                      and cognitive restructuring to change unhelpful thinking patterns.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Methods:</strong> Thought records, evidence examination, balanced thinking
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold mb-2">Week 4: Mindfulness & Grounding</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Practice present-moment awareness and grounding techniques including the 5-4-3-2-1 method 
+                      to manage anxiety and panic symptoms.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Tools:</strong> Mindful breathing, grounding exercises, body awareness
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold mb-2">Week 5: Behavioral Activation</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Build confidence through gradual exposure and behavioral experiments. Learn activity scheduling 
+                      and facing fears in a structured, supportive way.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Approaches:</strong> Exposure hierarchy, activity planning, confidence building
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold mb-2">Week 6: Relapse Prevention</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Develop your personal toolkit for maintaining progress. Create a relapse prevention plan 
+                      and prepare for transition to NHS services.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Focus:</strong> Progress maintenance, warning signs, long-term planning
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <Card className="mt-8">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">About Our Anxiety Support Program</h2>
+                  <p className="text-muted-foreground mb-4">
+                    Waitlist Companion's 6-Week Anxiety Support Track provides evidence-based mental health support 
+                    while you wait for NHS services. Each module includes interactive activities, educational content, 
+                    and practical tools based on cognitive behavioral therapy (CBT) principles recommended by NICE guidelines.
+                  </p>
+                  <p className="text-muted-foreground mb-4">
+                    Our program helps you understand anxiety, develop coping strategies, and build resilience through 
+                    structured learning modules designed by mental health professionals. Track your progress, complete 
+                    assessments, and build a personalized toolkit for managing anxiety.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Note:</strong> This platform provides interim support and educational content. It does not 
+                    replace professional medical care or therapy. If you're experiencing a mental health emergency, 
+                    please contact 999 or Samaritans on 116 123 immediately.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   // Show loading state while checking authentication
   if (userLoading) {

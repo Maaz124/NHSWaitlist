@@ -19,6 +19,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Footer } from "@/components/ui/footer";
 import { useUser } from "@/contexts/UserContext";
 import { useLocation } from "wouter";
+import { isSearchEngineBot } from "@/lib/bot-detection";
 
 const weeklyAssessmentSchema = z.object({
   anxietyFrequency: z.string(),
@@ -78,14 +79,16 @@ const frequencyOptions = [
 export default function CheckIns() {
   const [, setLocation] = useLocation();
   const { user, isLoading: userLoading, isAuthenticated } = useUser();
+  const [isBot] = useState(() => isSearchEngineBot());
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (only for regular users, not bots)
   useEffect(() => {
+    if (isBot) return; // Don't redirect bots - let them see the page for SEO
     if (userLoading) return; // Still loading
     if (!isAuthenticated) {
       setLocation("/login");
     }
-  }, [isAuthenticated, userLoading, setLocation]);
+  }, [isAuthenticated, userLoading, setLocation, isBot]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null);
@@ -159,6 +162,93 @@ export default function CheckIns() {
       responses,
     });
   };
+
+  // For bots, render SEO-friendly static content immediately
+  if (isBot) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <CrisisBanner />
+        <TabNavigation />
+        
+        <main className="flex-1 bg-background">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mb-8">
+              <h1 className="text-2xl font-semibold text-foreground mb-2">Weekly Check-ins</h1>
+              <p className="text-muted-foreground mb-6">
+                Regular mental health assessments to monitor your wellbeing and ensure your safety while waiting for NHS services.
+              </p>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">About Weekly Check-ins</h2>
+                  <p className="text-muted-foreground mb-4">
+                    Our weekly check-in assessments help you track your mental health progress and identify any changes 
+                    in your anxiety, depression, sleep quality, and daily functioning. These assessments are designed 
+                    to help you and your future NHS care team understand your journey.
+                  </p>
+                  
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <h3 className="font-semibold mb-2">What We Assess</h3>
+                      <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
+                        <li>Anxiety frequency and intensity</li>
+                        <li>Worry patterns and control</li>
+                        <li>Depression symptoms</li>
+                        <li>Sleep quality</li>
+                        <li>Daily functioning levels</li>
+                        <li>Overall wellbeing indicators</li>
+                      </ul>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-2">Risk Assessment</h3>
+                      <p className="text-muted-foreground mb-2">
+                        Each assessment includes a risk evaluation to ensure your safety. Based on your responses, 
+                        we provide appropriate support and recommendations.
+                      </p>
+                      <div className="grid grid-cols-3 gap-3 mt-3">
+                        <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg text-center">
+                          <div className="font-semibold text-green-700 dark:text-green-400">Low Risk</div>
+                          <div className="text-xs text-muted-foreground mt-1">Continue self-care</div>
+                        </div>
+                        <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg text-center">
+                          <div className="font-semibold text-yellow-700 dark:text-yellow-400">Medium Risk</div>
+                          <div className="text-xs text-muted-foreground mt-1">Monitor closely</div>
+                        </div>
+                        <div className="p-3 bg-red-50 dark:bg-red-950/20 rounded-lg text-center">
+                          <div className="font-semibold text-red-700 dark:text-red-400">High Risk</div>
+                          <div className="text-xs text-muted-foreground mt-1">Seek immediate support</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-2">Assessment History</h3>
+                      <p className="text-muted-foreground">
+                        Track your progress over time by viewing your assessment history. Each completed assessment 
+                        includes detailed results, risk scores, and recommendations. You can download your complete 
+                        assessment history as a PDF to share with your NHS care team.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Important:</strong> Weekly assessments help track your progress but do not replace 
+                      professional medical evaluation. If you're experiencing a mental health emergency, 
+                      please contact 999 or Samaritans on 116 123 immediately.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   // Show loading state while checking authentication
   if (userLoading) {
