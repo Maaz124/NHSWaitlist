@@ -7,7 +7,7 @@ version: '3.8'
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
+    image: maaz124/nhs-waitlist-db:${IMAGE_TAG:-latest}
     container_name: nhs-waitlist-db
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-nhs_waitlist}
@@ -18,8 +18,6 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./create-all-tables.sql:/docker-entrypoint-initdb.d/create-all-tables.sql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nhs_user} -d ${POSTGRES_DB:-nhs_waitlist}"]
       interval: 10s
@@ -30,9 +28,8 @@ services:
     restart: unless-stopped
 
   # NHS Waitlist Application
-  # Replace 'your-dockerhub-username' with your actual Docker Hub username
   app:
-    image: ${DOCKERHUB_USERNAME:-your-dockerhub-username}/nhs-waitlist:${IMAGE_TAG:-latest}
+    image: maaz124/nhs-waitlist-app:${IMAGE_TAG:-latest}
     container_name: nhs-waitlist-app
     environment:
       NODE_ENV: production
