@@ -3,7 +3,7 @@ name: Build & Deploy NHS Waitlist
 on:
   push:
     branches:
-      - main
+      - 11/13/2025
 
 jobs:
   build-and-deploy:
