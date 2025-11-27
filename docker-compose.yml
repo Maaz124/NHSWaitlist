@@ -3,7 +3,10 @@ version: '3.8'
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    image: nhs-waitlist-db:latest
     container_name: nhs-waitlist-db
     environment:
       POSTGRES_DB: nhs_waitlist
@@ -14,8 +17,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./create-all-tables.sql:/docker-entrypoint-initdb.d/create-all-tables.sql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nhs_user -d nhs_waitlist"]
       interval: 10s
@@ -30,6 +31,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: nhs-waitlist-app:latest
     container_name: nhs-waitlist-app
     environment:
       NODE_ENV: production

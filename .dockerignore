@@ -4,7 +4,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Build outputs
+# Build outputs (will be built in Docker)
 dist
 build
 .next
@@ -16,6 +16,8 @@ build
 .env.development.local
 .env.test.local
 .env.production.local
+env.docker.template
+env.example
 
 # IDE and editor files
 .vscode
@@ -37,9 +39,10 @@ Thumbs.db
 .git
 .gitignore
 
-# Docker
-Dockerfile*
-docker-compose*
+# Docker (exclude other docker files to avoid confusion)
+docker-compose*.yml
+Dockerfile.dev
+Dockerfile.simple
 .dockerignore
 
 # Documentation
@@ -117,3 +120,8 @@ test-*.sql
 # Temporary files
 tmp/
 temp/
+
+# Docker compose files (keep only Dockerfile.prod)
+docker-compose.yml
+docker-compose.dev.yml
+docker-compose.simple.yml

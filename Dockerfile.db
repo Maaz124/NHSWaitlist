@@ -1,0 +1,18 @@
+# Database Dockerfile for NHS Waitlist
+# Extends PostgreSQL with initialization scripts baked in
+FROM postgres:15-alpine
+
+# Copy initialization scripts
+COPY create-all-tables.sql /docker-entrypoint-initdb.d/01-create-all-tables.sql
+COPY init.sql /docker-entrypoint-initdb.d/02-init.sql
+
+# Set default environment variables
+ENV POSTGRES_DB=nhs_waitlist
+ENV POSTGRES_USER=nhs_user
+ENV POSTGRES_PASSWORD=nhs_password
+ENV POSTGRES_HOST_AUTH_METHOD=trust
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+  CMD pg_isready -U nhs_user -d nhs_waitlist
+
