@@ -18,12 +18,12 @@ import { ToolkitBuilder } from "@/components/ToolkitBuilder";
 import { RelapsePlanner } from "@/components/RelapsePlanner";
 import { NhsPrepGuide } from "@/components/NhsPrepGuide";
 import { WeeklyThoughtRecord } from "@/components/WeeklyThoughtRecord";
-import { 
-  ArrowLeft, 
-  Clock, 
-  CheckCircle, 
-  Circle, 
-  Play, 
+import {
+  ArrowLeft,
+  Clock,
+  CheckCircle,
+  Circle,
+  Play,
   Pause,
   BookOpen,
   Brain,
@@ -77,13 +77,13 @@ export default function ModuleDetail() {
       setLocation('/pricing');
     }
   }, [isAuthenticated, userLoading, setLocation]);
-  
+
   const [currentActivity, setCurrentActivity] = useState<string | null>(null);
   const [timer, setTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [notes, setNotes] = useState("");
   const [reflections, setReflections] = useState<Record<string, string>>({});
-  const [worksheetData, setWorksheetData] = useState<{[key: string]: {[key: string]: boolean}}>({});
+  const [worksheetData, setWorksheetData] = useState<{ [key: string]: { [key: string]: boolean | { label: string; checked: boolean } } }>({});
   const [moduleCompleted, setModuleCompleted] = useState(false);
   const [reflectionSaving, setReflectionSaving] = useState(false);
   const [notesSaving, setNotesSaving] = useState(false);
@@ -132,9 +132,9 @@ export default function ModuleDetail() {
   // Load existing worksheet data when module changes
   useEffect(() => {
     if (module?.userProgress) {
-      const loadedWorksheetData: {[key: string]: {[key: string]: boolean}} = {};
+      const loadedWorksheetData: { [key: string]: { [key: string]: boolean } } = {};
       const loadedReflectionData: Record<string, string> = {};
-      
+
       Object.keys(module.userProgress).forEach(activityId => {
         const progress = module.userProgress[activityId];
         if (progress.worksheetData) {
@@ -144,18 +144,18 @@ export default function ModuleDetail() {
           Object.assign(loadedReflectionData, progress.reflectionData);
         }
       });
-      
+
       setWorksheetData(loadedWorksheetData);
       setReflections(loadedReflectionData);
     }
-    
+
     // Load module notes if they exist, otherwise reset to empty
     if (module?.userProgress?.moduleNotes) {
       setNotes(module.userProgress.moduleNotes);
     } else {
       setNotes(""); // Reset notes when switching modules or no notes exist
     }
-    
+
     // Reset saving states when module changes
     setReflectionSaving(false);
     setNotesSaving(false);
@@ -191,14 +191,14 @@ export default function ModuleDetail() {
   const getModuleContentWithProgress = (weekNumber: number, moduleData: any) => {
     const staticContent = getModuleContent(weekNumber);
     const userProgress = moduleData?.userProgress || {};
-    
+
     // Merge activity completion status with user progress
     const activitiesWithProgress = staticContent.activities.map((activity: any) => ({
       ...activity,
       isCompleted: userProgress[activity.id]?.completed || false,
       completedAt: userProgress[activity.id]?.completedAt || null
     }));
-    
+
     return {
       ...staticContent,
       activities: activitiesWithProgress
@@ -226,7 +226,7 @@ export default function ModuleDetail() {
         description: "Learn about anxiety, its symptoms, and how it affects your body and mind",
         objectives: [
           "Understand what anxiety is and how it affects you",
-          "Recognize your personal anxiety symptoms", 
+          "Recognize your personal anxiety symptoms",
           "Learn about the fight-flight-freeze response",
           "Identify your anxiety triggers",
           "Create your personal anxiety profile"
@@ -386,7 +386,7 @@ Learning to breathe slowly and deeply from your diaphragm (belly breathing) can 
               pattern: "4-4-4-4",
               instructions: [
                 "Breathe in for 4 counts",
-                "Hold your breath for 4 counts", 
+                "Hold your breath for 4 counts",
                 "Breathe out for 4 counts",
                 "Hold empty for 4 counts",
                 "Repeat the cycle 4-8 times"
@@ -1982,7 +1982,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
         ]
       }
     };
-    
+
     return contents[weekNumber as keyof typeof contents] || contents[1];
   };
 
@@ -2090,15 +2090,15 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
   const handleActivityComplete = (activityId: string) => {
     if (!module) return;
-    
+
     // Get current module content with progress
     const moduleContent = getModuleContentWithProgress(module.weekNumber, module);
     const activity = moduleContent.activities.find((a: any) => a.id === activityId);
     if (!activity) return;
-    
+
     // Toggle completion status
     const newCompletionStatus = !activity.isCompleted;
-    
+
     // Calculate new progress counters
     const updatedUserProgress = {
       ...(module.userProgress || {}),
@@ -2108,19 +2108,19 @@ You're ready for this next phase of your mental health journey. Trust in the pro
         completedAt: newCompletionStatus ? new Date().toISOString() : null
       }
     };
-    
+
     // Special handling for personal-toolkit: ensure any current toolkit data is saved
     if (activityId === 'personal-toolkit' && newCompletionStatus) {
-      
+
       // Get the current toolkit data from the component if available
       let toolkitData = module.userProgress?.['personal-toolkit']?.worksheetData;
-      
+
       // If we have a data getter from the component, use the most current data
       if (toolkitDataGetter) {
         const currentToolkitData = toolkitDataGetter();
         toolkitData = currentToolkitData;
       }
-      
+
       if (toolkitData) {
         updatedUserProgress['personal-toolkit'] = {
           ...updatedUserProgress['personal-toolkit'],
@@ -2132,16 +2132,16 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
     // Special handling for relapse-prevention-plan: ensure any current relapse data is saved
     if (activityId === 'relapse-prevention-plan' && newCompletionStatus) {
-      
+
       // Get the current relapse data from the component if available
       let relapseData = module.userProgress?.['relapse-prevention-plan']?.worksheetData;
-      
+
       // If we have a data getter from the component, use the most current data
       if (relapseDataGetter) {
         const currentRelapseData = relapseDataGetter();
         relapseData = currentRelapseData;
       }
-      
+
       // If we have relapse data, ensure it's saved before completion
       if (relapseData) {
         updatedUserProgress['relapse-prevention-plan'] = {
@@ -2154,16 +2154,16 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
     // Special handling for nhs-transition-prep: ensure any current NHS data is saved
     if (activityId === 'nhs-transition-prep' && newCompletionStatus) {
-      
+
       // Get the current NHS data from the component if available
       let nhsData = module.userProgress?.['nhs-transition-prep']?.worksheetData;
-      
+
       // If we have a data getter from the component, use the most current data
       if (nhsDataGetter) {
         const currentNhsData = nhsDataGetter();
         nhsData = currentNhsData;
       }
-      
+
       // If we have NHS data, ensure it's saved before completion
       if (nhsData) {
         updatedUserProgress['nhs-transition-prep'] = {
@@ -2176,16 +2176,16 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
     // Special handling for values-assessment: ensure any current values data is saved
     if (activityId === 'values-assessment' && newCompletionStatus) {
-      
+
       // Get the current values data from the component if available
       let valuesData = module.userProgress?.['values-assessment']?.worksheetData;
-      
+
       // If we have a data getter from the component, use the most current data
       if (valuesDataGetter) {
         const currentValuesData = valuesDataGetter();
         valuesData = currentValuesData;
       }
-      
+
       // If we have values data, ensure it's saved before completion
       if (valuesData) {
         updatedUserProgress['values-assessment'] = {
@@ -2195,29 +2195,29 @@ You're ready for this next phase of your mental health journey. Trust in the pro
         };
       }
     }
-    
+
     // Count completed activities and minutes using the updated progress
     const completedActivities = moduleContent.activities.filter((a: any) => {
       const activityProgress = updatedUserProgress[a.id];
       return activityProgress?.completed || false;
     });
-    
+
     const newActivitiesCompleted = completedActivities.length;
     const calculatedMinutes = completedActivities.reduce((total: number, a: any) => {
       return total + (a.estimatedMinutes || 0);
     }, 0);
-    
+
     // Cap minutesCompleted at the module's estimatedMinutes to prevent >100% completion
     const newMinutesCompleted = Math.min(calculatedMinutes, module.estimatedMinutes);
-    
+
     // Update module progress
     const updates = {
       activitiesCompleted: newActivitiesCompleted,
       minutesCompleted: newMinutesCompleted,
       userProgress: updatedUserProgress
     };
-    
-    
+
+
     // Save to backend
     updateModuleMutation.mutate({
       moduleId: module.id,
@@ -2231,17 +2231,17 @@ You're ready for this next phase of your mental health journey. Trust in the pro
     setTimer(0);
   };
 
-  const handleWorksheetCheckboxChange = (activityId: string, category: string, itemIndex: number, checked: boolean) => {
+  const handleWorksheetCheckboxChange = (activityId: string, category: string, itemIndex: number, checked: boolean, label?: string) => {
     const newWorksheetData = {
       ...worksheetData,
       [activityId]: {
         ...worksheetData[activityId],
-        [`${category}-${itemIndex}`]: checked
+        [`${category}-${itemIndex}`]: label ? { label, checked } : checked
       }
     };
-    
+
     setWorksheetData(newWorksheetData);
-    
+
     // Auto-save worksheet data when checkbox changes
     if (module) {
       const updatedUserProgress = {
@@ -2251,7 +2251,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
           worksheetData: newWorksheetData[activityId] || {}
         }
       };
-      
+
       // Save to backend immediately
       updateModuleMutation.mutate({
         moduleId: module.id,
@@ -2263,7 +2263,11 @@ You're ready for this next phase of your mental health journey. Trust in the pro
   };
 
   const getWorksheetCheckboxState = (activityId: string, category: string, itemIndex: number) => {
-    return worksheetData[activityId]?.[`${category}-${itemIndex}`] || false;
+    const value = worksheetData[activityId]?.[`${category}-${itemIndex}`];
+    // Handle both old boolean format and new object format
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'object' && value !== null) return value.checked;
+    return false;
   };
 
   return (
@@ -2271,10 +2275,10 @@ You're ready for this next phase of your mental health journey. Trust in the pro
       <Header />
       <CrisisBanner />
       <TabNavigation />
-      
+
       <main className="flex-1 bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          
+
           {/* Header */}
           <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
@@ -2327,8 +2331,8 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                   {activities.filter(a => a.isCompleted).length} of {activities.length} activities completed
                 </div>
               </div>
-              <Progress 
-                value={(activities.filter(a => a.isCompleted).length / activities.length) * 100} 
+              <Progress
+                value={(activities.filter(a => a.isCompleted).length / activities.length) * 100}
                 className="mt-3"
               />
             </CardContent>
@@ -2359,7 +2363,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
             {activities.map((activity, index) => {
               const IconComponent = activityIcons[activity.type];
               const isActive = currentActivity === activity.id;
-              
+
               return (
                 <Card key={activity.id} className={cn("transition-all", isActive && "border-primary")}>
                   <CardHeader>
@@ -2389,7 +2393,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-2">
                         {!activity.isCompleted && (
                           <Button
@@ -2415,15 +2419,15 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                       <div className="pt-4">
                         {activity.type === 'reading' && (
                           <div className="prose prose-sm max-w-none">
-                            <div 
+                            <div
                               className="whitespace-pre-line text-sm leading-relaxed"
-                              dangerouslySetInnerHTML={{ 
-                                __html: activity.content.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+                              dangerouslySetInnerHTML={{
+                                __html: activity.content.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                               }}
                             />
                           </div>
                         )}
-                        
+
                         {activity.type === 'breathing' && (
                           <div className="space-y-4">
                             <div className="bg-muted/50 p-4 rounded-lg">
@@ -2441,7 +2445,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                             )}
                           </div>
                         )}
-                        
+
                         {activity.type === 'worksheet' && activity.content.checklist && (
                           <div className="space-y-4">
                             {activity.content.checklist.map((category: any, idx: number) => (
@@ -2450,15 +2454,15 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                 <div className="grid grid-cols-2 gap-2">
                                   {category.items.map((item: string, itemIdx: number) => (
                                     <div key={itemIdx} className="flex items-center space-x-2">
-                                      <Checkbox 
+                                      <Checkbox
                                         id={`${category.category}-${itemIdx}`}
                                         checked={getWorksheetCheckboxState(activity.id, category.category, itemIdx)}
-                                        onCheckedChange={(checked) => 
-                                          handleWorksheetCheckboxChange(activity.id, category.category, itemIdx, !!checked)
+                                        onCheckedChange={(checked) =>
+                                          handleWorksheetCheckboxChange(activity.id, category.category, itemIdx, !!checked, item)
                                         }
                                         data-testid={`checkbox-${activity.id}-${category.category}-${itemIdx}`}
                                       />
-                                      <label 
+                                      <label
                                         htmlFor={`${category.category}-${itemIdx}`}
                                         className="text-sm"
                                       >
@@ -2470,8 +2474,8 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                               </div>
                             ))}
                             <div className="pt-4 border-t">
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => {
                                   // Save worksheet data to module progress
@@ -2482,25 +2486,25 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                       worksheetData: worksheetData[activity.id] || {}
                                     }
                                   };
-                                  
+
                                   // Recalculate progress counters
                                   const moduleContent = getModuleContentWithProgress(module.weekNumber, module);
                                   const completedActivities = moduleContent.activities.filter((a: any) => {
                                     const activityProgress = updatedUserProgress[a.id];
                                     return activityProgress?.completed || false;
                                   });
-                                  
+
                                   const newActivitiesCompleted = completedActivities.length;
                                   const newMinutesCompleted = completedActivities.reduce((total: number, a: any) => {
                                     return total + (a.estimatedMinutes || 0);
                                   }, 0);
-                                  
+
                                   const updates = {
                                     activitiesCompleted: newActivitiesCompleted,
                                     minutesCompleted: newMinutesCompleted,
                                     userProgress: updatedUserProgress
                                   };
-                                  
+
                                   updateModuleMutation.mutate({
                                     moduleId: module.id,
                                     updates,
@@ -2515,7 +2519,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
                         {activity.type === 'worksheet' && activity.id === 'values-assessment' && (
                           <div className="mt-6">
-                            <ValuesWorksheet 
+                            <ValuesWorksheet
                               initialData={module?.userProgress?.['values-assessment']?.worksheetData}
                               onGetCurrentData={(getData) => {
                                 setValuesDataGetter(() => getData);
@@ -2531,8 +2535,8 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                       lastUpdated: new Date().toISOString()
                                     }
                                   };
-                                  
-                                  
+
+
                                   // Debounce the save to avoid too many API calls
                                   clearTimeout((window as any).valuesWorksheetSaveTimeout);
                                   (window as any).valuesWorksheetSaveTimeout = setTimeout(() => {
@@ -2549,7 +2553,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
                         {activity.type === 'assessment' && activity.id === 'progress-review' && (
                           <div className="mt-6">
-                            <ProgressTracker 
+                            <ProgressTracker
                               initialData={module?.userProgress?.['progress-review']?.worksheetData}
                               onDataChange={(data) => {
                                 // Auto-save worksheet data when it changes
@@ -2561,7 +2565,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                       worksheetData: data
                                     }
                                   };
-                                  
+
                                   // Debounce the save to avoid too many API calls
                                   clearTimeout((window as any).progressTrackerSaveTimeout);
                                   (window as any).progressTrackerSaveTimeout = setTimeout(() => {
@@ -2578,7 +2582,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
                         {activity.type === 'worksheet' && activity.id === 'personal-toolkit' && (
                           <div className="mt-6">
-                            <ToolkitBuilder 
+                            <ToolkitBuilder
                               initialData={module?.userProgress?.['personal-toolkit']?.worksheetData}
                               onGetCurrentData={(getData) => {
                                 setToolkitDataGetter(() => getData);
@@ -2593,8 +2597,8 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                       lastUpdated: new Date().toISOString()
                                     }
                                   };
-                                  
-                                  
+
+
                                   updateModuleMutation.mutate({
                                     moduleId: module.id,
                                     updates: { userProgress: updatedUserProgress },
@@ -2612,8 +2616,8 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                       lastUpdated: new Date().toISOString()
                                     }
                                   };
-                                  
-                                  
+
+
                                   // Debounce the save to avoid too many API calls
                                   clearTimeout((window as any).toolkitBuilderSaveTimeout);
                                   (window as any).toolkitBuilderSaveTimeout = setTimeout(() => {
@@ -2630,7 +2634,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
                         {activity.type === 'worksheet' && activity.id === 'relapse-prevention-plan' && (
                           <div className="mt-6">
-                            <RelapsePlanner 
+                            <RelapsePlanner
                               initialData={module?.userProgress?.['relapse-prevention-plan']?.worksheetData}
                               onGetCurrentData={(getData) => {
                                 setRelapseDataGetter(() => getData);
@@ -2645,7 +2649,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                       worksheetData: data
                                     }
                                   };
-                                  
+
                                   // Debounce the save to avoid too many API calls
                                   clearTimeout((window as any).relapsePlannerSaveTimeout);
                                   (window as any).relapsePlannerSaveTimeout = setTimeout(() => {
@@ -2662,16 +2666,16 @@ You're ready for this next phase of your mental health journey. Trust in the pro
 
                         {activity.type === 'worksheet' && activity.id === 'thought-record' && (
                           <div className="mt-6">
-                            <WeeklyThoughtRecord 
-                              moduleId={module?.id || ''} 
-                              weekNumber={weekNumber} 
+                            <WeeklyThoughtRecord
+                              moduleId={module?.id || ''}
+                              weekNumber={weekNumber}
                             />
                           </div>
                         )}
 
                         {activity.type === 'reading' && activity.id === 'nhs-transition-prep' && (
                           <div className="mt-6">
-                            <NhsPrepGuide 
+                            <NhsPrepGuide
                               initialData={module?.userProgress?.['nhs-transition-prep']?.worksheetData}
                               onGetCurrentData={(getData) => {
                                 setNhsDataGetter(() => getData);
@@ -2686,7 +2690,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                       worksheetData: data
                                     }
                                   };
-                                  
+
                                   // Debounce the save to avoid too many API calls
                                   clearTimeout((window as any).nhsPrepSaveTimeout);
                                   (window as any).nhsPrepSaveTimeout = setTimeout(() => {
@@ -2700,7 +2704,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                             />
                           </div>
                         )}
-                        
+
                         {activity.type === 'reflection' && (
                           <div className="space-y-4">
                             {activity.content.prompts.map((prompt: string, idx: number) => (
@@ -2712,10 +2716,10 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                   onChange={(e) => {
                                     const newReflections = {
                                       ...reflections,
-                                    [`${activity.id}-${idx}`]: e.target.value
+                                      [`${activity.id}-${idx}`]: e.target.value
                                     };
                                     setReflections(newReflections);
-                                    
+
                                     // Auto-save reflection data when user types
                                     if (module) {
                                       const updatedUserProgress = {
@@ -2730,7 +2734,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                             }, {} as Record<string, string>)
                                         }
                                       };
-                                      
+
                                       // Debounce the save to avoid too many API calls
                                       clearTimeout((window as any).reflectionSaveTimeout);
                                       (window as any).reflectionSaveTimeout = setTimeout(() => {
@@ -2753,7 +2757,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                 />
                               </div>
                             ))}
-                            
+
                             {/* Auto-save indicator */}
                             {reflectionSaving && (
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -2761,10 +2765,10 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                 Auto-saving...
                               </div>
                             )}
-                            
+
                             <div className="pt-4 border-t">
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => {
                                   // Save reflection data to module progress
@@ -2780,25 +2784,25 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                                         }, {} as Record<string, string>)
                                     }
                                   };
-                                  
+
                                   // Recalculate progress counters
                                   const moduleContent = getModuleContentWithProgress(module.weekNumber, module);
                                   const completedActivities = moduleContent.activities.filter((a: any) => {
                                     const activityProgress = updatedUserProgress[a.id];
                                     return activityProgress?.completed || false;
                                   });
-                                  
+
                                   const newActivitiesCompleted = completedActivities.length;
                                   const newMinutesCompleted = completedActivities.reduce((total: number, a: any) => {
                                     return total + (a.estimatedMinutes || 0);
                                   }, 0);
-                                  
+
                                   const updates = {
                                     activitiesCompleted: newActivitiesCompleted,
                                     minutesCompleted: newMinutesCompleted,
                                     userProgress: updatedUserProgress
                                   };
-                                  
+
                                   updateModuleMutation.mutate({
                                     moduleId: module.id,
                                     updates,
@@ -2814,11 +2818,11 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                         {activity.type === 'exercise' && (
                           <div className="space-y-4">
                             <div className="prose prose-sm max-w-none">
-                              <div 
+                              <div
                                 className="whitespace-pre-line text-sm leading-relaxed"
-                                dangerouslySetInnerHTML={{ 
+                                dangerouslySetInnerHTML={{
                                   __html: activity.content.instructions?.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') ||
-                                         activity.content.script?.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                    activity.content.script?.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                                 }}
                               />
                             </div>
@@ -2847,14 +2851,14 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                 onChange={(e) => {
                   const newNotes = e.target.value;
                   setNotes(newNotes);
-                  
+
                   // Auto-save notes when user types
                   if (module) {
                     const updatedUserProgress = {
                       ...(module.userProgress || {}),
                       moduleNotes: newNotes
                     };
-                    
+
                     // Debounce the save to avoid too many API calls
                     clearTimeout((window as any).notesSaveTimeout);
                     (window as any).notesSaveTimeout = setTimeout(() => {
@@ -2876,7 +2880,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                 className="min-h-[100px]"
                 data-testid="textarea-module-notes"
               />
-              
+
               {/* Auto-save indicator for notes */}
               {notesSaving && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
@@ -2897,8 +2901,8 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">
-                      {module?.activitiesCompleted >= module?.activitiesTotal 
-                        ? "Ready to Complete Module!" 
+                      {module?.activitiesCompleted >= module?.activitiesTotal
+                        ? "Ready to Complete Module!"
                         : "Keep Going!"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
@@ -2906,24 +2910,24 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                     </p>
                   </div>
                 </div>
-                
+
                 {(() => {
                   // Calculate actual completion status based on user progress
                   const moduleContent = getModuleContentWithProgress(weekNumber, module || {});
                   const actualCompletedActivities = moduleContent.activities.filter((a: any) => a.isCompleted).length;
                   const actualTotalActivities = moduleContent.activities.length;
                   const isActuallyComplete = actualCompletedActivities >= actualTotalActivities;
-                  
+
                   return isActuallyComplete ? (
                     <div className="space-y-3">
                       <p className="text-sm text-muted-foreground">
                         Great job! You've completed all {actualTotalActivities} activities in this module. You can now mark it as complete.
                       </p>
-                      <Button 
-                        size="lg" 
+                      <Button
+                        size="lg"
                         onClick={() => {
                           if (!module) return;
-                          
+
                           // Recalculate final progress to ensure accuracy
                           const moduleContent = getModuleContentWithProgress(weekNumber, module);
                           const completedActivities = moduleContent.activities.filter((a: any) => a.isCompleted);
@@ -2931,14 +2935,14 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                           const finalMinutesCompleted = completedActivities.reduce((total: number, a: any) => {
                             return total + (a.estimatedMinutes || 0);
                           }, 0);
-                          
+
                           const updates = {
                             completedAt: new Date().toISOString(),
                             minutesCompleted: finalMinutesCompleted,
                             activitiesCompleted: finalActivitiesCompleted
                             // Don't send userProgress here - let the backend preserve existing data
                           };
-                          
+
                           updateModuleMutation.mutate({
                             moduleId: module.id,
                             updates,
@@ -2946,7 +2950,7 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                             onSuccess: () => {
                               // Show success state
                               setModuleCompleted(true);
-                              
+
                               // Redirect to anxiety track page after successful completion
                               setTimeout(() => {
                                 setLocation("/anxiety-track");
@@ -2981,8 +2985,8 @@ You're ready for this next phase of your mental health journey. Trust in the pro
                       <p className="text-sm text-muted-foreground">
                         Complete all activities above to finish this module.
                       </p>
-                      <Progress 
-                        value={actualCompletedActivities / actualTotalActivities * 100} 
+                      <Progress
+                        value={actualCompletedActivities / actualTotalActivities * 100}
                         className="w-full max-w-xs mx-auto h-2"
                       />
                     </div>

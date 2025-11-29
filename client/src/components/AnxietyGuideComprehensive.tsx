@@ -7,12 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { 
-  BookOpen, 
-  Brain, 
-  Shield, 
-  CheckCircle, 
-  ArrowRight, 
+import {
+  BookOpen,
+  Brain,
+  Shield,
+  CheckCircle,
+  ArrowRight,
   Lightbulb,
   Heart,
   Target,
@@ -50,7 +50,7 @@ export function AnxietyGuideComprehensive() {
   const [worksheetEntries, setWorksheetEntries] = useState<WorksheetEntry[]>([]);
   const [personalNotes, setPersonalNotes] = useState<Record<string, string>>({});
   const [copingToolsRating, setCopingToolsRating] = useState<Record<string, number>>({});
-  const [symptomChecklist, setSymptomChecklist] = useState<Record<string, boolean>>({});
+  const [symptomChecklist, setSymptomChecklist] = useState<Record<string, boolean | { label: string; checked: boolean }>>({});
   const [actionPlanData, setActionPlanData] = useState<{
     selectedGoals: Record<string, boolean>;
     additionalNotes: string;
@@ -98,12 +98,12 @@ export function AnxietyGuideComprehensive() {
       return response.json();
     },
     onSuccess: (data) => {
-log('✅ Anxiety guide saved successfully:', data);
+      log('✅ Anxiety guide saved successfully:', data);
       setIsAutoSaving(false);
       // Don't automatically refetch to prevent loops
     },
     onError: (error: any) => {
-error('❌ Failed to save anxiety guide data:', error);
+      error('❌ Failed to save anxiety guide data:', error);
       setIsAutoSaving(false);
       toast({
         title: "Save Failed",
@@ -116,7 +116,7 @@ error('❌ Failed to save anxiety guide data:', error);
   // Load existing data when component mounts or data is fetched
   useEffect(() => {
     if (existingGuide) {
-log('📥 Loading existing guide data:', existingGuide);
+      log('📥 Loading existing guide data:', existingGuide);
       setCompletedSections(existingGuide.completedSections || []);
       setPersonalNotes(existingGuide.personalNotes || {});
       setQuizAnswers(existingGuide.quizAnswers || {});
@@ -136,7 +136,7 @@ log('📥 Loading existing guide data:', existingGuide);
         longTermGoals: "",
         warningSigns: ""
       });
-log('📥 Loaded data into state:', {
+      log('📥 Loaded data into state:', {
         actionPlanData: existingGuide.actionPlanData,
         symptomTrackingWorksheet: existingGuide.symptomTrackingWorksheet,
         personalManagementPlan: existingGuide.personalManagementPlan
@@ -147,16 +147,16 @@ log('📥 Loaded data into state:', {
   // Auto-save function
   const autoSave = () => {
     if (!user?.id || isAutoSaving || updateGuideMutation.isPending) return;
-    
-log('🔄 Auto-save triggered with data:', {
+
+    log('🔄 Auto-save triggered with data:', {
       actionPlanData,
       symptomTrackingWorksheet,
       personalManagementPlan,
       personalNotes
     });
-    
+
     setIsAutoSaving(true);
-    
+
     const dataToSave = {
       completedSections,
       personalNotes,
@@ -174,7 +174,7 @@ log('🔄 Auto-save triggered with data:', {
       }
     };
 
-log('💾 Saving data:', dataToSave);
+    log('💾 Saving data:', dataToSave);
     updateGuideMutation.mutate(dataToSave);
   };
 
@@ -198,14 +198,14 @@ log('💾 Saving data:', dataToSave);
           <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-400">
             <h3 className="text-xl font-semibold text-blue-800 mb-3">What is Anxiety?</h3>
             <p className="text-blue-700 mb-4">
-              Anxiety is a natural response to stress or danger. It's part of your body's "fight-flight-freeze" 
-              system that helped our ancestors survive. However, when anxiety becomes persistent, excessive, 
+              Anxiety is a natural response to stress or danger. It's part of your body's "fight-flight-freeze"
+              system that helped our ancestors survive. However, when anxiety becomes persistent, excessive,
               or interferes with daily life, it may indicate an anxiety disorder.
             </p>
             <div className="bg-white p-4 rounded border">
               <h4 className="font-semibold text-blue-800 mb-2">According to NICE Guidelines:</h4>
               <p className="text-blue-700 text-sm">
-                "Anxiety disorders are among the most common mental health problems, affecting up to 1 in 6 people. 
+                "Anxiety disorders are among the most common mental health problems, affecting up to 1 in 6 people.
                 They are highly treatable with psychological interventions, particularly Cognitive Behavioural Therapy (CBT)."
               </p>
             </div>
@@ -296,7 +296,7 @@ log('💾 Saving data:', dataToSave);
             <Textarea
               placeholder="Describe a recent situation where you felt anxious. What triggered it? How did your body feel? What thoughts went through your mind?"
               value={personalNotes['section0'] || ''}
-              onChange={(e) => setPersonalNotes(prev => ({...prev, section0: e.target.value}))}
+              onChange={(e) => setPersonalNotes(prev => ({ ...prev, section0: e.target.value }))}
               className="min-h-[100px]"
             />
           </div>
@@ -335,13 +335,13 @@ log('💾 Saving data:', dataToSave);
                   'Sleep disturbances'
                 ].map((symptom, index) => (
                   <div key={index} className="flex items-center space-x-2">
-                    <Checkbox 
+                    <Checkbox
                       id={`physical-${index}`}
-                      checked={symptomChecklist[`physical-${index}`] || false}
-                      onCheckedChange={(checked) => 
+                      checked={typeof symptomChecklist[`physical-${index}`] === 'boolean' ? symptomChecklist[`physical-${index}`] : symptomChecklist[`physical-${index}`]?.checked || false}
+                      onCheckedChange={(checked) =>
                         setSymptomChecklist(prev => ({
                           ...prev,
-                          [`physical-${index}`]: checked as boolean
+                          [`physical-${index}`]: { label: symptom, checked: checked as boolean }
                         }))
                       }
                     />
@@ -370,13 +370,13 @@ log('💾 Saving data:', dataToSave);
                   'Guilt or self-blame'
                 ].map((symptom, index) => (
                   <div key={index} className="flex items-center space-x-2">
-                    <Checkbox 
+                    <Checkbox
                       id={`emotional-${index}`}
-                      checked={symptomChecklist[`emotional-${index}`] || false}
-                      onCheckedChange={(checked) => 
+                      checked={typeof symptomChecklist[`emotional-${index}`] === 'boolean' ? symptomChecklist[`emotional-${index}`] : symptomChecklist[`emotional-${index}`]?.checked || false}
+                      onCheckedChange={(checked) =>
                         setSymptomChecklist(prev => ({
                           ...prev,
-                          [`emotional-${index}`]: checked as boolean
+                          [`emotional-${index}`]: { label: symptom, checked: checked as boolean }
                         }))
                       }
                     />
@@ -405,13 +405,13 @@ log('💾 Saving data:', dataToSave);
                   'Increased phone/internet use'
                 ].map((symptom, index) => (
                   <div key={index} className="flex items-center space-x-2">
-                    <Checkbox 
+                    <Checkbox
                       id={`behavioral-${index}`}
-                      checked={symptomChecklist[`behavioral-${index}`] || false}
-                      onCheckedChange={(checked) => 
+                      checked={typeof symptomChecklist[`behavioral-${index}`] === 'boolean' ? symptomChecklist[`behavioral-${index}`] : symptomChecklist[`behavioral-${index}`]?.checked || false}
+                      onCheckedChange={(checked) =>
                         setSymptomChecklist(prev => ({
                           ...prev,
-                          [`behavioral-${index}`]: checked as boolean
+                          [`behavioral-${index}`]: { label: symptom, checked: checked as boolean }
                         }))
                       }
                     />
@@ -436,7 +436,7 @@ log('💾 Saving data:', dataToSave);
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="most-common" className="text-yellow-800 font-medium">Most Common Physical Symptoms:</Label>
-                  <Textarea 
+                  <Textarea
                     id="most-common"
                     placeholder="List your 3-5 most frequent physical symptoms..."
                     className="mt-1"
@@ -449,7 +449,7 @@ log('💾 Saving data:', dataToSave);
                 </div>
                 <div>
                   <Label htmlFor="triggers" className="text-yellow-800 font-medium">Common Triggers:</Label>
-                  <Textarea 
+                  <Textarea
                     id="triggers"
                     placeholder="Situations, thoughts, or events that typically trigger your anxiety..."
                     className="mt-1"
@@ -469,7 +469,7 @@ log('💾 Saving data:', dataToSave);
             <Textarea
               placeholder="Reflect on your anxiety symptoms. Which ones do you experience most often? Are there any patterns you've noticed?"
               value={personalNotes['section1'] || ''}
-              onChange={(e) => setPersonalNotes(prev => ({...prev, section1: e.target.value}))}
+              onChange={(e) => setPersonalNotes(prev => ({ ...prev, section1: e.target.value }))}
               className="min-h-[100px]"
             />
           </div>
@@ -511,10 +511,10 @@ log('💾 Saving data:', dataToSave);
                     <div className="flex items-center space-x-2">
                       <Label className="text-emerald-700 text-sm">Rate effectiveness (1-5):</Label>
                       <div className="flex space-x-1">
-                        {[1,2,3,4,5].map(num => (
+                        {[1, 2, 3, 4, 5].map(num => (
                           <button
                             key={num}
-                            onClick={() => setCopingToolsRating(prev => ({...prev, boxBreathing: num}))}
+                            onClick={() => setCopingToolsRating(prev => ({ ...prev, boxBreathing: num }))}
                             className={`w-6 h-6 rounded ${copingToolsRating.boxBreathing === num ? 'bg-emerald-500 text-white' : 'bg-gray-200'}`}
                           >
                             {num}
@@ -536,10 +536,10 @@ log('💾 Saving data:', dataToSave);
                     <div className="flex items-center space-x-2">
                       <Label className="text-emerald-700 text-sm">Rate effectiveness (1-5):</Label>
                       <div className="flex space-x-1">
-                        {[1,2,3,4,5].map(num => (
+                        {[1, 2, 3, 4, 5].map(num => (
                           <button
                             key={num}
-                            onClick={() => setCopingToolsRating(prev => ({...prev, grounding: num}))}
+                            onClick={() => setCopingToolsRating(prev => ({ ...prev, grounding: num }))}
                             className={`w-6 h-6 rounded ${copingToolsRating.grounding === num ? 'bg-emerald-500 text-white' : 'bg-gray-200'}`}
                           >
                             {num}
@@ -563,10 +563,10 @@ log('💾 Saving data:', dataToSave);
                     <div className="flex items-center space-x-2">
                       <Label className="text-emerald-700 text-sm">Rate effectiveness (1-5):</Label>
                       <div className="flex space-x-1">
-                        {[1,2,3,4,5].map(num => (
+                        {[1, 2, 3, 4, 5].map(num => (
                           <button
                             key={num}
-                            onClick={() => setCopingToolsRating(prev => ({...prev, pmr: num}))}
+                            onClick={() => setCopingToolsRating(prev => ({ ...prev, pmr: num }))}
                             className={`w-6 h-6 rounded ${copingToolsRating.pmr === num ? 'bg-emerald-500 text-white' : 'bg-gray-200'}`}
                           >
                             {num}
@@ -588,10 +588,10 @@ log('💾 Saving data:', dataToSave);
                     <div className="flex items-center space-x-2">
                       <Label className="text-emerald-700 text-sm">Rate effectiveness (1-5):</Label>
                       <div className="flex space-x-1">
-                        {[1,2,3,4,5].map(num => (
+                        {[1, 2, 3, 4, 5].map(num => (
                           <button
                             key={num}
-                            onClick={() => setCopingToolsRating(prev => ({...prev, thoughtChallenge: num}))}
+                            onClick={() => setCopingToolsRating(prev => ({ ...prev, thoughtChallenge: num }))}
                             className={`w-6 h-6 rounded ${copingToolsRating.thoughtChallenge === num ? 'bg-emerald-500 text-white' : 'bg-gray-200'}`}
                           >
                             {num}
@@ -652,7 +652,7 @@ log('💾 Saving data:', dataToSave);
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-purple-800 font-medium">My Most Effective Immediate Strategies:</Label>
-                    <Textarea 
+                    <Textarea
                       placeholder="Based on your ratings above, list your top 3 immediate coping techniques..."
                       className="mt-1 min-h-[80px]"
                       value={personalManagementPlan.immediateStrategies}
@@ -664,7 +664,7 @@ log('💾 Saving data:', dataToSave);
                   </div>
                   <div>
                     <Label className="text-purple-800 font-medium">My Long-term Management Goals:</Label>
-                    <Textarea 
+                    <Textarea
                       placeholder="What lifestyle changes will you commit to? Set 2-3 realistic goals..."
                       className="mt-1 min-h-[80px]"
                       value={personalManagementPlan.longTermGoals}
@@ -677,7 +677,7 @@ log('💾 Saving data:', dataToSave);
                 </div>
                 <div>
                   <Label className="text-purple-800 font-medium">Early Warning Signs to Watch For:</Label>
-                  <Textarea 
+                  <Textarea
                     placeholder="List physical, emotional, or behavioral signs that indicate your anxiety is increasing..."
                     className="mt-1"
                     value={personalManagementPlan.warningSigns}
@@ -696,7 +696,7 @@ log('💾 Saving data:', dataToSave);
             <Textarea
               placeholder="Which coping strategies resonate most with you? What barriers might prevent you from using them?"
               value={personalNotes['section2'] || ''}
-              onChange={(e) => setPersonalNotes(prev => ({...prev, section2: e.target.value}))}
+              onChange={(e) => setPersonalNotes(prev => ({ ...prev, section2: e.target.value }))}
               className="min-h-[100px]"
             />
           </div>
@@ -721,7 +721,7 @@ log('💾 Saving data:', dataToSave);
               <div className="space-y-6">
                 <div>
                   <h4 className="font-semibold mb-3">1. Which of the following is a key component of the anxiety cycle?</h4>
-                  <RadioGroup value={quizAnswers['q1']} onValueChange={(value) => setQuizAnswers(prev => ({...prev, q1: value}))}>
+                  <RadioGroup value={quizAnswers['q1']} onValueChange={(value) => setQuizAnswers(prev => ({ ...prev, q1: value }))}>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="a" id="q1a" />
                       <Label htmlFor="q1a">Triggers → Thoughts → Physical sensations → Behaviors</Label>
@@ -739,7 +739,7 @@ log('💾 Saving data:', dataToSave);
 
                 <div>
                   <h4 className="font-semibold mb-3">2. What is the recommended breathing technique for immediate anxiety relief?</h4>
-                  <RadioGroup value={quizAnswers['q2']} onValueChange={(value) => setQuizAnswers(prev => ({...prev, q2: value}))}>
+                  <RadioGroup value={quizAnswers['q2']} onValueChange={(value) => setQuizAnswers(prev => ({ ...prev, q2: value }))}>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="a" id="q2a" />
                       <Label htmlFor="q2a">Breathe as fast as possible</Label>
@@ -757,7 +757,7 @@ log('💾 Saving data:', dataToSave);
 
                 <div>
                   <h4 className="font-semibold mb-3">3. Which lifestyle factor is most important for long-term anxiety management?</h4>
-                  <RadioGroup value={quizAnswers['q3']} onValueChange={(value) => setQuizAnswers(prev => ({...prev, q3: value}))}>
+                  <RadioGroup value={quizAnswers['q3']} onValueChange={(value) => setQuizAnswers(prev => ({ ...prev, q3: value }))}>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="a" id="q3a" />
                       <Label htmlFor="q3a">Avoiding all stressful situations</Label>
@@ -774,8 +774,8 @@ log('💾 Saving data:', dataToSave);
                 </div>
               </div>
 
-              <Button 
-                onClick={() => setShowQuizResults(true)} 
+              <Button
+                onClick={() => setShowQuizResults(true)}
                 className="w-full"
                 disabled={Object.keys(quizAnswers).length < 3}
               >
@@ -826,10 +826,10 @@ log('💾 Saving data:', dataToSave);
                       'Limit caffeine after 2 PM'
                     ].map((goal, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Checkbox 
+                        <Checkbox
                           id={`goal-${index}`}
                           checked={actionPlanData.selectedGoals[`goal-${index}`] || false}
-                          onCheckedChange={(checked) => 
+                          onCheckedChange={(checked) =>
                             setActionPlanData(prev => ({
                               ...prev,
                               selectedGoals: {
@@ -862,10 +862,10 @@ log('💾 Saving data:', dataToSave);
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <Label className="text-green-800 font-semibold">Additional Notes & Commitments:</Label>
-                <Textarea 
+                <Textarea
                   placeholder="What specific steps will you take this week? How will you remember to practice these techniques?"
                   className="mt-2"
                   value={actionPlanData.additionalNotes}
@@ -886,7 +886,7 @@ log('💾 Saving data:', dataToSave);
     if (!completedSections.includes(sectionId)) {
       const newCompletedSections = [...completedSections, sectionId];
       setCompletedSections(newCompletedSections);
-      
+
       // Show completion toast if this was the last section
       if (newCompletedSections.length === sections.length) {
         toast({
@@ -923,32 +923,32 @@ log('💾 Saving data:', dataToSave);
 
     // Section 1: Recognizing Symptoms & Coping Tools
     // Complete if symptom checklist is filled OR personal notes for section1 exist OR symptom tracking worksheet is filled
-    if (Object.keys(symptomChecklist).length > 0 || 
-        (personalNotes['section1'] && personalNotes['section1'].trim().length > 0) ||
-        symptomTrackingWorksheet.mostCommonSymptoms.trim().length > 0 ||
-        symptomTrackingWorksheet.commonTriggers.trim().length > 0) {
+    if (Object.keys(symptomChecklist).length > 0 ||
+      (personalNotes['section1'] && personalNotes['section1'].trim().length > 0) ||
+      symptomTrackingWorksheet.mostCommonSymptoms.trim().length > 0 ||
+      symptomTrackingWorksheet.commonTriggers.trim().length > 0) {
       completedContent += 1;
     }
 
     // Section 2: Coping Strategies & Techniques  
     // Complete if personal management plan is filled OR personal notes for section2 exist
     if (personalManagementPlan.immediateStrategies.trim().length > 0 ||
-        personalManagementPlan.longTermGoals.trim().length > 0 ||
-        personalManagementPlan.warningSigns.trim().length > 0 ||
-        (personalNotes['section2'] && personalNotes['section2'].trim().length > 0)) {
+      personalManagementPlan.longTermGoals.trim().length > 0 ||
+      personalManagementPlan.warningSigns.trim().length > 0 ||
+      (personalNotes['section2'] && personalNotes['section2'].trim().length > 0)) {
       completedContent += 1;
     }
 
     // Section 3: Knowledge Check & Action Plan
     // Complete if action plan data is filled OR section is marked complete
-    if (completedSections.includes(3) || 
-        Object.keys(actionPlanData.selectedGoals).length > 0 || 
-        actionPlanData.additionalNotes.trim().length > 0) {
+    if (completedSections.includes(3) ||
+      Object.keys(actionPlanData.selectedGoals).length > 0 ||
+      actionPlanData.additionalNotes.trim().length > 0) {
       completedContent += 1;
     }
 
     const percentage = Math.round((completedContent / totalContent) * 100);
-log('📊 Progress calculation:', {
+    log('📊 Progress calculation:', {
       completedContent,
       totalContent,
       percentage,
@@ -1034,7 +1034,7 @@ log('📊 Progress calculation:', {
         </CardHeader>
         <CardContent className="space-y-6">
           {sections[currentSection].content}
-          
+
           <div className="flex justify-between pt-6 border-t">
             <Button
               variant="outline"
@@ -1043,7 +1043,7 @@ log('📊 Progress calculation:', {
             >
               Previous Section
             </Button>
-            
+
             <div className="flex gap-3">
               <Button
                 variant="outline"
@@ -1062,7 +1062,7 @@ log('📊 Progress calculation:', {
                   </>
                 )}
               </Button>
-              
+
               <Button
                 onClick={() => {
                   if (currentSection < sections.length - 1) {

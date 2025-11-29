@@ -109,3 +109,4 @@ export function isMajorSearchEngineBot(): boolean {
   return majorSearchEngines.some(engine => userAgent.includes(engine));
 }
 
+
