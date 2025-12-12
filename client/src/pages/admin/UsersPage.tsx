@@ -19,6 +19,7 @@ interface User {
   paidCurrency?: string;
   createdAt: string;
   latestPaymentTime?: string;
+  stripePaymentIntentId?: string;
 }
 
 interface UsersResponse {
@@ -117,9 +118,9 @@ export default function UsersPage() {
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => refetchUsers()}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -146,6 +147,7 @@ export default function UsersPage() {
                     <TableHead>Phone</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Payment</TableHead>
+                    <TableHead>Payment ID</TableHead>
                     <TableHead>Payment Time</TableHead>
                     <TableHead>Signup Date</TableHead>
                   </TableRow>
@@ -178,6 +180,15 @@ export default function UsersPage() {
                           </span>
                         ) : (
                           <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {user.stripePaymentIntentId ? (
+                          <span className="text-blue-600 font-mono text-xs" title={user.stripePaymentIntentId}>
+                            {user.stripePaymentIntentId.substring(0, 20)}...
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">No payment ID</span>
                         )}
                       </TableCell>
                       <TableCell>
