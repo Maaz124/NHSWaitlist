@@ -183,12 +183,16 @@ export default function UsersPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {user.stripePaymentIntentId ? (
+                        {user.stripePaymentIntentId && user.stripePaymentIntentId.startsWith('pi_') ? (
                           <span className="text-blue-600 font-mono text-xs" title={user.stripePaymentIntentId}>
                             {user.stripePaymentIntentId.substring(0, 20)}...
                           </span>
+                        ) : user.stripePaymentIntentId && user.stripePaymentIntentId.startsWith('manual_') ? (
+                          <span className="text-orange-600 font-mono text-xs" title={user.stripePaymentIntentId}>
+                            Manual Payment
+                          </span>
                         ) : (
-                          <span className="text-muted-foreground">No payment ID</span>
+                          <span className="text-muted-foreground">No Stripe ID</span>
                         )}
                       </TableCell>
                       <TableCell>
