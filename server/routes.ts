@@ -20,15 +20,15 @@ function requireAuth(req: any, res: any, next: any) {
 function validateUserAccess(req: any, res: any, next: any) {
   const requestedUserId = req.params.userId;
   const sessionUserId = req.session?.userId;
-  
+
   if (!sessionUserId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  
+
   if (requestedUserId && requestedUserId !== sessionUserId) {
     return res.status(403).json({ error: "Forbidden: Access denied" });
   }
-  
+
   next();
 }
 
@@ -46,15 +46,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (existingUser) {
         return res.status(400).json({ error: "An account with this email already exists" });
       }
-      
+
       // Hash the password before storing
       const hashedPassword = await bcrypt.hash(userData.password, 10);
       const userWithHashedPassword = { ...userData, password: hashedPassword };
-      
+
       const user = await storage.createUser(userWithHashedPassword);
       await storage.initializeAnxietyModules(user.id);
       (req as any).session.userId = user.id;
-      
+
       // Don't return the password in the response
       const { password, ...userWithoutPassword } = user;
       res.json({ user: userWithoutPassword });
@@ -66,10 +66,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const message = firstError.message || "Invalid input";
         // Format field name to be more user-friendly
         const fieldName = field === "firstName" ? "First name" :
-                         field === "lastName" ? "Last name" :
-                         field === "phoneNumber" ? "Phone number" :
-                         field === "nhsNumber" ? "NHS number" :
-                         field.charAt(0).toUpperCase() + field.slice(1);
+          field === "lastName" ? "Last name" :
+            field === "phoneNumber" ? "Phone number" :
+              field === "nhsNumber" ? "NHS number" :
+                field.charAt(0).toUpperCase() + field.slice(1);
         return res.status(400).json({ error: `${fieldName}: ${message}` });
       }
       // For other errors, return the error message
@@ -82,20 +82,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { email, password } = req.body || {};
       if (!email) return res.status(400).json({ error: "Email is required" });
       if (!password) return res.status(400).json({ error: "Password is required" });
-      
+
       const user = await storage.getUserByEmail(email);
       if (!user) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
-      
+
       // Verify the password
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
-      
+
       (req as any).session.userId = user.id;
-      
+
       // Don't return the password in the response
       const { password: _, ...userWithoutPassword } = user;
       res.json({ user: userWithoutPassword });
@@ -117,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     const user = await storage.getUser(req.session.userId);
     if (!user) return res.status(401).json({ error: "Unauthorized" });
-    
+
     // Don't return the password in the response
     const { password, ...userWithoutPassword } = user;
     res.json({ user: userWithoutPassword });
@@ -128,14 +128,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userData = insertUserSchema.parse(req.body);
       const existingUser = await storage.getUserByEmail(userData.email);
-      
+
       if (existingUser) {
         return res.status(400).json({ error: "User already exists" });
       }
 
       const user = await storage.createUser(userData);
       await storage.initializeAnxietyModules(user.id);
-      
+
       res.json({ user });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -146,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email } = req.body;
       const user = await storage.getUserByEmail(email);
-      
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -161,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -176,12 +176,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const updates = req.body;
-      
+
       // Remove email from updates to prevent email changes
       const { email, ...allowedUpdates } = updates;
-      
+
       const user = await storage.updateUser(userId, allowedUpdates);
-      
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -197,13 +197,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { responses } = req.body;
       const userId = req.session.userId;
-      
+
       // Check if user has already completed onboarding
       const existingResponse = await storage.getOnboardingResponse(userId);
       if (existingResponse) {
         return res.status(400).json({ error: "Onboarding already completed" });
       }
-      
+
       const riskScore = calculateRiskScore(responses);
       const baselineAnxietyLevel = determineRiskLevel(riskScore);
 
@@ -281,13 +281,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       let modules = await storage.getAnxietyModules(userId);
-      
+
       // Initialize modules if none exist
       if (modules.length === 0) {
         await storage.initializeAnxietyModules(userId);
         modules = await storage.getAnxietyModules(userId);
       }
-      
+
       res.json({ modules });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -298,14 +298,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const updates = req.body;
-      
+
       // Verify the module belongs to the authenticated user
       const module = await storage.getAnxietyModules(req.session.userId);
       const targetModule = module.find(m => m.id === id);
       if (!targetModule) {
         return res.status(403).json({ error: "Forbidden: Module not found or access denied" });
       }
-      
+
       const updatedModule = await storage.updateAnxietyModule(id, updates);
       res.json({ module: updatedModule });
     } catch (error: any) {
@@ -317,7 +317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/dashboard/:userId", requireAuth, validateUserAccess, async (req, res) => {
     try {
       const { userId } = req.params;
-      
+
       const modules = await storage.getAnxietyModules(userId);
       const latestAssessment = await storage.getLatestWeeklyAssessment(userId);
       const onboarding = await storage.getOnboardingResponse(userId);
@@ -325,16 +325,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalMinutes = modules.reduce((sum, module) => sum + (module.minutesCompleted || 0), 0);
       const totalEstimatedMinutes = modules.reduce((sum, module) => sum + module.estimatedMinutes, 0);
       const completionRate = totalEstimatedMinutes > 0 ? Math.round((totalMinutes / totalEstimatedMinutes) * 100) : 0;
-      
+
       const currentWeek = modules.filter(m => !m.isLocked && m.completedAt).length + 1;
-      
+
       const dashboardData = {
         currentWeek: Math.min(currentWeek, 6),
         riskLevel: latestAssessment?.riskLevel || onboarding?.baselineAnxietyLevel || "unknown",
         completionRate,
         totalMinutes,
-        nextCheckInDue: latestAssessment ? 
-          new Date(latestAssessment.completedAt!.getTime() + 7 * 24 * 60 * 60 * 1000) : 
+        nextCheckInDue: latestAssessment ?
+          new Date(latestAssessment.completedAt!.getTime() + 7 * 24 * 60 * 60 * 1000) :
           new Date(),
       };
 
@@ -349,16 +349,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.userId;
       console.log(`[POST /api/reports] Generating report for userId: ${userId}`);
-      
+
       const user = await storage.getUser(userId);
       console.log(`[POST /api/reports] User found:`, user ? `${user.firstName} ${user.lastName}` : 'null');
-      
+
       const onboarding = await storage.getOnboardingResponse(userId);
       console.log(`[POST /api/reports] Onboarding found:`, onboarding ? 'yes' : 'no');
-      
+
       const assessments = await storage.getWeeklyAssessments(userId);
       console.log(`[POST /api/reports] Assessments found:`, assessments.length);
-      
+
       const modules = await storage.getAnxietyModules(userId);
       console.log(`[POST /api/reports] Modules found:`, modules.length);
 
@@ -399,10 +399,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.userId;
       const { situation, emotion, intensity, physicalSensations, automaticThought, evidenceFor, evidenceAgainst, balancedThought, newEmotion, newIntensity, actionPlan, selectedDistortions } = req.body;
-      
+
       // Debug log to help diagnose auth/body issues
       console.log('[POST /api/thought-records] userId:', userId, 'body keys:', Object.keys(req.body || {}));
-      
+
       const thoughtRecord = await storage.createThoughtRecord({
         userId,
         situation,
@@ -439,11 +439,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const thoughtRecord = await storage.getThoughtRecord(id);
-      
+
       if (!thoughtRecord) {
         return res.status(404).json({ error: "Thought record not found" });
       }
-      
+
       res.json(thoughtRecord);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -454,7 +454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const updates = req.body;
-      
+
       const thoughtRecord = await storage.updateThoughtRecord(id, updates);
       res.json(thoughtRecord);
     } catch (error: any) {
@@ -477,9 +477,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.userId;
       const { moduleId, weekNumber, situation, emotion, intensity, physicalSensations, automaticThought, evidenceFor, evidenceAgainst, balancedThought, newEmotion, newIntensity, actionPlan, selectedDistortions } = req.body;
-      
+
       console.log('[POST /api/weekly-thought-records] userId:', userId, 'moduleId:', moduleId, 'weekNumber:', weekNumber);
-      
+
       const thoughtRecord = await storage.createWeeklyThoughtRecord({
         userId,
         moduleId,
@@ -519,11 +519,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const thoughtRecord = await storage.getWeeklyThoughtRecord(id);
-      
+
       if (!thoughtRecord) {
         return res.status(404).json({ error: "Weekly thought record not found" });
       }
-      
+
       res.json(thoughtRecord);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -534,7 +534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const updates = req.body;
-      
+
       const thoughtRecord = await storage.updateWeeklyThoughtRecord(id, updates);
       res.json(thoughtRecord);
     } catch (error: any) {
@@ -557,7 +557,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.userId;
       const { entryDate, mood, energy, anxiety, sleep, emotions, activities, thoughts, gratitude, challenges, wins, notes } = req.body;
-      
+
       console.log('📥 POST /api/mood-entries received data:', {
         emotions,
         activities,
@@ -565,7 +565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         entryDate
       });
-      
+
       const moodEntry = await storage.createMoodEntry({
         userId,
         entryDate,
@@ -619,22 +619,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const updates = req.body;
-      
+
       console.log('📥 PATCH /api/mood-entries/:id received data:', {
         id,
         emotions: updates.emotions,
         activities: updates.activities,
         gratitude: updates.gratitude
       });
-      
+
       const moodEntry = await storage.updateMoodEntry(id, updates);
-      
+
       console.log('📤 PATCH /api/mood-entries/:id returning:', {
         emotions: moodEntry.emotions,
         activities: moodEntry.activities,
         gratitude: moodEntry.gratitude
       });
-      
+
       res.json(moodEntry);
     } catch (error: any) {
       console.error('❌ PATCH /api/mood-entries/:id error:', error);
@@ -667,7 +667,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.userId;
       const { completedSections, personalNotes, symptomChecklist, copingToolsRating, worksheetEntries, quizAnswers, progressData } = req.body;
-      
+
       const anxietyGuide = await storage.createAnxietyGuide({
         userId,
         completedSections,
@@ -689,7 +689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const updates = req.body;
-      
+
       const anxietyGuide = await storage.updateAnxietyGuide(userId, updates);
       res.json(anxietyGuide);
     } catch (error: any) {
@@ -712,7 +712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.userId;
       const assessmentData = req.body;
-      
+
       const sleepAssessment = await storage.createSleepAssessment({
         userId,
         ...assessmentData
@@ -728,7 +728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const updates = req.body;
-      
+
       const sleepAssessment = await storage.updateSleepAssessment(userId, updates);
       res.json(sleepAssessment);
     } catch (error: any) {
@@ -751,7 +751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.userId;
       const assessmentData = req.body;
-      
+
       const lifestyleAssessment = await storage.createLifestyleAssessment({
         userId,
         ...assessmentData
@@ -767,7 +767,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const updates = req.body;
-      
+
       const lifestyleAssessment = await storage.updateLifestyleAssessment(userId, updates);
       res.json(lifestyleAssessment);
     } catch (error: any) {
@@ -789,11 +789,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const plan = await storage.getPaymentPlan(id);
-      
+
       if (!plan) {
         return res.status(404).json({ error: "Payment plan not found" });
       }
-      
+
       res.json({ plan });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -805,7 +805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { planId, successUrl, cancelUrl } = req.body;
       const userId = req.session.userId;
-      
+
       if (!planId || !successUrl || !cancelUrl) {
         return res.status(400).json({ error: "Missing required fields" });
       }
@@ -826,7 +826,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let customerId: string;
       const existingSubscriptions = await storage.getUserSubscriptions(userId);
       const existingSubscription = existingSubscriptions.find(sub => sub.stripeCustomerId);
-      
+
       if (existingSubscription?.stripeCustomerId) {
         customerId = existingSubscription.stripeCustomerId;
       } else {
@@ -873,7 +873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const session = await stripe.checkout.sessions.create(sessionParams);
-      
+
       res.json({ sessionId: session.id, url: session.url });
     } catch (error: any) {
       console.error('Stripe checkout error:', error);
@@ -918,7 +918,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/payments/update-status", requireAuth, async (req, res) => {
     try {
       const currentUserId = req.session.userId;
-      
+
       if (!currentUserId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -927,7 +927,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentPlans = await storage.getPaymentPlans();
       const activePlan = paymentPlans.find(plan => plan.isActive);
       const amount = activePlan?.priceAmount || 14900; // Default to $149.00
-      
+
       // Simply mark user as paid using session userId
       await storage.markUserAsPaid(currentUserId, amount, 'usd');
 
@@ -946,8 +946,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       console.log(`✅ Payment status updated for user ${currentUserId}`);
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: "Payment status updated successfully"
       });
     } catch (error: any) {
@@ -961,25 +961,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId, amount = 14900, description = "Manual payment verification" } = req.body;
       const currentUserId = req.session.userId;
-      
+
       // For now, allow any authenticated user to verify their own payment
       // In production, you'd want admin-only access
       const targetUserId = userId || currentUserId;
-      
+
       if (targetUserId !== currentUserId) {
         return res.status(403).json({ error: "Can only verify your own payments" });
       }
 
       // Check if user already has a manual payment verification to prevent duplicates
       const existingTransactions = await storage.getPaymentTransactions(targetUserId);
-      const existingManualPayment = existingTransactions.find(t => 
-        t.description === description && 
-        t.paymentMethod === 'manual' && 
+      const existingManualPayment = existingTransactions.find(t =>
+        t.description === description &&
+        t.paymentMethod === 'manual' &&
         t.status === 'succeeded'
       );
 
       if (existingManualPayment) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: "Manual payment verification already exists for this user",
           existingTransaction: existingManualPayment
         });
@@ -1000,10 +1000,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.markUserAsPaid(targetUserId, amount, 'usd');
 
       console.log(`✅ Manual payment verification for user ${targetUserId}:`, transaction);
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: "Payment verified successfully",
-        transaction 
+        transaction
       });
     } catch (error: any) {
       console.error('Manual payment verification error:', error);
@@ -1112,7 +1112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     const existingSubscription = await storage.getUserSubscriptionByStripeId(subscription.id);
-    
+
     if (existingSubscription) {
       await storage.updateUserSubscription(existingSubscription.id, {
         status: subscription.status,
@@ -1125,7 +1125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     const existingSubscription = await storage.getUserSubscriptionByStripeId(subscription.id);
-    
+
     if (existingSubscription) {
       await storage.updateUserSubscription(existingSubscription.id, {
         status: 'canceled',
@@ -1136,7 +1136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     if (invoice.subscription && invoice.payment_intent) {
       const existingSubscription = await storage.getUserSubscriptionByStripeId(invoice.subscription as string);
-      
+
       if (existingSubscription) {
         await storage.createPaymentTransaction({
           userId: existingSubscription.userId,
@@ -1156,7 +1156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     if (invoice.subscription && invoice.payment_intent) {
       const existingSubscription = await storage.getUserSubscriptionByStripeId(invoice.subscription as string);
-      
+
       if (existingSubscription) {
         await storage.createPaymentTransaction({
           userId: existingSubscription.userId,
@@ -1182,17 +1182,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
       // Import the StripeAdminService
       const { StripeAdminService } = await import("./stripe-admin");
-      
+
       // Sync and get transactions
       const result = await StripeAdminService.syncUserTransactions(userId, user.email);
-      
+
       res.json({
         userId,
         email: user.email,
@@ -1209,12 +1209,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/stripe-transactions", requireAuth, async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 50;
-      
+
       // Import the StripeAdminService
       const { StripeAdminService } = await import("./stripe-admin");
-      
+
       const transactions = await StripeAdminService.getAllPaymentIntents(limit);
-      
+
       res.json({
         total: transactions.length,
         transactions,
@@ -1230,16 +1230,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
       // Import the StripeAdminService
       const { StripeAdminService } = await import("./stripe-admin");
-      
+
       const result = await StripeAdminService.syncUserTransactions(userId, user.email);
-      
+
       // Also update local database with the transactions
       for (const transaction of result.transactions) {
         try {
@@ -1262,7 +1262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Transaction ${transaction.id} might already exist in database`);
         }
       }
-      
+
       res.json({
         message: "Transactions synced successfully",
         userId,
@@ -1280,18 +1280,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
       // Get local transactions
       const localTransactions = await storage.getPaymentTransactions(userId);
-      
+
       // Get Stripe transactions
       const { StripeAdminService } = await import("./stripe-admin");
       const stripeResult = await StripeAdminService.syncUserTransactions(userId, user.email);
-      
+
       res.json({
         user: {
           id: user.id,
@@ -1324,28 +1324,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get all users
       const allUsers = await storage.getAllUsers();
-      
+
       // Calculate statistics
       const totalUsers = allUsers.length;
       const paidUsers = allUsers.filter(user => user.hasPaid).length;
       const unpaidUsers = totalUsers - paidUsers;
-      
+
       // Calculate revenue
       const totalRevenue = allUsers.reduce((sum, user) => sum + (user.paidAmount || 0), 0);
-      
+
       // Get recent signups (last 7 days)
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const recentSignups = allUsers.filter(user => 
+      const recentSignups = allUsers.filter(user =>
         new Date(user.createdAt || 0) > sevenDaysAgo
       ).length;
-      
+
       // Get users with phone numbers
       const usersWithPhone = allUsers.filter(user => user.phoneNumber && user.phoneNumber.trim() !== '').length;
-      
+
       // Get payment plans
       const paymentPlans = await storage.getPaymentPlans();
       const activePlan = paymentPlans.find(plan => plan.isActive);
-      
+
       res.json({
         overview: {
           totalUsers,
@@ -1399,7 +1399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
         hasPublishableKey: !!process.env.STRIPE_PUBLISHABLE_KEY,
       };
-      
+
       res.json({ stripeConfig });
     } catch (error: any) {
       console.error('Error fetching Stripe config:', error);
@@ -1411,12 +1411,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/stripe-config", requireAuth, async (req, res) => {
     try {
       const { publishableKey, secretKey } = req.body;
-      
+
       // Validate keys
       if (publishableKey && !publishableKey.startsWith('pk_')) {
         return res.status(400).json({ error: "Invalid publishable key format" });
       }
-      
+
       if (secretKey && !secretKey.startsWith('sk_')) {
         return res.status(400).json({ error: "Invalid secret key format" });
       }
@@ -1425,7 +1425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (publishableKey) {
         process.env.STRIPE_PUBLISHABLE_KEY = publishableKey;
       }
-      
+
       if (secretKey) {
         process.env.STRIPE_SECRET_KEY = secretKey;
       }
@@ -1433,10 +1433,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update .env file
       const fs = await import('fs');
       const path = await import('path');
-      
+
       const envPath = path.join(process.cwd(), '.env');
       let envContent = '';
-      
+
       try {
         envContent = fs.readFileSync(envPath, 'utf8');
       } catch (error) {
@@ -1448,7 +1448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (publishableKey) {
         const publishableKeyRegex = /^STRIPE_PUBLISHABLE_KEY=.*$/m;
         const publishableKeyLine = `STRIPE_PUBLISHABLE_KEY=${publishableKey}`;
-        
+
         if (publishableKeyRegex.test(envContent)) {
           envContent = envContent.replace(publishableKeyRegex, publishableKeyLine);
         } else {
@@ -1460,7 +1460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (secretKey) {
         const secretKeyRegex = /^STRIPE_SECRET_KEY=.*$/m;
         const secretKeyLine = `STRIPE_SECRET_KEY=${secretKey}`;
-        
+
         if (secretKeyRegex.test(envContent)) {
           envContent = envContent.replace(secretKeyRegex, secretKeyLine);
         } else {
@@ -1471,8 +1471,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Write back to .env file
       fs.writeFileSync(envPath, envContent);
 
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: "Stripe configuration updated successfully. Please restart the server for changes to take effect."
       });
     } catch (error: any) {
@@ -1486,22 +1486,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { planId } = req.params;
       const updates = req.body;
-      
+
       // Validate required fields
       if (updates.priceAmount && (typeof updates.priceAmount !== 'number' || updates.priceAmount <= 0)) {
         return res.status(400).json({ error: "Invalid price amount" });
       }
-      
+
       const updatedPlan = await storage.updatePaymentPlan(planId, updates);
-      
+
       if (!updatedPlan) {
         return res.status(404).json({ error: "Payment plan not found" });
       }
-      
-      res.json({ 
-        success: true, 
+
+      res.json({
+        success: true,
         message: "Payment plan updated successfully",
-        paymentPlan: updatedPlan 
+        paymentPlan: updatedPlan
       });
     } catch (error: any) {
       console.error('Error updating payment plan:', error);
@@ -1517,9 +1517,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const search = req.query.search as string || '';
       const status = req.query.status as string || 'all';
       const offset = (page - 1) * limit;
-      
+
       let allUsers = await storage.getAllUsers();
-      
+
       // Apply search filter if provided
       if (search.trim()) {
         const searchLower = search.toLowerCase();
@@ -1527,13 +1527,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
           const email = user.email.toLowerCase();
           const phone = user.phoneNumber?.toLowerCase() || '';
-          
-          return fullName.includes(searchLower) || 
-                 email.includes(searchLower) || 
-                 phone.includes(searchLower);
+
+          return fullName.includes(searchLower) ||
+            email.includes(searchLower) ||
+            phone.includes(searchLower);
         });
       }
-      
+
       // Apply payment status filter if provided
       if (status !== 'all') {
         allUsers = allUsers.filter(user => {
@@ -1545,27 +1545,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return true;
         });
       }
-      
+
       const totalUsers = allUsers.length;
-      
-      // Get latest payment time for each user
+
+      // Get latest payment time and payment ID for each user
       const usersWithPaymentTime = await Promise.all(
         allUsers.map(async (user) => {
           const latestTransaction = await storage.getLatestPaymentTransaction(user.id);
           return {
             ...user,
             latestPaymentTime: latestTransaction?.createdAt || null,
+            stripePaymentIntentId: latestTransaction?.stripePaymentIntentId || null,
           };
         })
       );
-      
+
       // Sort by creation date (newest first)
-      const sortedUsers = usersWithPaymentTime.sort((a, b) => 
+      const sortedUsers = usersWithPaymentTime.sort((a, b) =>
         new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
       );
-      
+
       const paginatedUsers = sortedUsers.slice(offset, offset + limit);
-      
+
       res.json({
         users: paginatedUsers,
         pagination: {
@@ -1590,18 +1591,18 @@ function calculateRiskScore(responses: any): number {
   // PHQ-4 based scoring (0-12 scale)
   // Questions about anxiety and depression frequency
   let score = 0;
-  
+
   if (responses.anxietyFrequency !== undefined) score += parseInt(responses.anxietyFrequency);
   if (responses.worryFrequency !== undefined) score += parseInt(responses.worryFrequency);
   if (responses.depressionFrequency !== undefined) score += parseInt(responses.depressionFrequency);
   if (responses.anhedoniaFrequency !== undefined) score += parseInt(responses.anhedoniaFrequency);
-  
+
   // Additional factors
   if (responses.sleepQuality === "poor") score += 1;
   if (responses.suicidalThoughts === "yes") score += 5; // Major escalation factor
   if (responses.selfHarm === "yes") score += 3;
   if (responses.substanceUse === "increased") score += 2;
-  
+
   return Math.min(score, 15); // Cap at 15 for our scale
 }
 
